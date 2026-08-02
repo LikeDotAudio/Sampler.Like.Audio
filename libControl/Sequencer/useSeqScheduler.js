@@ -27,21 +27,15 @@ window.useSeqScheduler = (
         return w;
     };
 
-    // Live recording needs the transport clock to quantise a pad strike to the
-    // nearest step, and a way to say "this note already sounded, don't play it
-    // again on the pass it was written into". Both ride on this shared clock.
-    window.OA_SEQ_CLOCK = window.OA_SEQ_CLOCK || { nextNoteTime: 0, step: 0, stepDur: 0.125 };
+    // Live recording needs to quantise a pad strike to the nearest playing step.
+    // We maintain a history of recently scheduled step times to match against ctx.currentTime.
+    window.OA_SEQ_TIMES = window.OA_SEQ_TIMES || [];
     window.OA_SEQ_SKIP = window.OA_SEQ_SKIP || new Set();
 
     const nextNote = (songRef, setSongPos, applySongEntry, songItemsRef, libraryRef) => {
         const secondsPerBeat = 60.0 / bpmRef.current;
         nextNoteTimeRef.current += 0.25 * secondsPerBeat; // 16th note
         currentStepRef.current = (currentStepRef.current + 1) % stepsRef.current;
-        window.OA_SEQ_CLOCK = {
-            nextNoteTime: nextNoteTimeRef.current,
-            step: currentStepRef.current,
-            stepDur: 0.25 * secondsPerBeat
-        };
         if (currentStepRef.current === 0 && songRef.current) advanceSong(songRef, setSongPos, applySongEntry, songItemsRef, libraryRef);
     };
 
@@ -66,6 +60,9 @@ window.useSeqScheduler = (
     };
 
     const scheduleNote = (stepNumber, time, setCurrentStep) => {
+        window.OA_SEQ_TIMES.push({ time, step: stepNumber, stepDur: 0.25 * (60.0 / bpmRef.current) });
+        if (window.OA_SEQ_TIMES.length > 32) window.OA_SEQ_TIMES.shift();
+
         const ctx = getAudioCtx();
         const TRACKS = window.OA_DRUM_KIT || [];
 

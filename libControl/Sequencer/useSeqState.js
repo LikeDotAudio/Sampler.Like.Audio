@@ -143,14 +143,22 @@ window.useSeqState = (label, DEFAULT_STEPS, TRACKS) => {
     // hit landing slightly early records where the player meant it, not a step late.
     const quantizedStep = () => {
         const steps = stepsRef.current;
-        const clock = window.OA_SEQ_CLOCK;
         const cur = currentStepRef.current % steps;
-        if (!clock || !clock.stepDur) return cur;
+        const times = window.OA_SEQ_TIMES;
+        if (!times || !times.length) return cur;
         const ctx = audioCtxRef.current;
         if (!ctx) return cur;
-        // How far past the current step's start we are; over halfway rounds up.
-        const intoStep = clock.stepDur - (clock.nextNoteTime - ctx.currentTime);
-        return intoStep > clock.stepDur / 2 ? (cur + 1) % steps : cur;
+        
+        let closest = times[0];
+        let minDiff = Math.abs(closest.time - ctx.currentTime);
+        for (let i = 1; i < times.length; i++) {
+            const diff = Math.abs(times[i].time - ctx.currentTime);
+            if (diff < minDiff) {
+                minDiff = diff;
+                closest = times[i];
+            }
+        }
+        return closest.step % steps;
     };
     React.useEffect(() => {
         const onDrumHit = (e) => {

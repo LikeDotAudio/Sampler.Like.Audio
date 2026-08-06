@@ -2,3 +2,13 @@ node_modules/
 package-lock.json
 
 .crawler/
+
+# Build output. Generated from the sources in sources.json by build.mjs, and
+# built fresh by CI on every push to main (.github/workflows/deploy.yml), which
+# then uploads it to the site. Deliberately NOT tracked: when it was, CI pushed
+# a "Build: recompile dist/" commit after every push, which landed on top of
+# whatever you were doing and turned the next push into a merge.
+#
+# Run ./build.sh after editing anything under libControl/ to refresh your local
+# copy — a fresh clone has no dist/ until you do.
+dist/

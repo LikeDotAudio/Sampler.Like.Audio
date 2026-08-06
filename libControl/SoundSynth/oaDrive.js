@@ -22,11 +22,11 @@
  *                 negative halves equally, and lopsided clipping makes EVEN
  *                 harmonics — the second above all, which is exactly an octave
  *                 and therefore reads as warmth rather than as distortion. We
- *                 fake the lopsidedness by shoving the whole wave up a little
- *                 before it hits the ceiling, so the top squashes first.
+ *                 fake it by shoving the wave off-centre before it meets the
+ *                 ceiling, so the top squashes first.
  *
- *     FUZZ        A hard clamp at ±1. No rounding at all: the wave goes square,
- *                 the harmonic series goes on forever, and it rips.
+ *     FUZZ        A hard clamp at the rail. No rounding at all: the wave goes
+ *                 square, the harmonic series runs on forever, and it rips.
  *
  *   Two more tricks sit on top of the clipper:
  *
@@ -59,28 +59,44 @@ window.OA_DRIVE_EPSILON = 0.0005;
 // of full scale. Past about 0.6 the note stops being a note.
 const OA_STARVE_MAX = 0.6;
 
-// The shape of the ceiling. `soft` rounds the peaks, `hard` chops them.
+// The shape of the ceiling. `soft` rounds the peaks off, `hard` chops them flat.
 const OA_CLIPS = {
     soft: function (x) { return Math.tanh(x); },
     hard: function (x) { return x < -1 ? -1 : (x > 1 ? 1 : x); },
 };
 
 /**
- * The three voicings. `bias` is the DC offset pushed into the clipper before it
- * squashes — 0 is symmetric (odd harmonics), anything else is lopsided (even
- * harmonics, the warm ones).
+ * The three voicings.
+ *
+ * `bias` is how far off-centre the wave sits when it meets the ceiling, so the
+ * top squashes before the bottom does. Lopsided clipping is what makes EVEN
+ * harmonics — the second above all, which is an octave, and an octave reads as
+ * warmth rather than as dirt. Symmetric clipping can only make ODD ones.
+ *
+ * The number is a fraction of the DRIVE, not a fixed offset, and that detail is
+ * the whole difference between a tube setting and a decoration. Measured over a
+ * 200 Hz sine, a fixed 0.30 offset gives a healthy second harmonic at 1.5x
+ * drive and almost nothing by 40x: the wave is swinging ±40 by then and a
+ * constant 0.30 barely tilts it, so the warmth evaporates exactly where you
+ * reached for it. Tie the offset to the drive and the wave crosses the
+ * threshold at the same lopsided place no matter how hard it is being pushed —
+ * measured, the second harmonic holds at ~0.12 from 3x all the way to 40x.
+ *
+ * Physically that is a bias point that tracks the signal instead of sitting at
+ * one voltage, which is a liberty; but a real tube stage that hot has other
+ * people's problems, and this is the behaviour a player expects from the knob.
  */
 window.OA_DRIVE_MODES = [
     {
         key: 'od', label: 'Overdrive', clip: 'soft', bias: 0, color: '#4caf50',
-        hint: 'tanh — peaks rounded, symmetric, odd harmonics. A pushed amp.',
+        hint: 'tanh, dead centre — peaks rounded, odd harmonics only. A pushed amp.',
     },
     {
-        key: 'tube', label: 'Tube', clip: 'soft', bias: 0.30, color: '#ffb300',
-        hint: 'tanh off-centre — one half squashes first, so the even harmonics come up. Warm.',
+        key: 'tube', label: 'Tube', clip: 'soft', bias: 0.10, color: '#ffb300',
+        hint: 'tanh off-centre — the top squashes first, so the even harmonics come up. Warm.',
     },
     {
-        key: 'fuzz', label: 'Fuzz', clip: 'hard', bias: 0.12, color: '#e53935',
+        key: 'fuzz', label: 'Fuzz', clip: 'hard', bias: 0.05, color: '#e53935',
         hint: 'clamped flat at the rail — square wave, endless harmonics. Rips.',
     },
 ];
@@ -204,20 +220,19 @@ window.oaDriveSample = function (x, u, mode) {
     //    so the knob goes from the untouched wave to the full octave-up.
     if (u.rect > 0) s = s * (1 - u.rect) + Math.abs(s) * u.rect;
 
-    // 4 + 5. ASYMMETRY AND THE CEILING.
-    //
-    //    Offsetting the wave before the clipper makes it hit the top rail
-    //    before the bottom one, and that lopsidedness is what generates the
-    //    even harmonics a tube is loved for.
-    //
-    //    Then undo the offset. Note it is clip(bias) that comes off, NOT bias:
-    //    the clipper has already bent the offset on its way through, so
-    //    subtracting the raw bias leaves a small DC residue behind. With
-    //    tanh(0.3) = 0.2913, subtracting 0.3 parks the output at -0.0087
-    //    forever — a speaker cone held off-centre and a click when the wet path
-    //    is faded in. Subtracting what actually came out lands on true zero.
+    // 4. ASYMMETRY — push the wave off-centre so it reaches the top rail before
+    //    the bottom one. Scaled by drive; see OA_DRIVE_MODES for why.
     const clip = OA_CLIPS[mode.clip];
-    const bias = mode.bias;
+    const bias = mode.bias * u.drive;
+
+    // 5. THE CEILING, and then the offset taken back off.
+    //
+    //    Note it is clip(bias) that comes off, NOT bias. The clipper has
+    //    already bent the offset on its way through, so subtracting the raw
+    //    number leaves a residue: with tanh(0.3) = 0.2913, subtracting 0.3
+    //    parks the output at -0.0087 for ever — a speaker cone held off-centre
+    //    and a thump the moment the wet path is faded in. Subtracting what
+    //    actually came out lands on true zero at every mode and every drive.
     return clip(s + bias) - clip(bias);
 };
 

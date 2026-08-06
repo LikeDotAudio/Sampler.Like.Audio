@@ -1,0 +1,233 @@
+// The DRIVE pedal for one channel. Everything on this panel is a knob on a
+// stompbox, plus one thing a stompbox could never show you: the transfer curve
+// itself, drawn from the exact lookup table the audio is running through.
+
+// A drive knob that spends half its travel between 20x and 40x is useless — the
+// ear hears ratios, not differences — so the logarithmic params are driven
+// through a normalised 0..1 knob and mapped back on the way out.
+const toNorm = (p, v) => p.log
+    ? Math.log(Math.max(p.min, v) / p.min) / Math.log(p.max / p.min)
+    : (v - p.min) / ((p.max - p.min) || 1);
+const fromNorm = (p, n) => p.log
+    ? p.min * Math.pow(p.max / p.min, n)
+    : p.min + n * (p.max - p.min);
+
+const DriveKnob = ({ p, value, color, size = 40, onChange }) => (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+        <window.SvgKnob
+            value={toNorm(p, value)} min={0} max={1} defaultVal={toNorm(p, p.def)}
+            color={color} size={size}
+            onChange={(n) => onChange(fromNorm(p, n))}
+        />
+        <div style={{ fontSize: '8px', color: '#8f9299', letterSpacing: '1px' }}>{p.label.toUpperCase()}</div>
+        <div style={{ fontSize: '9px', color: color, fontVariantNumeric: 'tabular-nums' }}>{p.fmt(value)}</div>
+    </div>
+);
+
+// One of the three voicings. Interlocked — a pedal has one circuit in at a time.
+const ModeButton = ({ mode, active, onPress }) => (
+    <button
+        onClick={() => onPress(mode.key)}
+        title={mode.hint}
+        style={{
+            flex: 1, padding: '6px 4px', borderRadius: '3px', cursor: 'pointer',
+            background: active
+                ? `linear-gradient(to bottom, ${mode.color} 0%, ${mode.color} 62%, #00000055 100%)`
+                : 'linear-gradient(to bottom, #3a3e45 0%, #00000030 100%)',
+            border: '1px solid #000',
+            boxShadow: active ? 'inset 0 2px 5px rgba(0,0,0,0.6)' : '0 2px 0 #000, 0 3px 4px rgba(0,0,0,0.55)',
+            transform: active ? 'translateY(2px)' : 'none',
+            color: active ? '#15171b' : '#9aa3ae',
+            fontSize: '9px', fontWeight: '700', letterSpacing: '.8px',
+            transition: 'transform .06s, box-shadow .06s',
+        }}
+    >
+        {mode.label.toUpperCase()}
+    </button>
+);
+
+/**
+ * The picture of what the pedal does to a wave. Input runs left to right,
+ * output bottom to top, so a straight diagonal is a wire and anything else is
+ * distortion. The flat shoulders are the clipping, a kink at the origin is the
+ * starve dead zone, and a curve that is not symmetric about the centre is the
+ * asymmetry that makes the even harmonics.
+ */
+const TransferPlot = ({ unit, color }) => {
+    const N = 160;
+    const S = 148;                                   // drawing box, px
+    const curve = window.oaDriveCurve(unit);
+
+    const px = (x) => (x + 1) / 2 * S;
+    const py = (y) => S - (Math.max(-1.15, Math.min(1.15, y)) + 1) / 2 * S;
+
+    const wet = [];
+    const out = [];
+    for (let i = 0; i < N; i++) {
+        const x = (i / (N - 1)) * 2 - 1;
+        // Read the same table the WaveShaper reads, rather than recomputing —
+        // if the two ever disagree, the picture is the one that is lying.
+        const w = curve[Math.round((x + 1) / 2 * (curve.length - 1))];
+        wet.push(`${px(x).toFixed(1)},${py(w).toFixed(1)}`);
+        out.push(`${px(x).toFixed(1)},${py(x * (1 - unit.mix) + w * unit.mix * unit.level).toFixed(1)}`);
+    }
+
+    return (
+        <svg width={S} height={S} viewBox={`0 0 ${S} ${S}`} style={{ display: 'block', borderRadius: '3px', background: '#101216', border: '1px solid #000' }}>
+            {[0.25, 0.5, 0.75].map((f) => (
+                <React.Fragment key={f}>
+                    <line x1={f * S} y1={0} x2={f * S} y2={S} stroke="#ffffff0d" strokeWidth={1} />
+                    <line x1={0} y1={f * S} x2={S} y2={f * S} stroke="#ffffff0d" strokeWidth={1} />
+                </React.Fragment>
+            ))}
+            {/* The wire: what a perfectly transparent channel looks like. */}
+            <line x1={0} y1={S} x2={S} y2={0} stroke="#5a6472" strokeWidth={1} strokeDasharray="3 3" />
+            {/* The pedal on its own, at 100% wet... */}
+            <polyline points={wet.join(' ')} fill="none" stroke={color} strokeWidth={1} opacity={0.3} />
+            {/* ...and what actually leaves the channel once the mix is applied. */}
+            <polyline points={out.join(' ')} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" />
+            <text x={4} y={S - 4} fill="#5a6472" fontSize="7" letterSpacing="1">IN →</text>
+            <text x={4} y={10} fill="#5a6472" fontSize="7" letterSpacing="1">OUT ↑</text>
+        </svg>
+    );
+};
+
+/**
+ * The pedal panel for one channel. Writes straight to the live unit, and since
+ * the pedal is built per voice the next hit carries whatever is set here.
+ */
+window.DriveEditor = ({ idx, name, onClose }) => {
+    const [, force] = React.useReducer((n) => n + 1, 0);
+    React.useEffect(() => {
+        const onChange = (e) => { if (e.detail && e.detail.idx === idx) force(); };
+        window.addEventListener('oa-drive-changed', onChange);
+        return () => window.removeEventListener('oa-drive-changed', onChange);
+    }, [idx]);
+
+    // Taken once per channel, so ABORT goes back to how this channel sounded
+    // when the panel was opened rather than to a factory setting.
+    const opened = React.useRef(null);
+    React.useEffect(() => {
+        const u = window.oaDriveUnit(idx);
+        opened.current = { mode: u.mode };
+        window.OA_DRIVE_PARAMS.forEach((p) => { opened.current[p.key] = u[p.key]; });
+    }, [idx]);
+
+    const unit = window.oaDriveUnit(idx);
+    const mode = window.oaDriveMode(unit.mode);
+    const params = window.OA_DRIVE_PARAMS;
+    const mixP = params.find((p) => p.key === 'mix');
+    const knobs = params.filter((p) => p.key !== 'mix');
+    const on = unit.mix > window.OA_DRIVE_EPSILON;
+    const color = mode.color;
+
+    const dirty = !!opened.current && (opened.current.mode !== unit.mode
+        || params.some((p) => opened.current[p.key] !== unit[p.key]));
+    const abort = () => {
+        if (!opened.current) return;
+        window.oaSetDrive(idx, 'mode', opened.current.mode);
+        params.forEach((p) => window.oaSetDrive(idx, p.key, opened.current[p.key]));
+    };
+
+    return (
+        <div style={{
+            position: 'fixed', bottom: '46px', left: '50%', transform: 'translateX(-50%)',
+            background: 'var(--panel)', border: '1px solid #444', borderRadius: '8px',
+            boxShadow: '0 -4px 24px rgba(0,0,0,0.7)', zIndex: 1200,
+            padding: '14px 16px', width: 'min(560px, 92vw)', maxHeight: '78vh', overflowY: 'auto'
+        }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                <span style={{ fontSize: '12px', color: color, fontWeight: 'bold', letterSpacing: '1px' }}>
+                    {name} — DRIVE
+                </span>
+                <span style={{ fontSize: '9px', color: '#666' }}>before the pan and the sends</span>
+                <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
+                    <window.SeqButton label="⟲ Abort" onClick={abort} disabled={!dirty}
+                        color={dirty ? '#b71c1c' : undefined} textColor={dirty ? '#fff' : undefined}
+                        title="Back to how this channel sounded when the panel was opened"
+                        style={{ padding: '4px 10px', border: 'none' }} />
+                    <window.SeqButton label="✖ Close" onClick={onClose} style={{ padding: '4px 10px' }} />
+                </div>
+            </div>
+
+            {/* The faceplate — hammered enclosure, knobs across the top. */}
+            <div style={{
+                background: 'linear-gradient(to bottom, #24262a 0%, #17181b 100%)',
+                border: '1px solid #000', borderRadius: '4px',
+                boxShadow: 'inset 0 1px 0 #ffffff12', padding: '12px 14px 10px'
+            }}>
+                <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>
+                    {window.OA_DRIVE_MODES.map((m) => (
+                        <ModeButton key={m.key} mode={m} active={m.key === unit.mode}
+                            onPress={(k) => window.oaSetDrive(idx, 'mode', k)} />
+                    ))}
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'space-between' }}>
+                            {knobs.map((p) => (
+                                <DriveKnob key={p.key} p={p} value={unit[p.key]} color={color}
+                                    onChange={(v) => window.oaSetDrive(idx, p.key, v)} />
+                            ))}
+                        </div>
+
+                        {/* MIX gets its own row and a bigger knob — it is the one
+                            control that decides whether this channel is touched
+                            at all, and at 0 the pedal is not in the graph. */}
+                        <div style={{
+                            display: 'flex', alignItems: 'center', gap: '10px',
+                            borderTop: '1px solid #ffffff10', paddingTop: '10px'
+                        }}>
+                            <DriveKnob p={mixP} value={unit.mix} color={color} size={52}
+                                onChange={(v) => window.oaSetDrive(idx, 'mix', v)} />
+                            <div style={{ flex: 1 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                                    <span style={{
+                                        width: '7px', height: '7px', borderRadius: '50%', display: 'inline-block',
+                                        background: on ? color : '#3a1a16',
+                                        boxShadow: on ? `0 0 6px ${color}` : 'inset 0 1px 2px #000'
+                                    }}></span>
+                                    <span style={{ fontSize: '8px', color: '#8f9299', letterSpacing: '1.5px' }}>
+                                        {on ? 'ENGAGED' : 'BYPASS'}
+                                    </span>
+                                </div>
+                                <div style={{ fontSize: '9px', color: '#777', lineHeight: 1.45 }}>
+                                    {on
+                                        ? mode.hint
+                                        : 'At 0% no pedal is built — the voice goes to the pan untouched.'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <TransferPlot unit={unit} color={color} />
+                </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px' }}>
+                <span style={{ fontSize: '10px', color: '#aaa' }}>Pedal</span>
+                <select
+                    value=""
+                    onChange={(e) => { if (e.target.value) window.oaApplyDrivePreset(idx, e.target.value); }}
+                    style={{ background: '#222', color: color, border: '1px solid #444', borderRadius: '3px', fontSize: '11px', padding: '3px 6px' }}
+                >
+                    <option value="">Load a setting…</option>
+                    {Object.keys(window.OA_DRIVE_PRESETS).map((k) => (
+                        <option key={k} value={k}>{window.OA_DRIVE_PRESETS[k].label}</option>
+                    ))}
+                </select>
+                <span style={{ fontSize: '10px', color: '#777', fontStyle: 'italic' }}>
+                    drive squashes the peaks; the harmonics that appear are the sound
+                </span>
+            </div>
+
+            <div style={{ fontSize: '9px', color: '#666', marginTop: '10px', lineHeight: 1.5 }}>
+                STARVE is a dying battery — the dead zone around silence gets wide enough
+                that the tail of a note sputters out instead of decaying. OCTAVE folds the
+                bottom half of the wave up onto the top, so it repeats twice as often and
+                the pitch jumps an octave. Blend both back against the dry signal with MIX.
+            </div>
+        </div>
+    );
+};

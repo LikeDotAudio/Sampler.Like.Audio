@@ -16,6 +16,7 @@ const Mixer = () => {
     // Which channel's SYNTH panel is open, and a re-render when samples change
     // so a channel that just got a sample loses its SYNTH button.
     const [synthPad, setSynthPad] = React.useState(null);
+    const [drivePad, setDrivePad] = React.useState(null);
     const [tapeUnit, setTapeUnit] = React.useState(null);
     const [chorusUnit, setChorusUnit] = React.useState(null);
     const [, forceSamples] = React.useReducer((n) => n + 1, 0);
@@ -23,7 +24,7 @@ const Mixer = () => {
         const onSample = () => forceSamples();
         // The Sequencer's track names open the same editor — the Mixer hosts it
         // because it is always mounted, and the panel portals to <body>.
-        const onOpen = (e) => { if (e.detail && e.detail.idx != null) setSynthPad(e.detail.idx); };
+        const onOpen = (e) => { if (e.detail && e.detail.idx != null) { setDrivePad(null); setSynthPad(e.detail.idx); } };
         window.addEventListener('oa-sample-changed', onSample);
         window.addEventListener('oa-open-synth', onOpen);
         return () => {
@@ -61,9 +62,11 @@ const Mixer = () => {
         const onFx = () => forceFx();
         window.addEventListener('oa-reverb-changed', onFx);
         window.addEventListener('oa-delay-changed', onFx);
+        window.addEventListener('oa-drive-changed', onFx);
         return () => {
             window.removeEventListener('oa-reverb-changed', onFx);
             window.removeEventListener('oa-delay-changed', onFx);
+            window.removeEventListener('oa-drive-changed', onFx);
         };
     }, []);
 
@@ -287,7 +290,7 @@ const Mixer = () => {
                         {/* No sample loaded means this voice is synthesized — let them shape it. */}
                         {!hasSample(i) && (
                             <button
-                                onClick={() => setSynthPad(synthPad === i ? null : i)}
+                                onClick={() => { setDrivePad(null); setSynthPad(synthPad === i ? null : i); }}
                                 title={`Edit the ${track.name || 'Track'} synth voice`}
                                 style={{
                                     width: '100%', padding: '3px 0', textAlign: 'center', borderRadius: '4px',
@@ -301,6 +304,31 @@ const Mixer = () => {
                                 SYNTH
                             </button>
                         )}
+
+                        {/* The pedal in front of this channel. Unlit means the
+                            mix is at 0 and no distortion is in the graph at all. */}
+                        {(() => {
+                            const dUnit = window.oaDriveUnit(i);
+                            const dOn = dUnit.mix > window.OA_DRIVE_EPSILON;
+                            const dColor = window.oaDriveMode(dUnit.mode).color;
+                            const dOpen = drivePad === i;
+                            return (
+                                <button
+                                    onClick={() => { setSynthPad(null); setDrivePad(dOpen ? null : i); }}
+                                    title={`${track.name || 'Track'} — distortion pedal${dOn ? ` (${window.oaDriveMode(dUnit.mode).label}, ${Math.round(dUnit.mix * 100)}% mix)` : ''}`}
+                                    style={{
+                                        width: '100%', padding: '3px 0', textAlign: 'center', borderRadius: '4px',
+                                        border: `1px solid ${dOpen || dOn ? dColor : '#444b57'}`,
+                                        background: dOpen ? '#4a2418' : (dOn ? '#33201a' : '#2a2f38'),
+                                        color: dOpen || dOn ? dColor : '#9aa3ae',
+                                        cursor: 'pointer', fontSize: '9px', fontWeight: '700', letterSpacing: '.5px',
+                                        marginBottom: '4px'
+                                    }}
+                                >
+                                    DRIVE{dOn ? ` ${Math.round(dUnit.mix * 100)}` : ''}
+                                </button>
+                            );
+                        })()}
 
                         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
                             <SvgKnob
@@ -533,6 +561,15 @@ const Mixer = () => {
                     idx={synthPad}
                     name={(tracks[synthPad] && tracks[synthPad].name) || `Track ${synthPad + 1}`}
                     onClose={() => setSynthPad(null)}
+                />,
+                document.body
+            )}
+
+            {drivePad != null && window.DriveEditor && ReactDOM.createPortal(
+                <window.DriveEditor
+                    idx={drivePad}
+                    name={(tracks[drivePad] && tracks[drivePad].name) || `Track ${drivePad + 1}`}
+                    onClose={() => setDrivePad(null)}
                 />,
                 document.body
             )}

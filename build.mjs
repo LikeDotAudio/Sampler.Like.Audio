@@ -43,11 +43,20 @@ const runTests = () => {
     }
     if (!existsSync('test')) return;
 
-    console.log('• running plugin tests…');
-    // A glob, not the directory: `node --test test/` resolves the bare word as
-    // a module path and dies before it runs anything. Quoted so the runner
-    // expands it rather than the shell, which keeps it working from npm too.
-    const r = spawnSync(process.execPath, ['--test', 'test/**/*.test.mjs'], { stdio: 'inherit' });
+    // Explicit filenames, not a glob. `node --test 'test/**/*.test.mjs'` reads
+    // well and works on this machine, but glob patterns only reach the test
+    // runner in Node 22 — an older one takes the pattern for a literal filename
+    // and reports "Could not find", which is a green suite locally and a red
+    // build in CI, over a Node version nobody thought to look at. Listing the
+    // directory costs a millisecond and cannot do that.
+    const files = readdirSync('test')
+        .filter((f) => f.endsWith('.test.mjs'))
+        .sort()
+        .map((f) => `test/${f}`);
+    if (!files.length) return;
+
+    console.log(`• running plugin tests… (${files.length} files)`);
+    const r = spawnSync(process.execPath, ['--test', ...files], { stdio: 'inherit' });
 
     if (r.error) {
         console.error(`✗ could not run the tests: ${r.error.message}`);

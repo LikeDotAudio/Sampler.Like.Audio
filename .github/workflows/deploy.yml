@@ -45,9 +45,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # 22, not 20: build.mjs gates the compile on `node --test
+      # 'test/**/*.test.mjs'`, and glob patterns for the test runner only exist
+      # from 22 on. Node 20 reads that pattern as a literal filename, finds no
+      # such file, and fails the build with "Could not find" — a green suite
+      # locally, a red run here, for no reason a reader would guess.
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install build dependencies
         run: npm install --no-audit --no-fund

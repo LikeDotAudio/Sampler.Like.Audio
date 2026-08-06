@@ -88,7 +88,20 @@
                         </div>
 
                         <div style={{ ...panelStyle('EDITOR'), display: activeTabs.includes('EDITOR') ? 'flex' : 'none', justifyContent: 'center', alignItems: 'center' }}>
-                            {window.SoundBrowser ? <window.SoundBrowser inline={true} onClose={() => closeTab('EDITOR')} /> : <div>Loading EDITOR...</div>}
+                            {window.SoundBrowser ? (
+                                <window.SoundBrowser
+                                    inline={true}
+                                    onClose={() => closeTab('EDITOR')}
+                                    /* The editor is not opened from a pad, so there is no pad to load
+                                       into — Load handed the sound to nobody. Instead it arms the same
+                                       "click a pad to assign" flow the browser already uses when you
+                                       send a sound to a second pad, and brings the pads up to click. */
+                                    onChoose={(file, meta) => {
+                                        window.dispatchEvent(new CustomEvent('oa-assign-sample', { detail: { file, meta } }));
+                                        toggleTab('PADS');
+                                    }}
+                                />
+                            ) : <div>Loading EDITOR...</div>}
                         </div>
 
                         <div style={panelStyle('MIXER')}>

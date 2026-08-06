@@ -27,6 +27,7 @@ window.useSoundBrowseState = () => {
     const [favEntries, setFavEntries] = React.useState([]);
     const [cloudData, setCloudData] = React.useState(null);
     const [cloudErr, setCloudErr] = React.useState('');
+    const [recEntries, setRecEntries] = React.useState([]);
 
     const isFav = (s) => !!s && favorites.some((f) => f.name === s.name && f.folder === (s.folder || ''));
     const toggleFav = () => {
@@ -36,7 +37,31 @@ window.useSoundBrowseState = () => {
         setFavState({ items: exists ? favorites.filter((f) => !(f.name === entry.name && f.folder === entry.folder)) : [...favorites, entry] });
     };
 
+    // Recordings are read out of IndexedDB as Files, which is the same shape the
+    // grid, the thumbnails and Load-to-pad already take from a picked folder —
+    // so a take behaves like any other sample from the moment it is saved.
+    const reloadRecs = React.useCallback(async () => {
+        if (!window.oaRecList) return;
+        const recs = await window.oaRecList();
+        setRecEntries(recs.map((r) => ({
+            name: r.name,
+            folder: window.OA_REC_FOLDER,
+            file: new File([r.blob], r.name, { type: r.blob.type || 'audio/wav', lastModified: r.at || 0 }),
+            rec: r,
+        })));
+    }, []);
+
     const showFiles = () => { setView('files'); setSelectedIndex(-1); };
+    const showRecorder = () => { setView('recorder'); setSelectedIndex(-1); reloadRecs(); };
+
+    // Deleting the selected take: the grid index it was sitting at now points at
+    // a different sound, so the selection is dropped rather than silently moved.
+    const deleteRecording = async (entry) => {
+        if (!entry || !window.oaRecDelete) return;
+        await window.oaRecDelete(entry.name);
+        setSelected(null); setSelectedIndex(-1);
+        await reloadRecs();
+    };
     const showFavorites = async () => { setView('favorites'); setSelectedIndex(-1); if (window.oaEnsureRootPermission) await window.oaEnsureRootPermission(); };
     const showCloud = async () => { 
         setView('cloud'); setSelectedIndex(-1); setCloudErr('');
@@ -70,7 +95,7 @@ window.useSoundBrowseState = () => {
 
     const [filter, setFilter] = React.useState('');
     const files = supportsFS ? folderFiles : flatEntries;
-    const baseList = view === 'favorites' ? favEntries : files;
+    const baseList = view === 'favorites' ? favEntries : (view === 'recorder' ? recEntries : files);
     
     const shown = filter.trim()
         ? ((view === 'files' && supportsFS) ? deepResults : baseList.filter((f) => f.name.toLowerCase().includes(filter.trim().toLowerCase())))
@@ -138,6 +163,7 @@ window.useSoundBrowseState = () => {
         supportsFS, rootHandle, selectedFolder, selectedFolderPath, selectedIndex, setSelectedIndex,
         selected, setSelected, err, chips, scanning, deepSearching, filter, setFilter,
         view, cloudData, cloudErr, favorites, isFav, toggleFav, showFiles, showFavorites, showCloud,
+        showRecorder, recEntries, reloadRecs, deleteRecording,
         shown, pickFolder, selectFolder, onPlainFiles, selectFileByIndex, files
     };
 };

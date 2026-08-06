@@ -35,6 +35,7 @@ window.SoundBrowser = ({ onClose, onChoose, onChooseOther, targetLabel, inline }
         supportsFS, rootHandle, selectedFolder, selectedFolderPath, selectedIndex, setSelectedIndex,
         selected, setSelected, err, chips, scanning, deepSearching, filter, setFilter,
         view, cloudData, cloudErr, favorites, isFav, toggleFav, showFiles, showFavorites, showCloud,
+        showRecorder, recEntries, reloadRecs, deleteRecording,
         shown, pickFolder, selectFolder, onPlainFiles, selectFileByIndex, files
     } = window.useSoundBrowseState();
 
@@ -42,6 +43,10 @@ window.SoundBrowser = ({ onClose, onChoose, onChooseOther, targetLabel, inline }
 
     // Big waveform of the selected file.
     React.useEffect(() => { drawWave(bigCanvasRef.current, buffer, '#f4902c'); }, [buffer]);
+
+    // Read the takes once on open, so the RECORDER tab carries its count before
+    // anyone clicks it — otherwise a device full of recordings looks empty.
+    React.useEffect(() => { reloadRecs(); }, [reloadRecs]);
 
     const chooseIt = () => { if (selected && onChoose) onChoose(selected.file, { name: selected.name, folder: selected.folder || '' }); };
     const chooseOther = () => { if (selected && onChooseOther) onChooseOther(selected.file, { name: selected.name, folder: selected.folder || '' }); };
@@ -81,6 +86,8 @@ window.SoundBrowser = ({ onClose, onChoose, onChooseOther, targetLabel, inline }
                         <button onClick={showFiles} style={{ background: view === 'files' ? '#f4902c' : '#222', color: view === 'files' ? '#111' : '#ccc', border: 'none', padding: '5px 12px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>FILES</button>
                         <button onClick={showFavorites} style={{ background: view === 'favorites' ? '#f4902c' : '#222', color: view === 'favorites' ? '#111' : '#ccc', border: 'none', padding: '5px 12px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>★ Favorites{favorites.length ? ` (${favorites.length})` : ''}</button>
                         <button onClick={showCloud} style={{ background: view === 'cloud' ? '#f4902c' : '#222', color: view === 'cloud' ? '#111' : '#ccc', border: 'none', padding: '5px 12px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>☁ THE CLOUD</button>
+                        <button onClick={showRecorder} title="Record a new sample from this device's input"
+                            style={{ background: view === 'recorder' ? '#f4902c' : '#222', color: view === 'recorder' ? '#111' : '#ccc', border: 'none', padding: '5px 12px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>● RECORDER{recEntries.length ? ` (${recEntries.length})` : ''}</button>
                     </div>
                     {supportsFS ? (
                         <button onClick={pickFolder} style={tbtn({ background: '#f4902c', color: '#111', border: 'none', fontWeight: 'bold' })}>📁 Choose folder…</button>
@@ -112,6 +119,9 @@ window.SoundBrowser = ({ onClose, onChoose, onChooseOther, targetLabel, inline }
                         )}
                     </div>
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+                        {view === 'recorder' && window.SoundRecorder && (
+                            <window.SoundRecorder onSaved={() => reloadRecs()} />
+                        )}
                         {view === 'files' && (chips.length > 0 || scanning) && (
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', padding: '6px 10px', borderBottom: '1px solid #2a2a2a', alignItems: 'center' }}>
                                 {scanning && <span style={{ fontSize: '11px', color: '#888' }}>scanning…</span>}
@@ -133,7 +143,12 @@ window.SoundBrowser = ({ onClose, onChoose, onChooseOther, targetLabel, inline }
                                 <div style={{ display: 'grid', gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))`, gap: '8px' }}>
                                     {shown.map((entry, i) => (
                                         <div key={i} ref={i === selectedIndex ? selectedThumbRef : undefined} style={{ minWidth: 0 }}>
-                                            <WaveThumb entry={entry} selected={i === selectedIndex} onSelect={() => selectFileByIndex(i)} scrollRootRef={gridScrollRef} />
+                                            {/* setBuffer/setPos have to come along: without them the
+                                                click selects the file, throws on the missing setter and
+                                                lands on "Could not open file" — so the big waveform, the
+                                                transport and the auto-preview all stayed dead unless you
+                                                had arrived by arrow key. */}
+                                            <WaveThumb entry={entry} selected={i === selectedIndex} onSelect={() => selectFileByIndex(i, setBuffer, setPos)} scrollRootRef={gridScrollRef} />
                                         </div>
                                     ))}
                                 </div>
@@ -165,6 +180,8 @@ window.SoundBrowser = ({ onClose, onChoose, onChooseOther, targetLabel, inline }
                                 <div style={{ color: '#666', fontSize: '12px', padding: '30px', textAlign: 'center' }}>
                                     {view === 'favorites'
                                         ? (favorites.length ? 'No matching favorites.' : 'No favorites yet — open Files, pick a sound, and ☆ Favorite it.')
+                                        : view === 'recorder'
+                                        ? (recEntries.length ? 'No takes match that filter.' : 'No recordings yet — open the input above and hit Record.')
                                         : (deepSearching ? 'Searching all folders…' : (scanning ? 'Scanning folders…' : (files.length ? 'No matches.' : (supportsFS ? 'Select a folder on the left to see its waveforms.' : 'No files chosen yet.'))))}
                                 </div>
                             )}
@@ -186,6 +203,24 @@ window.SoundBrowser = ({ onClose, onChoose, onChooseOther, targetLabel, inline }
                         <label style={{ fontSize: '12px', color: '#ccc', display: 'flex', alignItems: 'center', gap: '4px' }}>
                             <input type="checkbox" checked={loop} onChange={(e) => setLoop(e.target.checked)} /> Loop
                         </label>
+                        {/* Housekeeping for takes. Only in the recorder view —
+                            these two are the only sounds in the app the browser
+                            owns outright and can therefore destroy or hand back. */}
+                        {view === 'recorder' && (
+                            <>
+                                <button onClick={() => { if (selected) window.oaDownloadRecording(selected); }} disabled={!selected}
+                                    title="Save this take out as a .wav file"
+                                    style={tbtn({ padding: '6px 10px' })}>⭳ .wav</button>
+                                <button
+                                    onClick={() => {
+                                        const entry = shown[selectedIndex];
+                                        if (entry && window.confirm(`Delete "${entry.name}"? Pads using it will lose their sound.`)) deleteRecording(entry);
+                                    }}
+                                    disabled={selectedIndex < 0}
+                                    title="Delete this recording from this device"
+                                    style={tbtn({ padding: '6px 10px', color: '#f88' })}>🗑</button>
+                            </>
+                        )}
                         <button onClick={toggleFav} disabled={!selected} title="Add/remove this file from favorites"
                             style={tbtn({ background: isFav(selected) ? '#f4902c' : '#333', color: isFav(selected) ? '#111' : '#fff', border: 'none', fontWeight: 'bold' })}>
                             {isFav(selected) ? '★ Favorited' : '☆ Favorite'}

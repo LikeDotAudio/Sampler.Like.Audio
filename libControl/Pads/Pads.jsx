@@ -54,6 +54,15 @@ const Pads = ({ label = "Drum Pads", centerVelocity = 100, edgeVelocity = 10, on
         window.addEventListener('oa-drum-play', onPlay);
         return () => window.removeEventListener('oa-drum-play', onPlay);
     }, []);
+    // A sound sent over from the EDITOR tab, which has no pad of its own to load
+    // into — it arrives armed, and the next pad clicked takes it.
+    React.useEffect(() => {
+        const onAssign = (e) => {
+            if (e.detail && e.detail.file) setPendingAssign({ file: e.detail.file, meta: e.detail.meta || {} });
+        };
+        window.addEventListener('oa-assign-sample', onAssign);
+        return () => window.removeEventListener('oa-assign-sample', onAssign);
+    }, []);
     // Esc cancels "Load to other pad" mode.
     React.useEffect(() => {
         if (!pendingAssign) return;

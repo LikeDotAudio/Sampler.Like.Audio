@@ -28,26 +28,46 @@ async function oaNavigateToFile(root, folderPath, name) {
     return await dir.getFileHandle(name);
 }
 
+// A pad whose sample came from the recorder carries the synthetic folder name
+// instead of a path on disk. Those come out of IndexedDB and need neither a
+// picked folder nor a permission prompt.
+const oaIsRecMeta = (m) => !!m && m.folder === window.OA_REC_FOLDER;
+
 // Re-load samples from the persisted folder using per-pad {name, folder} meta.
 // MUST be called from a user gesture — may prompt for folder read permission.
 window.oaRestoreKit = async function (metaByIdx) {
-    const root = await window.oaIdbGet('oaRootDir');
-    if (!root) return { ok: false, reason: 'no-folder', restored: 0 };
-    if (root.queryPermission) {
+    const metas = Object.keys(metaByIdx).map((i) => metaByIdx[i]).filter((m) => m && m.name);
+    const wantsDisk = metas.some((m) => !oaIsRecMeta(m));
+    const wantsRecs = metas.some(oaIsRecMeta);
+
+    // The folder is only fetched, and only prompted for, if something actually
+    // needs it — a kit built entirely from recordings must restore on a machine
+    // that has never picked a folder at all.
+    let root = wantsDisk ? await window.oaIdbGet('oaRootDir') : null;
+    if (wantsDisk && !root && !wantsRecs) return { ok: false, reason: 'no-folder', restored: 0 };
+    if (root && root.queryPermission) {
         let p = await root.queryPermission({ mode: 'read' });
         if (p !== 'granted' && root.requestPermission) p = await root.requestPermission({ mode: 'read' });
-        if (p !== 'granted') return { ok: false, reason: 'permission', restored: 0 };
+        // Refused, but there are still recordings to put back — restore those
+        // rather than reporting total failure over the pads it cannot reach.
+        if (p !== 'granted') {
+            if (!wantsRecs) return { ok: false, reason: 'permission', restored: 0 };
+            root = null;
+        }
     }
+
     let restored = 0;
     for (const idx in metaByIdx) {
         const m = metaByIdx[idx]; if (!m || !m.name) continue;
         try {
-            const fh = await oaNavigateToFile(root, m.folder, m.name);
-            const file = await fh.getFile();
+            let file = null;
+            if (oaIsRecMeta(m)) file = window.oaRecFile ? await window.oaRecFile(m.name) : null;
+            else if (root) file = await (await oaNavigateToFile(root, m.folder, m.name)).getFile();
+            if (!file) continue;
             const buf = await window.oaDecodeAudio(window.oaAudioCtx(), await file.arrayBuffer());
-            window.oaSetDrumSample(Number(idx), buf, { name: m.name });
+            window.oaSetDrumSample(Number(idx), buf, { name: m.name, folder: m.folder || '' });
             restored++;
-        } catch (e) { /* file moved/renamed — skip */ }
+        } catch (e) { /* file moved/renamed/deleted — skip */ }
     }
     return { ok: true, restored };
 };
@@ -67,6 +87,9 @@ window.oaEnsureRootPermission = async function () {
 
 // Resolve a File from {folder, name} using the persisted root (if permitted).
 window.oaResolveFile = async function (folderPath, name) {
+    // Recordings are not on disk — this is the one folder name that resolves
+    // out of IndexedDB, which is what lets a take be favorited like any file.
+    if (folderPath === window.OA_REC_FOLDER && window.oaRecFile) return await window.oaRecFile(name);
     const root = window.OA_SOUND_DIR || await window.oaIdbGet('oaRootDir');
     if (!root) return null;
     if (root.queryPermission) { const p = await root.queryPermission({ mode: 'read' }); if (p !== 'granted') return null; }

@@ -212,11 +212,15 @@ const VuMeter = ({ posRef, mode }) => {
 
     return (
         <div style={{
-            padding: '5px', borderRadius: '3px',
+            padding: '5px', borderRadius: '3px', maxWidth: '100%', minWidth: 0,
             background: 'linear-gradient(to bottom, #141416 0%, #26262a 50%, #101012 100%)',
             border: '1px solid #000', boxShadow: 'inset 0 1px 0 #ffffff18, 0 2px 5px rgba(0,0,0,0.6)'
         }}>
-            <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ display: 'block', borderRadius: '2px' }}>
+            {/* Sized in percent rather than pixels: the meter is the widest thing
+                on the plate, and on a small phone it has to give ground instead
+                of pushing the ratio and meter buttons off the line. */}
+            <svg width="100%" height="auto" viewBox={`0 0 ${W} ${H}`}
+                 style={{ display: 'block', borderRadius: '2px', width: `${W}px`, maxWidth: '100%', height: 'auto' }}>
                 <defs>
                     <linearGradient id="vuface" x1="0" y1="0" x2="0" y2="1">
                         <stop offset="0%" stopColor="#ffd98a" />
@@ -279,6 +283,17 @@ const screw = (
  */
 window.CompressorEditor = ({ idx, name, onClose }) => {
     const [, force] = React.useReducer((n) => n + 1, 0);
+
+    // On a phone the plate cannot hold one row, so it wraps. Left to itself the
+    // wrap breaks the panel in the wrong places — the meter separated from the
+    // buttons that aim it, and the two time knobs standing in a tall column that
+    // pushes everything else down. Below this width the groups are re-cut.
+    const [narrow, setNarrow] = React.useState(window.innerWidth <= 800);
+    React.useEffect(() => {
+        const onResize = () => setNarrow(window.innerWidth <= 800);
+        window.addEventListener('resize', onResize);
+        return () => window.removeEventListener('resize', onResize);
+    }, []);
     React.useEffect(() => {
         const onChange = (e) => { if (e.detail && e.detail.idx === idx) force(); };
         window.addEventListener('oa-comp-changed', onChange);
@@ -460,55 +475,70 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
                     {knobCol('input', 62)}
                     {knobCol('output', 62)}
 
-                    {/* ATTACK over RELEASE, stacked, as on the front panel. */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                    {/* ATTACK over RELEASE, stacked, as on the front panel —
+                        except when the plate is narrow, where a two-knob column
+                        is the tallest thing on it and side by side costs
+                        nothing that a wrapped row was not going to cost anyway. */}
+                    <div style={{
+                        display: 'flex', flexDirection: narrow ? 'row' : 'column',
+                        alignItems: 'center', gap: '6px'
+                    }}>
                         {knobCol('attack', 42)}
                         {knobCol('release', 42)}
                     </div>
 
-                    {/* RATIO — interlocking buttons, one circuit at a time. */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                        <Engraved size={7} style={{ letterSpacing: '1.6px', marginBottom: '1px' }}>RATIO</Engraved>
-                        {window.OA_COMP_RATIOS.map((r) => (
-                            <div key={r.key} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <span style={{
-                                    fontSize: '7.5px', fontWeight: '700', color: '#331704', width: '18px',
-                                    textAlign: 'right', textShadow: '0 1px 0 rgba(255,220,180,0.35)'
-                                }}>{r.label}</span>
-                                <PushButton label="" active={unit.ratio === r.key} title={r.hint}
-                                    onPress={() => set('ratio', r.key)} width={16} height={17} />
-                            </div>
-                        ))}
-                    </div>
+                    {/* RATIO, the meter, and the METER buttons travel together:
+                        the buttons on the right are what the needle is reading,
+                        and a wrap that leaves them on the line below reads as a
+                        second, unrelated bank of switches. */}
+                    <div style={{
+                        display: 'flex', alignItems: 'center', gap: '4px',
+                        flexWrap: 'nowrap', minWidth: 0
+                    }}>
+                        {/* RATIO — interlocking buttons, one circuit at a time. */}
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                            <Engraved size={7} style={{ letterSpacing: '1.6px', marginBottom: '1px' }}>RATIO</Engraved>
+                            {window.OA_COMP_RATIOS.map((r) => (
+                                <div key={r.key} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <span style={{
+                                        fontSize: '7.5px', fontWeight: '700', color: '#331704', width: '18px',
+                                        textAlign: 'right', textShadow: '0 1px 0 rgba(255,220,180,0.35)'
+                                    }}>{r.label}</span>
+                                    <PushButton label="" active={unit.ratio === r.key} title={r.hint}
+                                        onPress={() => set('ratio', r.key)} width={16} height={17} />
+                                </div>
+                            ))}
+                        </div>
 
-                    {/* The meter, with the live reduction figure tucked into the
-                        space under it — the needle tells you the shape, the
-                        number tells you how much. */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-                        <VuMeter posRef={needleRef} mode={meterMode} />
-                        <span style={{
-                            fontSize: '7px', fontWeight: '700', letterSpacing: '1.2px', color: '#2a1204',
-                            fontVariantNumeric: 'tabular-nums', opacity: 0.8,
-                            textShadow: '0 1px 0 rgba(255,220,180,0.3)'
-                        }}>
-                            GR <i ref={grRef} style={{ fontStyle: 'normal' }}>0.0 dB</i>
-                        </span>
-                    </div>
+                        {/* The meter, with the live reduction figure tucked into
+                            the space under it — the needle tells you the shape,
+                            the number tells you how much. */}
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', minWidth: 0 }}>
+                            <VuMeter posRef={needleRef} mode={meterMode} />
+                            <span style={{
+                                fontSize: '7px', fontWeight: '700', letterSpacing: '1.2px', color: '#2a1204',
+                                fontVariantNumeric: 'tabular-nums', opacity: 0.8,
+                                textShadow: '0 1px 0 rgba(255,220,180,0.3)'
+                            }}>
+                                GR <i ref={grRef} style={{ fontStyle: 'normal' }}>0.0 dB</i>
+                            </span>
+                        </div>
 
-                    {/* METER — where the needle is pointing. Panel only; it
-                        changes nothing about what the channel sounds like. */}
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                        <Engraved size={7} style={{ letterSpacing: '1.6px', marginBottom: '1px' }}>METER</Engraved>
-                        {window.OA_COMP_METERS.map((m) => (
-                            <div key={m.key} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                <PushButton label="" active={meterMode === m.key} title={m.hint}
-                                    onPress={() => set('meter', m.key)} width={16} height={17} />
-                                <span style={{
-                                    fontSize: '7.5px', fontWeight: '700', color: '#331704', width: '20px',
-                                    textShadow: '0 1px 0 rgba(255,220,180,0.35)'
-                                }}>{m.label}</span>
-                            </div>
-                        ))}
+                        {/* METER — where the needle is pointing. Panel only; it
+                            changes nothing about what the channel sounds like. */}
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                            <Engraved size={7} style={{ letterSpacing: '1.6px', marginBottom: '1px' }}>METER</Engraved>
+                            {window.OA_COMP_METERS.map((m) => (
+                                <div key={m.key} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <PushButton label="" active={meterMode === m.key} title={m.hint}
+                                        onPress={() => set('meter', m.key)} width={16} height={17} />
+                                    <span style={{
+                                        fontSize: '7.5px', fontWeight: '700', color: '#331704', width: '20px',
+                                        textShadow: '0 1px 0 rgba(255,220,180,0.35)'
+                                    }}>{m.label}</span>
+                                </div>
+                            ))}
+                        </div>
                     </div>
 
                 </div>

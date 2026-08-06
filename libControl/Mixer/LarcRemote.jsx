@@ -87,7 +87,7 @@ const Key = ({ label, onClick, onDown, onUp, lit, title, wide, tone = 'cream', s
  * is a fader with a real position on a real scale, so grabbing halfway up the
  * slot should put it halfway up, exactly as your hand expects from the picture.
  */
-const LarcSlider = ({ value, onChange, height = 190 }) => {
+const LarcSlider = ({ value, onChange, height = 224 }) => {
     const trackRef = React.useRef(null);
     const CAP_H = 13;
 
@@ -324,7 +324,11 @@ window.LarcRemote = ({ u, onClose }) => {
             position: 'fixed', bottom: '46px', left: '50%', transform: 'translateX(-50%)',
             background: 'var(--panel)', border: '1px solid #444', borderRadius: '8px',
             boxShadow: '0 -4px 24px rgba(0,0,0,0.7)', zIndex: 1200,
-            padding: '10px 12px', width: 'min(390px, 96vw)', maxHeight: '88vh', overflowY: 'auto'
+            // The real remote is a tall thing you hold in one hand, not a wide
+            // thing you set down. Narrowing the plate and letting the sliders
+            // have the height back is what makes it read as a remote — the
+            // widest line in the display still clears the meter at this width.
+            padding: '10px 12px', width: 'min(340px, 96vw)', maxHeight: '88vh', overflowY: 'auto'
         }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                 <span style={{ fontSize: '12px', color: meta.color, fontWeight: 'bold', letterSpacing: '1px' }}>

@@ -282,8 +282,6 @@ const screw = (
  * on the sound that is already ringing rather than waiting for the next hit.
  */
 window.CompressorEditor = ({ idx, name, onClose }) => {
-    const [, force] = React.useReducer((n) => n + 1, 0);
-
     // On a phone the plate cannot hold one row, so it wraps. Left to itself the
     // wrap breaks the panel in the wrong places — the meter separated from the
     // buttons that aim it, and the two time knobs standing in a tall column that
@@ -294,27 +292,26 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
         window.addEventListener('resize', onResize);
         return () => window.removeEventListener('resize', onResize);
     }, []);
-    React.useEffect(() => {
-        const onChange = (e) => { if (e.detail && e.detail.idx === idx) force(); };
-        window.addEventListener('oa-comp-changed', onChange);
-        return () => window.removeEventListener('oa-comp-changed', onChange);
-    }, [idx]);
+    // Settings and faceplate through the interface; the subscribe/unsubscribe
+    // pair each editor used to write out longhand lives in the hook now, which
+    // is one fewer listener that can outlive its panel and keep the whole
+    // component tree alive behind it.
+    const unit = window.useOaState('comp', idx);
+    const params = window.useOaParams('comp', idx);
 
     // Taken once per channel, so ABORT goes back to how this channel sounded
     // when the panel was opened rather than to a factory setting.
     const opened = React.useRef(null);
     React.useEffect(() => {
-        const u = window.oaCompUnit(idx);
+        const u = window.oaPluginState('comp', idx);
         opened.current = { on: u.on, ratio: u.ratio };
-        window.OA_COMP_PARAMS.forEach((p) => { opened.current[p.key] = u[p.key]; });
+        window.oaPluginParams('comp', idx).forEach((p) => { opened.current[p.key] = u[p.key]; });
     }, [idx]);
 
-    const unit = window.oaCompUnit(idx);
-    const params = window.OA_COMP_PARAMS;
     const P = (k) => params.find((p) => p.key === k);
     const ratio = window.oaCompRatio(unit.ratio);
     const on = unit.on && unit.mix > 0.0005;
-    const set = (k, v) => window.oaSetComp(idx, k, v);
+    const set = (k, v) => window.oaPluginSet('comp', idx, k, v);
 
     const dirty = !!opened.current && (opened.current.on !== unit.on || opened.current.ratio !== unit.ratio
         || params.some((p) => opened.current[p.key] !== unit[p.key]));
@@ -329,50 +326,42 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
     const needleRef = React.useRef(null);
     const grRef = React.useRef(null);
     const meterMode = unit.meter || 'gr';
-    React.useEffect(() => {
-        const A0 = -33, A1 = 33;
-        const buf = new Float32Array(1024);
-        let shown = 0;                       // smoothed needle position, 0..1
-        let raf = null;
-        const tick = () => {
-            const ctx = window.OA_AUDIO_CTX;
-            const bus = ctx && ctx.__oaComps && ctx.__oaComps[idx];
-            const gr = window.oaCompGR(idx);
+    // The panel used to find its own compressor in ctx.__oaComps, pull a
+    // thousand floats out of its analyser and reduce them to a peak — the same
+    // work the Mixer was doing on the same node in its own loop. Both readings
+    // now come off the plugin's frame, which is filled once by the back end.
+    //
+    // Everything below is presentation: a scale position, a needle with mass, a
+    // number formatted for a readout. That is all a front panel should be.
+    const A0 = -33, A1 = 33;
+    const shownRef = React.useRef(0);        // smoothed needle position, 0..1
 
-            let target = VU_ZERO;
-            const meta = window.OA_COMP_METERS.find((m) => m.key === meterMode);
-            if (meterMode === 'off') {
-                target = 0;
-            } else if (meterMode === 'gr') {
-                // The same engraved scale, read backwards: no reduction parks
-                // the needle on 0 and every dB taken off swings it left.
-                target = VU_ZERO * (1 - Math.min(1, gr / 20));
-            } else if (bus && bus.analyser) {
-                bus.analyser.getFloatTimeDomainData(buf);
-                let peak = 0;
-                for (let i = 0; i < buf.length; i++) {
-                    const a = Math.abs(buf[i]);
-                    if (a > peak) peak = a;
-                }
-                const db = peak > 1e-6 ? 20 * Math.log10(peak) : -80;
-                target = vuPos(db - (meta ? meta.ref : -18));
-            } else {
-                target = 0;
-            }
+    window.useOaFrame('comp', idx, (frame, L) => {
+        const gr = frame[L.GR];
 
-            // A moving-coil movement has mass. Rising fast and falling slow is
-            // both what the real one does and what makes the reading legible.
-            shown += (target - shown) * (target > shown ? 0.35 : 0.12);
-            if (needleRef.current) {
-                needleRef.current.setAttribute('transform',
-                    `rotate(${(A0 + shown * (A1 - A0)).toFixed(2)} 98 158.24)`);
-            }
-            if (grRef.current) grRef.current.textContent = gr > 0.05 ? '-' + gr.toFixed(1) + ' dB' : '0.0 dB';
-            raf = requestAnimationFrame(tick);
-        };
-        raf = requestAnimationFrame(tick);
-        return () => cancelAnimationFrame(raf);
-    }, [idx, meterMode]);
+        let target;
+        const meta = window.OA_COMP_METERS.find((m) => m.key === meterMode);
+        if (meterMode === 'off' || !frame[L.ACTIVE]) {
+            target = 0;
+        } else if (meterMode === 'gr') {
+            // The same engraved scale, read backwards: no reduction parks the
+            // needle on 0 and every dB taken off swings it left.
+            target = VU_ZERO * (1 - Math.min(1, gr / 20));
+        } else {
+            const peak = frame[L.PEAK_L];
+            const db = peak > 1e-6 ? 20 * Math.log10(peak) : -80;
+            target = vuPos(db - (meta ? meta.ref : -18));
+        }
+
+        // A moving-coil movement has mass. Rising fast and falling slow is both
+        // what the real one does and what makes the reading legible.
+        shownRef.current += (target - shownRef.current) * (target > shownRef.current ? 0.35 : 0.12);
+        if (needleRef.current) {
+            needleRef.current.setAttribute('transform',
+                `rotate(${(A0 + shownRef.current * (A1 - A0)).toFixed(2)} 98 158.24)`);
+        }
+        if (grRef.current) grRef.current.textContent = gr > 0.05 ? '-' + gr.toFixed(1) + ' dB' : '0.0 dB';
+    });
 
     const knobCol = (key, size) => {
         const p = P(key);
@@ -557,7 +546,7 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
                 <span style={{ fontSize: '10px', color: '#aaa' }}>Setting</span>
                 <select
                     value=""
-                    onChange={(e) => { if (e.target.value) window.oaApplyCompPreset(idx, e.target.value); }}
+                    onChange={(e) => { if (e.target.value) window.oaPluginPreset('comp', idx, e.target.value); }}
                     style={{ background: '#222', color: window.OA_COMP_COLOR, border: '1px solid #444', borderRadius: '3px', fontSize: '11px', padding: '3px 6px' }}
                 >
                     <option value="">Load a setting…</option>

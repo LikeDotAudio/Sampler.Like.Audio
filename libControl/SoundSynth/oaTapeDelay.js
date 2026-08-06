@@ -386,7 +386,18 @@ const nativeEngine = function (ctx, unit) {
     wowL.gain.value = unit.wowDepth;
     wowR.gain.value = -unit.wowDepth;
 
-    return { input: inGain, output: merge, apply: apply };
+    return {
+        input: inGain,
+        output: merge,
+        apply: apply,
+        // The wow LFO was started once and runs for the life of the context. It
+        // is a source with no stop time, so nothing else will ever release it —
+        // teardown has to name it explicitly or the tape "goes away" with an
+        // oscillator still turning behind it.
+        dispose: function () {
+            window.oaDisconnectAll([lfo, wowL, wowR, inGain, shaper, tape, dL, dR, fb, damp, merge]);
+        },
+    };
 };
 
 const workletEngine = function (ctx, unit) {
@@ -479,8 +490,33 @@ window.oaDelayToReverb = function (ctx, u, r, amount) {
     feed.gain.setTargetAtTime(amount, ctx.currentTime, 0.02);
 };
 
+/**
+ * Hold a tape parameter to what the machine can do.
+ *
+ * dlUnit() clamps on the way IN from storage, but this — the way in from a
+ * knob, a preset, a song file or a grid-sync recalculation — did not, and the
+ * numbers here reach hardware limits fast. A head time past maxDelayTime is
+ * silently pinned by the DelayNode, so the panel and the sound disagree from
+ * then on. Feedback above about 1.1 is a loop that adds energy every pass:
+ * it climbs until it clips and stays there, which is exactly the "it started
+ * distorting" symptom, and it is persisted, so it comes back after a reload.
+ */
+const clampDelay = function (key, value) {
+    if (key === 'ret') {
+        const v = Number(value);
+        return isFinite(v) ? Math.max(0, Math.min(1, v)) : 0;
+    }
+    const spec = window.OA_DELAY_PARAMS.find(function (p) { return p.key === key; });
+    if (!spec) return value;                      // syncL/syncR/chorus have their own setters
+    const v = Number(value);
+    // NaN passes both bounds, so it has to be caught before them, not by them.
+    if (!isFinite(v)) return window.oaDelayUnit(0)[key];
+    return Math.max(spec.min, Math.min(spec.max, v));
+};
+
 window.oaSetDelay = function (u, key, value, keepSync) {
     const unit = window.oaDelayUnit(u);
+    value = clampDelay(key, value);
     unit[key] = value;
     // Dialling a head in milliseconds takes it off the grid — including when a
     // preset rewrites the tape, which goes through here one parameter at a time.
@@ -564,3 +600,71 @@ window.oaApplyDelayPreset = function (u, key) {
     if (!preset) return;
     window.OA_DELAY_PARAMS.forEach((p) => window.oaSetDelay(u, p.key, preset[p.key]));
 };
+
+/**
+ * Take every tape machine out of a context. The chorus insert carries a running
+ * oscillator — an LFO that was started once and never stopped — so disconnecting
+ * the delay alone would leave that oscillator alive with nowhere to go.
+ */
+window.oaDisposeDelay = function (ctx) {
+    const buses = ctx && ctx.__oaDelays;
+    if (!buses) return;
+    buses.forEach(function (bus) {
+        if (!bus) return;
+        if (bus.chorus && bus.chorus.dispose) bus.chorus.dispose();
+        if (bus.engine && bus.engine.dispose) bus.engine.dispose();
+        window.oaDisconnectAll(
+            [bus.input, bus.ret]
+                .concat(bus.analysers || [])
+                .concat(bus.rvFeeds || [])
+                .concat(bus.engine ? [bus.engine.input, bus.engine.output] : []),
+        );
+    });
+    buses.length = 0;
+};
+
+// ---------------------------------------------------------------------------
+// The back end, as the tape panel sees it.
+// ---------------------------------------------------------------------------
+
+window.oaRegisterPlugin({
+    id: 'delay',
+    label: 'Tape Delay',
+    event: 'oa-delay-changed',
+    units: function () { return window.OA_DELAY_COUNT; },
+    params: window.OA_DELAY_PARAMS,
+    presets: window.OA_DELAY_PRESETS,
+    state: function (i) { return window.oaDelayUnit(i); },
+    set: function (i, key, value) { window.oaSetDelay(i, key, value); },
+    preset: function (i, name) { window.oaApplyDelayPreset(i, name); },
+
+    slots: window.OA_SLOT.USER + 2,
+    layout: {
+        /**
+         * How close the feedback path is to running away, 0..1+. Above 1 the
+         * loop is adding energy every pass, which is the Runaway preset doing
+         * what it says — a panel wants to light that up, not hide it.
+         */
+        REGEN: window.OA_SLOT.USER,
+        /** Which Dimension button is lit, 0 = OFF. */
+        CHORUS: window.OA_SLOT.USER + 1,
+    },
+
+    read: function (ctx, i, frame) {
+        const S = window.OA_SLOT;
+        const unit = window.oaDelayUnit(i);
+        const bus = ctx && ctx.__oaDelays && ctx.__oaDelays[i];
+        frame[S.ACTIVE] = bus && unit.ret > 0.0005 ? 1 : 0;
+        frame[S.USER] = unit.feedback;
+        frame[S.USER + 1] = unit.chorus;
+        if (!bus || !bus.analysers) {
+            frame[S.PEAK_L] = 0;
+            frame[S.PEAK_R] = 0;
+            return;
+        }
+        window.oaWritePeak(frame, S.PEAK_L, window.oaAnalyserPeak(bus.analysers[0]));
+        window.oaWritePeak(frame, S.PEAK_R, window.oaAnalyserPeak(bus.analysers[1]));
+    },
+
+    dispose: window.oaDisposeDelay,
+});

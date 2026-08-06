@@ -237,51 +237,46 @@ window.LarcRemote = ({ u, onClose }) => {
     const runningBank = window.oaReverbBank(unit.bank);
 
     // ---- the meter ---------------------------------------------------------
+    // Both sides come off the reverb's telemetry frame. The LARC used to find
+    // the bus in ctx.__oaReverbs and read its two analysers itself — which meant
+    // opening this panel doubled the metering work already being done for the
+    // Mixer's return strip, on the very same nodes.
+    //
+    // HOLD is honoured here rather than at the source: the frame keeps being
+    // filled for everyone else, and this display simply stops reading it. That
+    // is what hold means on the real machine — the needle stops, the room does
+    // not.
     const dotsRef = React.useRef({});
-    React.useEffect(() => {
-        let raf = null;
-        const buf = new Float32Array(1024);
-        const peak = [0, 0];
-        const tick = () => {
-            const ctx = window.OA_AUDIO_CTX;
-            const bus = ctx && ctx.__oaReverbs && ctx.__oaReverbs[active];
-            for (let ch = 0; ch < 2; ch++) {
-                const els = dotsRef.current[ch];
-                if (!els) continue;
-                let v = 0;
-                if (bus && bus.analysers && bus.analysers[ch] && !dispHold) {
-                    bus.analysers[ch].getFloatTimeDomainData(buf);
-                    for (let i = 0; i < buf.length; i++) {
-                        const a = Math.abs(buf[i]);
-                        if (a > v) v = a;
-                    }
-                }
-                if (!dispHold) peak[ch] = Math.max(v, peak[ch] * 0.88);
-                // -34dB at the left end up to +12 at the right, which is the
-                // scale printed between the two rows. The return feeding this is
-                // a reverb tail — quiet by nature — so it is shown at twice the
-                // amplitude it arrives at, which puts a typical tail in the
-                // middle of the scale instead of flickering at the left end.
-                // Display only: nothing downstream of here hears the difference.
-                const db = peak[ch] > 1e-5 ? 20 * Math.log10(peak[ch] * LARC_METER_GAIN) : -80;
-                const lit = Math.round(((db + 34) / 46) * els.length);
-                els.forEach((el, i) => {
-                    if (!el) return;
-                    const on = i < lit;
-                    const hot = i >= els.length - 2;      // the last two are the ovld pair
-                    el.style.background = on ? (hot ? LARC_LED_HOT : LARC_LED) : LARC_LED_OFF;
-                    // A lit dot blooms into the filter exactly like the text
-                    // does; an unlit one is a dark hole and casts nothing.
-                    el.style.boxShadow = on
-                        ? `0 0 4px ${hot ? 'rgba(var(--accent-rgb),0.95)' : 'rgba(var(--accent-rgb),0.9)'}, 0 0 9px rgba(var(--accent-rgb),0.5)`
-                        : 'none';
-                });
-            }
-            raf = requestAnimationFrame(tick);
-        };
-        raf = requestAnimationFrame(tick);
-        return () => cancelAnimationFrame(raf);
-    }, [active, dispHold]);
+    const heldPeak = React.useRef([0, 0]);
+
+    window.useOaFrame('reverb', active, (frame, L) => {
+        if (dispHold) return;
+        for (let ch = 0; ch < 2; ch++) {
+            const els = dotsRef.current[ch];
+            if (!els) continue;
+            heldPeak.current[ch] = frame[ch === 0 ? L.PEAK_L : L.PEAK_R];
+            // -34dB at the left end up to +12 at the right, which is the scale
+            // printed between the two rows. The return feeding this is a reverb
+            // tail — quiet by nature — so it is shown at twice the amplitude it
+            // arrives at, which puts a typical tail in the middle of the scale
+            // instead of flickering at the left end. Display only: nothing
+            // downstream of here hears the difference.
+            const p = heldPeak.current[ch];
+            const db = p > 1e-5 ? 20 * Math.log10(p * LARC_METER_GAIN) : -80;
+            const lit = Math.round(((db + 34) / 46) * els.length);
+            els.forEach((el, i) => {
+                if (!el) return;
+                const on = i < lit;
+                const hot = i >= els.length - 2;      // the last two are the ovld pair
+                el.style.background = on ? (hot ? LARC_LED_HOT : LARC_LED) : LARC_LED_OFF;
+                // A lit dot blooms into the filter exactly like the text does;
+                // an unlit one is a dark hole and casts nothing.
+                el.style.boxShadow = on
+                    ? `0 0 4px ${hot ? 'rgba(var(--accent-rgb),0.95)' : 'rgba(var(--accent-rgb),0.9)'}, 0 0 9px rgba(var(--accent-rgb),0.5)`
+                    : 'none';
+            });
+        }
+    });
 
     // ---- actions -----------------------------------------------------------
     const loadProgram = (b, p) => {

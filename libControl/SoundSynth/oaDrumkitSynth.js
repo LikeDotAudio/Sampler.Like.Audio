@@ -12,7 +12,12 @@ window.oaPlayDrumVoice = function (ctx, track, time, volume, pan) {
     const tuned = (ratio === 1) ? patch : window.oaTransposePatch(patch, ratio);
 
     const out = window.oaVoiceOut ? window.oaVoiceOut(ctx, idx, pan) : ctx.destination;
-    engine.render(ctx, tuned, time, Math.max(0.0001, volume), out);
+    // Engines report the voice's length; that is when its chain can go. The
+    // fallback covers an engine that returns nothing rather than leaking on it.
+    const dur = engine.render(ctx, tuned, time, Math.max(0.0001, volume), out);
+    if (window.oaRetireVoice) {
+        window.oaRetireVoice(ctx, out, time + (typeof dur === 'number' && isFinite(dur) ? dur : 2));
+    }
 };
 
 // Frequency-valued parameters that should follow a Tone Mode transposition.
@@ -53,8 +58,9 @@ window.oaPlayDrumSample = function (ctx, entry, time, volume, pan) {
     src.connect(gain);
     // entry.idx is stamped on by oaSetDrumSample so the sample path finds its
     // own reverb send, the same as a synth voice does.
-    gain.connect(window.oaVoiceOut ? window.oaVoiceOut(ctx, entry.idx, pan) : ctx.destination);
-    
+    const out = window.oaVoiceOut ? window.oaVoiceOut(ctx, entry.idx, pan) : ctx.destination;
+    gain.connect(out);
+
     const v = Math.max(0.0001, volume);
     if (entry.fade) {
         const f = Math.min(0.05, playDur * 0.2);
@@ -75,10 +81,15 @@ window.oaPlayDrumSample = function (ctx, entry, time, volume, pan) {
     // start it at the current wheel offset. Auto-removed when the note ends.
     try {
         if (src.detune) src.detune.value = window.OA_PITCH_BEND || 0;
-        window.OA_DRUM_VOICES.push(src);
+        window.OA_LIVE_VOICES.push(src);
         src.addEventListener('ended', function () {
-            const i = window.OA_DRUM_VOICES.indexOf(src);
-            if (i >= 0) window.OA_DRUM_VOICES.splice(i, 1);
+            const i = window.OA_LIVE_VOICES.indexOf(src);
+            if (i >= 0) window.OA_LIVE_VOICES.splice(i, 1);
+            // The registry is this voice's last strong reference; dropping the
+            // graph behind it is what lets the panner, the sends and the drive
+            // pedal built for this one hit go with it.
+            try { src.disconnect(); gain.disconnect(); } catch (e) {}
+            if (window.oaRetireVoice) window.oaRetireVoice(ctx, out, ctx.currentTime);
         });
     } catch (e) {}
     return src;
@@ -119,6 +130,8 @@ window.oaTriggerTone = function(rootIdx, semitones, volume, time) {
         // If we have a pre-rendered cache for this exact pitch, use it at 1x speed to save latency
         const cache = window.OA_TONE_CACHE[rootIdx];
         if (cache && cache[semitones]) {
+            // Played, so this pad is the one to keep when the budget bites.
+            if (window.oaTouchToneCache) window.oaTouchToneCache(rootIdx);
             window.oaPlayDrumSample(ctx, Object.assign({}, entry, { cachedBuffer: cache[semitones], pitch: totalPitch }), t, vol);
             return true;
         }
@@ -135,43 +148,154 @@ window.oaTriggerTone = function(rootIdx, semitones, volume, time) {
     }
     return false;
 };
+// ---------------------------------------------------------------------------
+// The Tone Mode cache, and the budget that stops it eating the machine.
+//
+// Pre-rendering a pad at every pitch removes the resampling latency, and it is
+// worth doing. What it is not worth doing is FORGETTING, which is what used to
+// happen: the cache was written on precache and never read back out. Two ways
+// that ended badly.
+//
+//   IT WAS NEVER EVICTED ON A SAMPLE CHANGE. Loading a new sound onto a pad
+//   replaced OA_DRUM_SAMPLES[idx] and left sixty-one renders of the OLD sound
+//   sitting under the same key. They were not merely wasted — oaTriggerTone
+//   reads the cache BEFORE the entry, so tone mode went on playing the sample
+//   that used to be on that pad. A silent wrong-sound bug on top of the leak.
+//
+//   IT HAD NO CEILING. The range below is 61 renders per pad, and pitching down
+//   two octaves makes a buffer four times longer, so the set weighs about
+//   seventy times the original sample. A one-second stereo 48k sample is 384KB,
+//   so one pad is ~27MB and a full 5x5 grid is over half a gigabyte of
+//   AudioBuffer. Long before it ran out, the collector pressure alone was
+//   enough to stall the main thread — and a main-thread stall during playback
+//   is heard as a dropout, which is what "it slowed down and distorted" is.
+//
+// So: a byte budget, least-recently-used eviction across pads, and a hard drop
+// whenever the pad's sound changes underneath it.
+// ---------------------------------------------------------------------------
+
+// Two octaves down, three up.
+const OA_TONE_LO = -24;
+const OA_TONE_HI = 36;
+
+// Generous enough that a working pad or three stay resident, small enough that
+// it can never be the reason a machine starts swapping.
+window.OA_TONE_CACHE_BUDGET = window.OA_TONE_CACHE_BUDGET || 64 * 1024 * 1024;
+
+// rootIdx -> bytes held, and rootIdx -> a monotonic stamp for LRU order.
+const toneBytes = {};
+let toneClock = 0;
+const toneUsed = {};
+
+const bufBytes = function (b) {
+    return b ? b.numberOfChannels * b.length * 4 : 0;
+};
+
+/** Total bytes currently held by every pre-rendered pitch, across all pads. */
+window.oaToneCacheBytes = function () {
+    return Object.keys(toneBytes).reduce(function (a, k) { return a + toneBytes[k]; }, 0);
+};
+
+/** Mark a pad as recently played, so the budget evicts a colder one first. */
+window.oaTouchToneCache = function (rootIdx) {
+    if (toneBytes[rootIdx] != null) toneUsed[rootIdx] = ++toneClock;
+};
+
+/** Drop every pre-rendered pitch for one pad. Safe to call when there is none. */
+window.oaEvictToneCache = function (rootIdx) {
+    if (window.OA_TONE_CACHE[rootIdx]) delete window.OA_TONE_CACHE[rootIdx];
+    delete toneBytes[rootIdx];
+    delete toneUsed[rootIdx];
+    const entry = window.OA_DRUM_SAMPLES[rootIdx];
+    // The single-pitch cache is baked from the same sample and goes stale with
+    // it. Left behind, oaPlayDrumSample would play the old sound at 1x.
+    if (entry && entry.cachedBuffer) entry.cachedBuffer = null;
+};
+
+/**
+ * Evict whole pads, coldest first, until the cache is back inside its budget.
+ * Returns true if there is room to carry on rendering `keepIdx`.
+ *
+ * The pad being rendered is exempt from eviction — throwing away the work in
+ * progress to make room for itself is a loop that never terminates. But that
+ * exemption is also why this has to report failure: one pad's full set can be
+ * bigger than the entire budget on its own (a two-second stereo sample renders
+ * to roughly seventy times its own size across the pitch range). When even an
+ * empty cache cannot hold it, the answer is to stop rendering and let
+ * oaTriggerTone fall back to real-time resampling for the pitches that did not
+ * fit — a little latency, which is recoverable, instead of a machine on its
+ * knees, which is not.
+ */
+const enforceToneBudget = function (keepIdx) {
+    let held = window.oaToneCacheBytes();
+    if (held <= window.OA_TONE_CACHE_BUDGET) return true;
+
+    const order = Object.keys(toneBytes)
+        .filter(function (k) { return String(k) !== String(keepIdx); })
+        .sort(function (a, b) { return (toneUsed[a] || 0) - (toneUsed[b] || 0); });
+    for (let i = 0; i < order.length && held > window.OA_TONE_CACHE_BUDGET; i++) {
+        held -= toneBytes[order[i]] || 0;
+        window.oaEvictToneCache(order[i]);
+    }
+    return held <= window.OA_TONE_CACHE_BUDGET;
+};
+
 // Pre-render a sample at multiple pitches to eliminate real-time resampling latency
-window.oaPrecacheTones = async function(rootIdx) {
+window.oaPrecacheTones = async function (rootIdx) {
     const entry = window.OA_DRUM_SAMPLES[rootIdx];
     if (!entry || !entry.buffer) return;
-    
+
     const origBuf = entry.buffer;
     const basePitch = entry.pitch || 1;
     const OfflineCtx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
     if (!OfflineCtx) return;
-    
-    window.OA_TONE_CACHE[rootIdx] = window.OA_TONE_CACHE[rootIdx] || {};
-    
-    // Pre-render 2 octaves down and 3 octaves up
-    for (let semitones = -24; semitones <= 36; semitones++) {
-        if (window.OA_TONE_CACHE[rootIdx][semitones]) continue; // already cached
-        
+
+    // Whatever is under this key was rendered from a different sample or a
+    // different base pitch; either way it is not this one.
+    window.oaEvictToneCache(rootIdx);
+    window.OA_TONE_CACHE[rootIdx] = {};
+    toneBytes[rootIdx] = 0;
+    toneUsed[rootIdx] = ++toneClock;
+
+    for (let semitones = OA_TONE_LO; semitones <= OA_TONE_HI; semitones++) {
+        // A pad whose sample changed while this loop was awaiting a render has
+        // taken its cache with it. Stop rather than refill a dead key.
+        if (!window.OA_TONE_CACHE[rootIdx]) return;
+        if (window.OA_DRUM_SAMPLES[rootIdx] !== entry) return;
+
         try {
             const pitchRatio = Math.pow(2, semitones / 12);
             const totalPitch = basePitch * pitchRatio;
-            
+
             if (totalPitch === 1) {
+                // The original buffer, not a copy — it is already held by the
+                // entry, so this costs nothing and must not be counted twice.
                 window.OA_TONE_CACHE[rootIdx][semitones] = origBuf;
                 continue;
             }
-            
+
             const dur = origBuf.duration / totalPitch;
             const offCtx = new OfflineCtx(origBuf.numberOfChannels, Math.ceil(dur * origBuf.sampleRate), origBuf.sampleRate);
-            
+
             const src = offCtx.createBufferSource();
             src.buffer = origBuf;
             src.playbackRate.value = totalPitch;
             src.connect(offCtx.destination);
             src.start(0);
-            
+
             const rendered = await offCtx.startRendering();
             window.OA_TONE_CACHE[rootIdx][semitones] = rendered;
-        } catch(e) {
+            toneBytes[rootIdx] = (toneBytes[rootIdx] || 0) + bufBytes(rendered);
+            if (!enforceToneBudget(rootIdx)) {
+                // No room left even with every other pad evicted. Give the one
+                // that just tipped it over back, and stop: the pitches already
+                // cached still play instantly, and the rest resample in
+                // real time, which is what happened before any of this existed.
+                delete window.OA_TONE_CACHE[rootIdx][semitones];
+                toneBytes[rootIdx] -= bufBytes(rendered);
+                return;
+            }
+        } catch (e) {
             console.error('Failed to pre-render pitch', semitones, e);
         }
     }

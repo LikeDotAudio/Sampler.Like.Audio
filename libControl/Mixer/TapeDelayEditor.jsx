@@ -102,33 +102,34 @@ const LedReadout = ({ label, text }) => (
 );
 
 window.TapeDelayEditor = ({ u, bpm, onClose }) => {
-    const [, force] = React.useReducer((n) => n + 1, 0);
-    React.useEffect(() => {
-        const onChange = (e) => { if (e.detail && e.detail.unit === u) force(); };
-        window.addEventListener('oa-delay-changed', onChange);
-        return () => window.removeEventListener('oa-delay-changed', onChange);
-    }, [u]);
+    // Settings and faceplate both through the interface. The one thing this
+    // panel still reaches for by name is oaSetDelaySync — locking a head to the
+    // grid is a tape-specific control with no equivalent on any other plugin,
+    // so it stays the tape's own call rather than being forced into the shared
+    // shape for the sake of symmetry.
+    const unit = window.useOaState('delay', u);
+    const params = window.useOaParams('delay', u);
 
     // Taken once per unit, so ABORT goes back to however the tape sounded when
     // the panel was opened — not to the factory preset.
     const opened = React.useRef(null);
     React.useEffect(() => {
-        opened.current = JSON.parse(JSON.stringify(window.oaDelayUnit(u)));
+        opened.current = JSON.parse(JSON.stringify(window.oaPluginState('delay', u)));
     }, [u]);
 
-    const unit = window.oaDelayUnit(u);
     const meta = window.OA_DELAY_UNITS[u];
-    const params = window.OA_DELAY_PARAMS;
-    const factory = window.OA_DELAY_PRESETS[meta.preset] || {};
+    const factory = window.oaPluginPresets('delay')[meta.preset] || {};
+
+    if (!unit) return null;
 
     const dirty = !!opened.current && params.some((p) => opened.current[p.key] !== unit[p.key]);
     const abort = () => {
         if (!opened.current) return;
-        params.forEach((p) => window.oaSetDelay(u, p.key, opened.current[p.key]));
+        params.forEach((p) => window.oaPluginSet('delay', u, p.key, opened.current[p.key]));
     };
 
     const specOf = (key) => params.find((p) => p.key === key);
-    const set = (p, n) => window.oaSetDelay(u, p.key, tapeValue(p, n));
+    const set = (p, n) => window.oaPluginSet('delay', u, p.key, tapeValue(p, n));
 
     // The two heads take the big dials; everything else is a knob in the row
     // under them, in the order the signal meets it.
@@ -259,7 +260,7 @@ window.TapeDelayEditor = ({ u, bpm, onClose }) => {
                         </span>
                         <select
                             value=""
-                            onChange={(e) => { if (e.target.value) window.oaApplyDelayPreset(u, e.target.value); }}
+                            onChange={(e) => { if (e.target.value) window.oaPluginPreset('delay', u, e.target.value); }}
                             style={{
                                 background: '#14181c', color: meta.color, border: '1px solid #000',
                                 borderRadius: '2px', fontSize: '11px', padding: '2px 4px'

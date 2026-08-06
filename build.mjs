@@ -12,12 +12,55 @@
  */
 import { readFileSync, writeFileSync, existsSync, mkdirSync, statSync, readdirSync } from 'node:fs';
 import { createHash } from 'node:crypto';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { transformSync } from '@babel/core';
 
 const SOURCES = JSON.parse(readFileSync('sources.json', 'utf8'));
 const OUT = 'dist/app.js';
 const check = process.argv.includes('--check');
+
+// ---------------------------------------------------------------------------
+// The tests run BEFORE the compile, and a failure means no bundle.
+//
+// The alternative — build first, test separately, notice later — is how a
+// broken bundle reaches the site: the deploy workflow's only gate is that
+// `node build.mjs` exits zero, so if compiling is all this does, compiling is
+// all that is ever checked. Anything that still parses gets shipped.
+//
+// So the gate lives here, where it cannot be walked around by running the
+// build a different way. Every plugin's test pattern is under test/ and they
+// take about a second between them.
+//
+//   node build.mjs --skip-tests   compile without the gate
+//
+// which exists for bisecting a bad commit and for nothing else. It prints a
+// warning every time so it cannot quietly become the normal way to build.
+// ---------------------------------------------------------------------------
+const runTests = () => {
+    if (process.argv.includes('--skip-tests')) {
+        console.warn('⚠️  --skip-tests: compiling WITHOUT running the plugin tests.');
+        return;
+    }
+    if (!existsSync('test')) return;
+
+    console.log('• running plugin tests…');
+    // A glob, not the directory: `node --test test/` resolves the bare word as
+    // a module path and dies before it runs anything. Quoted so the runner
+    // expands it rather than the shell, which keeps it working from npm too.
+    const r = spawnSync(process.execPath, ['--test', 'test/**/*.test.mjs'], { stdio: 'inherit' });
+
+    if (r.error) {
+        console.error(`✗ could not run the tests: ${r.error.message}`);
+        process.exit(1);
+    }
+    if (r.status !== 0) {
+        console.error('');
+        console.error('✗ Tests failed — dist/ was NOT rebuilt, so the last good bundle is untouched.');
+        console.error('  Fix the failures above, or run with --skip-tests if you know why.');
+        process.exit(r.status || 1);
+    }
+    console.log('✓ tests pass');
+};
 
 // A hash of every input; stamped into the bundle so --check can tell whether
 // the committed output still matches the sources without recompiling blind.
@@ -39,6 +82,9 @@ if (check) {
   console.log(`✓ dist/app.js is up to date (${stamp})`);
   process.exit(0);
 }
+
+// Nothing is written until this returns.
+runTests();
 
 // Human-readable release stamp shown in the footer: VYYYYMMDD.HHMM in UTC.
 //

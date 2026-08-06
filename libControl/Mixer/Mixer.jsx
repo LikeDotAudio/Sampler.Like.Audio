@@ -60,7 +60,6 @@ const Mixer = () => {
         return (unit.sends && unit.sends[ch]) || 0;
     };
     const setSend = (fx, ch, v) => (fx.kind === 'rv' ? window.oaSetReverbSend : window.oaSetDelaySend)(fx.i, ch, v);
-    const busOf = (ctx, fx) => (fx.kind === 'rv' ? ctx.__oaReverbs : ctx.__oaDelays) || [];
 
     // The effect state lives outside React (the audio graph reads it directly),
     // so mirror its changes back into a render.
@@ -85,51 +84,61 @@ const Mixer = () => {
     React.useEffect(() => { window.oaResyncDelays(bpm); }, [bpm]);
 
     // A tail and a tape repeat decay on their own schedule, so unlike the
-    // per-hit track meters these are polled from each bus's analysers.
+    // per-hit track meters these come off each plugin's telemetry frame.
     const fxMeterRefs = React.useRef({});
     // The gain-reduction readout on each channel's COMPRESS button.
     const grRefs = React.useRef({});
+
+    // The Mixer used to do this by hand: reach into ctx.__oaReverbs, find the
+    // bus, pull 1024 floats out of its analyser into a scratch array, reduce
+    // them to a peak, and do the same again for every delay — sixty times a
+    // second, in parallel with CompressorEditor and LarcRemote doing the same
+    // work on the same analysers. Now the back end measures once and every
+    // display reads the answer.
+    //
+    // The other thing this buys: the four shared slots mean the loop below does
+    // not care WHICH effect it is metering. A reverb and a tape are read by the
+    // same three lines, and a plugin added later is metered without touching
+    // this file.
     React.useEffect(() => {
-        let raf = null;
-        const buf = new Float32Array(1024);
-        const peaks = {};
+        const detach = window.oaPluginAttach();
+        let raf = 0;
+        const S = window.OA_SLOT;
+
         const tick = () => {
-            const ctx = window.OA_AUDIO_CTX;
-            if (ctx) {
-                // Only channels whose compressor has actually been built have a
-                // number to show; everything else is a wire and stays blank.
-                const comps = ctx.__oaComps || [];
-                Object.keys(grRefs.current).forEach((k) => {
-                    const el = grRefs.current[k];
+            // Only channels whose compressor has actually been built have a
+            // number to show; everything else is a wire and stays blank.
+            Object.keys(grRefs.current).forEach((k) => {
+                const el = grRefs.current[k];
+                if (!el) return;
+                const frame = window.oaPluginFrame('comp', k | 0);
+                const L = window.oaPluginLayout('comp');
+                const gr = frame && frame[S.ACTIVE] ? frame[L.GR] : 0;
+                const text = gr > 0.15 ? '-' + gr.toFixed(1) : '';
+                if (el.textContent !== text) el.textContent = text;
+            });
+
+            FX.forEach((fx) => {
+                const els = fxMeterRefs.current[fx.key];
+                if (!els) return;
+                const frame = window.oaPluginFrame(fx.kind === 'rv' ? 'reverb' : 'delay', fx.i);
+                if (!frame) return;
+                // The decay is applied where the peak is WRITTEN, so two panels
+                // reading the same frame cannot decay it twice as fast as one.
+                [S.PEAK_L, S.PEAK_R].forEach((slot, ch) => {
+                    const el = els[ch];
                     if (!el) return;
-                    const gr = comps[k] ? window.oaCompGR(k | 0) : 0;
-                    const text = gr > 0.15 ? '-' + gr.toFixed(1) : '';
-                    if (el.textContent !== text) el.textContent = text;
+                    el.style.height = `${Math.max(0, (1 - Math.min(1, frame[slot])) * 100)}%`;
                 });
-                FX.forEach((fx) => {
-                    const bus = busOf(ctx, fx)[fx.i];
-                    const els = fxMeterRefs.current[fx.key];
-                    if (!bus || !bus.analysers || !els) return;
-                    const p = peaks[fx.key] || (peaks[fx.key] = [0, 0]);
-                    bus.analysers.forEach((an, ch) => {
-                        const el = els[ch];
-                        if (!el) return;
-                        an.getFloatTimeDomainData(buf);
-                        let peak = 0;
-                        for (let i = 0; i < buf.length; i++) {
-                            const a = Math.abs(buf[i]);
-                            if (a > peak) peak = a;
-                        }
-                        // Fall away smoothly so the tail reads as a decay, not a flicker.
-                        p[ch] = Math.max(peak, p[ch] * 0.86);
-                        el.style.height = `${Math.max(0, (1 - Math.min(1, p[ch])) * 100)}%`;
-                    });
-                });
-            }
+            });
+
             raf = requestAnimationFrame(tick);
         };
         raf = requestAnimationFrame(tick);
-        return () => cancelAnimationFrame(raf);
+        return () => {
+            cancelAnimationFrame(raf);
+            detach();
+        };
     }, [FX]);
 
     const masterRefs = React.useRef([null, null]);
@@ -562,7 +571,7 @@ const Mixer = () => {
                             {fxMeters(fx)}
                             <SvgFader
                                 value={unit.ret} color={meta.color} width={36} height={140}
-                                onChange={(v) => window.oaSetDelay(u, 'ret', v)}
+                                onChange={(v) => window.oaPluginSet('delay', u, 'ret', v)}
                             />
                         </div>
 

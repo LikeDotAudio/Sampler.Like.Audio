@@ -53,20 +53,21 @@ const ModeButton = ({ mode, active, onPress }) => (
  * starve dead zone, and a curve that is not symmetric about the centre is the
  * asymmetry that makes the even harmonics.
  */
-const TransferPlot = ({ unit, color }) => {
+const TransferPlot = ({ idx, unit, color }) => {
     const N = 160;
     const S = 148;                                   // drawing box, px
-    const curve = window.oaDriveCurve(unit);
+    // Asked for by plugin id, not by function name. What comes back is the very
+    // table the WaveShaper is running — if the two ever disagreed, the picture
+    // would be the one lying, and there is now only one of them to disagree.
+    const curve = window.useOaCurve('drive', idx);
 
     const px = (x) => (x + 1) / 2 * S;
     const py = (y) => S - (Math.max(-1.15, Math.min(1.15, y)) + 1) / 2 * S;
 
     const wet = [];
     const out = [];
-    for (let i = 0; i < N; i++) {
+    for (let i = 0; curve && i < N; i++) {
         const x = (i / (N - 1)) * 2 - 1;
-        // Read the same table the WaveShaper reads, rather than recomputing —
-        // if the two ever disagree, the picture is the one that is lying.
         const w = curve[Math.round((x + 1) / 2 * (curve.length - 1))];
         wet.push(`${px(x).toFixed(1)},${py(w).toFixed(1)}`);
         out.push(`${px(x).toFixed(1)},${py(x * (1 - unit.mix) + w * unit.mix * unit.level).toFixed(1)}`);
@@ -97,25 +98,21 @@ const TransferPlot = ({ unit, color }) => {
  * the pedal is built per voice the next hit carries whatever is set here.
  */
 window.DriveEditor = ({ idx, name, onClose }) => {
-    const [, force] = React.useReducer((n) => n + 1, 0);
-    React.useEffect(() => {
-        const onChange = (e) => { if (e.detail && e.detail.idx === idx) force(); };
-        window.addEventListener('oa-drive-changed', onChange);
-        return () => window.removeEventListener('oa-drive-changed', onChange);
-    }, [idx]);
+    const unit = window.useOaState('drive', idx);
+    const params = window.useOaParams('drive', idx);
 
     // Taken once per channel, so ABORT goes back to how this channel sounded
     // when the panel was opened rather than to a factory setting.
     const opened = React.useRef(null);
     React.useEffect(() => {
-        const u = window.oaDriveUnit(idx);
+        const u = window.oaPluginState('drive', idx);
         opened.current = { mode: u.mode };
-        window.OA_DRIVE_PARAMS.forEach((p) => { opened.current[p.key] = u[p.key]; });
+        window.oaPluginParams('drive', idx).forEach((p) => { opened.current[p.key] = u[p.key]; });
     }, [idx]);
 
-    const unit = window.oaDriveUnit(idx);
+    // The mode's own colour and hint stay a drive-specific lookup: a voicing is
+    // not a parameter, it is which of three curves the pedal is baking.
     const mode = window.oaDriveMode(unit.mode);
-    const params = window.OA_DRIVE_PARAMS;
     const mixP = params.find((p) => p.key === 'mix');
     const knobs = params.filter((p) => p.key !== 'mix');
     const on = unit.mix > window.OA_DRIVE_EPSILON;
@@ -125,8 +122,8 @@ window.DriveEditor = ({ idx, name, onClose }) => {
         || params.some((p) => opened.current[p.key] !== unit[p.key]));
     const abort = () => {
         if (!opened.current) return;
-        window.oaSetDrive(idx, 'mode', opened.current.mode);
-        params.forEach((p) => window.oaSetDrive(idx, p.key, opened.current[p.key]));
+        window.oaPluginSet('drive', idx, 'mode', opened.current.mode);
+        params.forEach((p) => window.oaPluginSet('drive', idx, p.key, opened.current[p.key]));
     };
 
     return (
@@ -159,7 +156,7 @@ window.DriveEditor = ({ idx, name, onClose }) => {
                 <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>
                     {window.OA_DRIVE_MODES.map((m) => (
                         <ModeButton key={m.key} mode={m} active={m.key === unit.mode}
-                            onPress={(k) => window.oaSetDrive(idx, 'mode', k)} />
+                            onPress={(k) => window.oaPluginSet('drive', idx, 'mode', k)} />
                     ))}
                 </div>
 
@@ -168,7 +165,7 @@ window.DriveEditor = ({ idx, name, onClose }) => {
                         <div style={{ display: 'flex', gap: '8px', justifyContent: 'space-between' }}>
                             {knobs.map((p) => (
                                 <DriveKnob key={p.key} p={p} value={unit[p.key]} color={color}
-                                    onChange={(v) => window.oaSetDrive(idx, p.key, v)} />
+                                    onChange={(v) => window.oaPluginSet('drive', idx, p.key, v)} />
                             ))}
                         </div>
 
@@ -180,7 +177,7 @@ window.DriveEditor = ({ idx, name, onClose }) => {
                             borderTop: '1px solid #ffffff10', paddingTop: '10px'
                         }}>
                             <DriveKnob p={mixP} value={unit.mix} color={color} size={52}
-                                onChange={(v) => window.oaSetDrive(idx, 'mix', v)} />
+                                onChange={(v) => window.oaPluginSet('drive', idx, 'mix', v)} />
                             <div style={{ flex: 1 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
                                     <span style={{
@@ -201,7 +198,7 @@ window.DriveEditor = ({ idx, name, onClose }) => {
                         </div>
                     </div>
 
-                    <TransferPlot unit={unit} color={color} />
+                    <TransferPlot idx={idx} unit={unit} color={color} />
                 </div>
             </div>
 
@@ -209,7 +206,7 @@ window.DriveEditor = ({ idx, name, onClose }) => {
                 <span style={{ fontSize: '10px', color: '#aaa' }}>Pedal</span>
                 <select
                     value=""
-                    onChange={(e) => { if (e.target.value) window.oaApplyDrivePreset(idx, e.target.value); }}
+                    onChange={(e) => { if (e.target.value) window.oaPluginPreset('drive', idx, e.target.value); }}
                     style={{ background: '#222', color: color, border: '1px solid #444', borderRadius: '3px', fontSize: '11px', padding: '3px 6px' }}
                 >
                     <option value="">Load a setting…</option>

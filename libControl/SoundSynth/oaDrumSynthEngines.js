@@ -397,6 +397,22 @@ window.oaSynthDefaults = function (engineName) {
 };
 
 window.oaSynthPatch = function (patch) {
-    const engine = (patch && patch.engine) || 'membrane';
-    return Object.assign(window.oaSynthDefaults(engine), patch || {}, { engine });
+    const engine = window.OA_SYNTH_ENGINES[patch && patch.engine] ? patch.engine : 'membrane';
+    const out = Object.assign(window.oaSynthDefaults(engine), patch || {}, { engine });
+    // This is the LOAD path — a saved patch out of localStorage, a patch out of
+    // a song file, a patch out of a build that had different ranges. Held to
+    // what the engine can actually do, on the way in, once. Without this a
+    // corrupt stored value goes straight onto an AudioParam at the next hit,
+    // and no amount of clamping in the setter helps: nothing was ever set.
+    const spec = window.OA_SYNTH_ENGINES[engine].params;
+    Object.keys(spec).forEach((k) => {
+        const s = spec[k];
+        if (s.options) {
+            if (s.options.indexOf(out[k]) < 0) out[k] = s.def;
+        } else {
+            const v = Number(out[k]);
+            out[k] = isFinite(v) ? Math.max(s.min, Math.min(s.max, v)) : s.def;
+        }
+    });
+    return out;
 };

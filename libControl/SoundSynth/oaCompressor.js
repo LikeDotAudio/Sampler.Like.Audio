@@ -600,3 +600,71 @@ window.oaApplyCompPreset = function (idx, name) {
     pushToBus(idx);
     window.dispatchEvent(new CustomEvent('oa-comp-changed', { detail: { idx: idx, preset: name } }));
 };
+
+/**
+ * Tear every strip out of a context. Called when a context is closed and by the
+ * leak tests: a channel strip is one of only two things in this file that
+ * outlive a voice, so if anything here holds on, this is where it shows.
+ */
+window.oaDisposeComp = function (ctx) {
+    const strips = ctx && ctx.__oaComps;
+    if (!strips) return;
+    strips.forEach(function (bus) {
+        if (!bus) return;
+        // The worklet's message port keeps a reference to `bus` through the
+        // onmessage closure. Cutting it is what actually lets the strip go.
+        if (bus.engine && bus.engine.input && bus.engine.input.port) {
+            bus.engine.input.port.onmessage = null;
+        }
+        window.oaDisconnectAll([
+            bus.input, bus.output, bus.analyser,
+            bus.engine && bus.engine.input,
+            bus.engine && bus.engine.output,
+        ]);
+    });
+    strips.length = 0;
+};
+
+// ---------------------------------------------------------------------------
+// The back end, as the front panel sees it. Everything above this line is DSP;
+// everything the editor is allowed to touch is declared here. See oaPlugin.js.
+// ---------------------------------------------------------------------------
+
+window.oaRegisterPlugin({
+    id: 'comp',
+    label: 'Compressor',
+    event: 'oa-comp-changed',
+    units: function () { return window.OA_PAD_MAX; },
+    params: window.OA_COMP_PARAMS,
+    presets: window.OA_COMP_PRESETS,
+    state: function (i) { return window.oaCompUnit(i); },
+    set: function (i, key, value) { window.oaSetComp(i, key, value); },
+    preset: function (i, name) { window.oaApplyCompPreset(i, name); },
+
+    // GR is the only measurement this unit has that the shared four do not
+    // already cover. The ratio and meter-mode switches are SETTINGS and come
+    // back through state() — a frame carries what is measured, not what is set.
+    slots: window.OA_SLOT.USER + 1,
+    layout: { GR: window.OA_SLOT.USER },
+
+    read: function (ctx, i, frame) {
+        const S = window.OA_SLOT;
+        frame[S.ACTIVE] = window.oaCompActive(i) ? 1 : 0;
+        const bus = ctx && ctx.__oaComps && ctx.__oaComps[i];
+        if (!bus) {
+            frame[S.PEAK_L] = 0;
+            frame[S.PEAK_R] = 0;
+            frame[S.USER] = 0;
+            return;
+        }
+        // One analyser on the strip output, so both sides read the same number.
+        // Honest: the DSP is stereo-linked, and a split meter here would be
+        // showing a difference the compressor deliberately does not create.
+        const peak = window.oaAnalyserPeak(bus.analyser);
+        window.oaWritePeak(frame, S.PEAK_L, peak);
+        window.oaWritePeak(frame, S.PEAK_R, peak);
+        frame[S.USER] = window.oaCompGR(i);
+    },
+
+    dispose: window.oaDisposeComp,
+});

@@ -298,21 +298,27 @@ window.oaDriveCurve = function (u) {
  * Per voice rather than per channel, like the sends above it: a knob move lands
  * on the next hit instead of re-shaping notes that are already ringing.
  */
-window.oaDriveNode = function (ctx, idx, dest) {
+window.oaDriveNode = function (ctx, idx, dest, chain) {
     const u = window.oaDriveUnit(idx);
     if (!(u.mix > window.OA_DRIVE_EPSILON)) return null;
 
+    // Everything built below joins the caller's retirement list, so the pedal is
+    // released with the rest of the voice rather than left for the collector.
+    // A WaveShaper at 4x oversampling carries its own internal buffers, which
+    // makes it the most expensive thing here to leave lying around.
+    const keep = function (n) { if (chain) chain.push(n); return n; };
+
     const mode = window.oaDriveMode(u.mode);
-    const input = ctx.createGain();
+    const input = keep(ctx.createGain());
 
     // The clean signal, straight past the pedal. At mix 0 we never get here, so
     // this path is only ever a partial blend.
-    const dry = ctx.createGain();
+    const dry = keep(ctx.createGain());
     dry.gain.value = 1 - u.mix;
     input.connect(dry);
     dry.connect(dest);
 
-    const shaper = ctx.createWaveShaper();
+    const shaper = keep(ctx.createWaveShaper());
     shaper.curve = window.oaDriveCurve(u);
     // Clipping invents harmonics above everything the signal had, and anything
     // it invents past half the sample rate folds back down as inharmonic
@@ -328,7 +334,7 @@ window.oaDriveNode = function (ctx, idx, dest) {
     // Tone: distortion is bright by construction — every harmonic it adds is
     // above what went in. The tone control is what makes it sit in a mix.
     if (u.tone < 17000) {
-        const tone = ctx.createBiquadFilter();
+        const tone = keep(ctx.createBiquadFilter());
         tone.type = 'lowpass';
         tone.frequency.value = u.tone;
         tone.Q.value = 0.707;
@@ -341,14 +347,14 @@ window.oaDriveNode = function (ctx, idx, dest) {
     // a filter. Symmetric and unrectified, the curve generates no DC at all and
     // this is skipped.
     if (mode.bias !== 0 || u.rect > 0) {
-        const dc = ctx.createBiquadFilter();
+        const dc = keep(ctx.createBiquadFilter());
         dc.type = 'highpass';
         dc.frequency.value = 12;
         tail.connect(dc);
         tail = dc;
     }
 
-    const wet = ctx.createGain();
+    const wet = keep(ctx.createGain());
     wet.gain.value = u.mix * u.level;
     tail.connect(wet);
     wet.connect(dest);
@@ -380,3 +386,56 @@ window.oaApplyDrivePreset = function (idx, name) {
     window.oaSaveDrive();
     window.dispatchEvent(new CustomEvent('oa-drive-changed', { detail: { idx: idx, preset: name } }));
 };
+
+// ---------------------------------------------------------------------------
+// The back end, as the pedal's panel sees it.
+//
+// The drive is per-VOICE, not per-channel: nothing persistent is ever built, so
+// there is nothing to meter and nothing to dispose. What it does have is the
+// one thing this pedal's display is entirely about — the transfer curve — and
+// that is exactly what the binary curve channel is for.
+//
+// The panel already plotted the baked table rather than recomputing the maths,
+// which was the right call and stays. What changes is who it asks: the plot no
+// longer names oaDriveCurve or oaDriveUnit, it asks the plugin for curve zero
+// and draws whatever comes back. The array is the same one the WaveShaper is
+// running, so the picture cannot drift from the sound.
+// ---------------------------------------------------------------------------
+
+window.oaRegisterPlugin({
+    id: 'drive',
+    label: 'Drive',
+    event: 'oa-drive-changed',
+    units: function () { return window.OA_PAD_MAX; },
+    params: window.OA_DRIVE_PARAMS,
+    presets: window.OA_DRIVE_PRESETS,
+    state: function (i) { return window.oaDriveUnit(i); },
+    set: function (i, key, value) { window.oaSetDrive(i, key, value); },
+    preset: function (i, name) { window.oaApplyDrivePreset(i, name); },
+
+    slots: window.OA_SLOT.USER + 2,
+    layout: {
+        /** Blend, 0..1 — how much of the channel is going through the pedal. */
+        MIX: window.OA_SLOT.USER,
+        /**
+         * Where the curve stops being a straight line, 0..1 of full scale. A
+         * display draws the knee here; below it the pedal is a wire.
+         */
+        KNEE: window.OA_SLOT.USER + 1,
+    },
+
+    read: function (ctx, i, frame) {
+        const S = window.OA_SLOT;
+        const u = window.oaDriveUnit(i);
+        frame[S.ACTIVE] = window.oaDriveActive(i) ? 1 : 0;
+        frame[S.USER] = u.mix;
+        frame[S.USER + 1] = u.starve * OA_STARVE_MAX * u.drive;
+        // Nothing persistent to meter — the pedal exists only while a voice is
+        // sounding through it. A steady zero is the truth, not a missing value.
+        frame[S.PEAK_L] = 0;
+        frame[S.PEAK_R] = 0;
+    },
+
+    /** The WaveShaper's own table: 4096 points, input -1..+1, output -1..+1. */
+    curve: function (i) { return window.oaDriveCurve(window.oaDriveUnit(i)); },
+});

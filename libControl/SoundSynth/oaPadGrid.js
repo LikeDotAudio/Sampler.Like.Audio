@@ -87,17 +87,7 @@ window.oaSetPadLayout = function (key) {
     window.dispatchEvent(new CustomEvent('oa-pad-grid-changed', { detail: { layout: window.OA_PAD_LAYOUT } }));
 };
 
-/**
- * Re-render a component when the grid changes. Everything that draws one strip
- * or pad per voice reads window.OA_DRUM_KIT during render, so a forced render is
- * all any of them needs.
- */
-window.useOaPadGrid = function () {
-    const [, force] = React.useReducer((n) => n + 1, 0);
-    React.useEffect(() => {
-        const onChange = () => force();
-        window.addEventListener('oa-pad-grid-changed', onChange);
-        return () => window.removeEventListener('oa-pad-grid-changed', onChange);
-    }, []);
+/** The grid as plain data. The React hook over it lives in useOaPlugin.js. */
+window.oaPadGrid = function () {
     return { cols: window.OA_PAD_COLS, rows: window.OA_PAD_ROWS, count: window.OA_PAD_COUNT };
 };

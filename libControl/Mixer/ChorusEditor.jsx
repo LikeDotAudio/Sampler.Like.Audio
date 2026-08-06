@@ -39,21 +39,18 @@ const DimButton = ({ mode, active, color, onPress }) => {
  * a button lands on the repeats already circulating in the tape loop.
  */
 window.ChorusEditor = ({ u, onClose }) => {
-    const [, force] = React.useReducer((n) => n + 1, 0);
-    React.useEffect(() => {
-        const onChange = (e) => { if (e.detail && e.detail.unit === u) force(); };
-        window.addEventListener('oa-delay-changed', onChange);
-        return () => window.removeEventListener('oa-delay-changed', onChange);
-    }, [u]);
+    // The chorus is an insert inside a tape delay, but this panel does not need
+    // to know that: it asks the 'chorus' plugin for unit u. Which delay it lives
+    // in, and how the two are wired, is the back end's business.
+    const state = window.useOaState('chorus', u);
 
-    const unit = window.oaDelayUnit(u);
     const meta = window.OA_DELAY_UNITS[u];
-    const mode = unit.chorus || 0;
+    const mode = (state && state.chorus) || 0;
     const on = mode > 0;
 
     // Interlocked, like the mechanical buttons: one goes down and the last one
     // pops up. Pressing the lit mode releases it back to OFF.
-    const press = (m) => window.oaSetDelayChorus(u, m === mode ? 0 : m);
+    const press = (m) => window.oaPluginSet('chorus', u, 'chorus', m === mode ? 0 : m);
 
     return (
         <div style={{

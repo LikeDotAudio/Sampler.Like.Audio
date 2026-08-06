@@ -91,21 +91,31 @@ window.oaAudioCtx = function () {
 window.OA_DRUM_SAMPLES = window.OA_DRUM_SAMPLES || {};
 // index -> currently-playing looping BufferSource (for auto-loop toggle pads).
 window.OA_DRUM_LOOPS = window.OA_DRUM_LOOPS || {};
-// Every currently-sounding BufferSource, for live MIDI pitch-bend. OA_PITCH_BEND
-// is the current wheel offset in CENTS (±200 = ±2 semitones); it is applied via
-// each source's `detune` AudioParam so the sample's base pitch is preserved.
-window.OA_DRUM_VOICES = window.OA_DRUM_VOICES || [];
+
+// Every currently-sounding BufferSource, for live MIDI pitch-bend.
+//
+// THIS USED TO BE CALLED OA_DRUM_VOICES, which is the name of the kit voice
+// table thirty lines above. `window.OA_DRUM_VOICES = window.OA_DRUM_VOICES || []`
+// therefore did nothing at all — the table was already truthy — and every
+// sounding BufferSource was pushed onto the KIT DEFINITION. Two things went
+// wrong and neither announced itself: oaBuildDrumKit() indexes that table with
+// `i % length`, so rebuilding the grid while anything was ringing handed pads a
+// BufferSource in place of a voice spec (no .name, no .freq); and the array is
+// the app's only strong reference to a playing source, so it is exactly where a
+// voice that never fires 'ended' piles up. Separate names, separate arrays.
+window.OA_LIVE_VOICES = window.OA_LIVE_VOICES || [];
 window.OA_PITCH_BEND = window.OA_PITCH_BEND || 0;
 
-// Pre-rendered pitched buffers for Tone Mode (avoids real-time resampling latency)
-// rootIdx -> { semitones -> AudioBuffer }
+// Pre-rendered pitched buffers for Tone Mode (avoids real-time resampling
+// latency). rootIdx -> { semitones -> AudioBuffer }. See oaDrumkitSynth.js for
+// the budget that keeps this from eating the machine.
 window.OA_TONE_CACHE = window.OA_TONE_CACHE || {};
 
 // Set the global pitch-bend (cents) and retune every sounding voice live.
 window.oaSetPitchBend = function (cents) {
     window.OA_PITCH_BEND = cents || 0;
-    for (let i = 0; i < window.OA_DRUM_VOICES.length; i++) {
-        const s = window.OA_DRUM_VOICES[i];
+    for (let i = 0; i < window.OA_LIVE_VOICES.length; i++) {
+        const s = window.OA_LIVE_VOICES[i];
         try { if (s.detune) s.detune.value = window.OA_PITCH_BEND; } catch (e) {}
     }
 };
@@ -130,6 +140,12 @@ window.oaSetDrumSample = function (idx, buffer, opts) {
         name: name,
         folder: opts.folder || '',  // source folder (for set snapshots / revert)
     };
+    // The pad's old sample is gone, so every pre-rendered pitch of it is dead
+    // weight — and worse than dead, because oaTriggerTone reads the cache FIRST
+    // and would go on playing the sample that used to be here. Drop it before
+    // the new entry lands.
+    if (window.oaEvictToneCache) window.oaEvictToneCache(idx);
+
     window.OA_DRUM_SAMPLES[idx] = entry;
     if (window.oaPrecachePad) window.oaPrecachePad(entry);
     // A loaded sample takes over from the synth voice — the Mixer hides SYNTH.
@@ -143,6 +159,9 @@ window.oaUpdateDrumSample = function (idx, patch) {
         const oldPitch = e.pitch || 1;
         Object.assign(e, patch || {});
         if (e.pitch !== oldPitch || !e.cachedBuffer) {
+            // Every tone-mode render was baked at the OLD base pitch, so they
+            // are all the wrong speed now. Same reasoning as a sample swap.
+            if (e.pitch !== oldPitch && window.oaEvictToneCache) window.oaEvictToneCache(idx);
             if (window.oaPrecachePad) window.oaPrecachePad(e);
         }
     }

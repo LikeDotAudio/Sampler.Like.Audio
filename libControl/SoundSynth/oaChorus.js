@@ -120,5 +120,85 @@ window.oaChorusNode = function (ctx, mode) {
         if (s.rate) lfo.frequency.setTargetAtTime(s.rate, t, 0.1);
     };
 
-    return { input: input, output: output, setMode: setMode };
+    return {
+        input: input,
+        output: output,
+        setMode: setMode,
+        /**
+         * The sweep oscillator has no stop time — it was started once and holds
+         * the two delay lines' delayTime params for as long as the context
+         * lives. Disconnecting the audio path alone leaves it running, so the
+         * LFO and its two polarity gains are named here explicitly.
+         */
+        dispose: function () {
+            window.oaDisconnectAll([
+                lfo, swL, swR, input, output, dry, hp, split, merge, dL, dR, wetL, wetR,
+            ]);
+        },
+    };
 };
+
+// ---------------------------------------------------------------------------
+// The back end, as the Dimension panel sees it.
+//
+// The chorus is the odd one out: it is an INSERT inside each tape delay rather
+// than a bus of its own, so its "units" are the delays it sits in and its only
+// setting is which button is pushed. It still registers, because a panel should
+// not have to know that — it asks for chorus unit 2 and gets chorus unit 2.
+// ---------------------------------------------------------------------------
+
+window.oaRegisterPlugin({
+    id: 'chorus',
+    label: 'Dimension',
+    event: 'oa-delay-changed',
+    units: function () { return window.OA_DELAY_COUNT || 0; },
+
+    // One button, five positions. Declared as a parameter so a generic panel can
+    // render it without a special case for "this plugin has no knobs".
+    params: [{
+        key: 'chorus', label: 'Mode', min: 0, max: window.OA_CHORUS_COUNT - 1, def: 0, step: 1,
+        fmt: function (v) { return window.oaChorusMode(v).label; },
+        ticks: window.OA_CHORUS_MODES.map(function (m) { return m.name; }),
+        hint: 'Off, then four fixed widths. There were never any knobs on this box.',
+    }],
+
+    presets: (function () {
+        const out = {};
+        window.OA_CHORUS_MODES.forEach(function (m, i) {
+            out[m.name.toLowerCase()] = { label: m.label, chorus: i };
+        });
+        return out;
+    })(),
+
+    state: function (i) { return { chorus: window.oaDelayUnit(i).chorus }; },
+    set: function (i, key, value) {
+        if (key === 'chorus') window.oaSetDelayChorus(i, value);
+    },
+    preset: function (i, name) {
+        const p = window.oaPluginPresets('chorus')[name];
+        if (p) window.oaSetDelayChorus(i, p.chorus);
+    },
+
+    slots: window.OA_SLOT.USER + 2,
+    layout: {
+        /** Which button is lit, 0..4. */
+        MODE: window.OA_SLOT.USER,
+        /** How far the heads are being swept, in samples-ish — the depth lamp. */
+        DEPTH: window.OA_SLOT.USER + 1,
+    },
+
+    read: function (ctx, i, frame) {
+        const S = window.OA_SLOT;
+        const mode = window.oaDelayUnit(i).chorus;
+        const spec = window.oaChorusMode(mode);
+        frame[S.ACTIVE] = mode > 0 ? 1 : 0;
+        frame[S.USER] = mode;
+        frame[S.USER + 1] = spec.depth;
+        // The insert has no meter of its own: it sits inside the tape return and
+        // is metered there. Saying so with a zero beats inventing a number.
+        frame[S.PEAK_L] = 0;
+        frame[S.PEAK_R] = 0;
+    },
+
+    // Disposed with the delay it lives inside; see oaDisposeDelay.
+});

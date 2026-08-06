@@ -537,3 +537,125 @@ window.oaSetReverbSend = function (u, idx, value) {
     window.oaSaveReverb();
     window.dispatchEvent(new CustomEvent('oa-reverb-changed', { detail: { unit: u, idx: idx } }));
 };
+
+/**
+ * Take both machines out of a context. The convolver holds an impulse response
+ * — seconds of stereo float, the largest single allocation in the effects rack
+ * — so dropping the buffer matters as much as dropping the node.
+ */
+window.oaDisposeReverb = function (ctx) {
+    const buses = ctx && ctx.__oaReverbs;
+    if (!buses) return;
+    Object.keys(pending).forEach(function (u) {
+        // A rebuild still on the debounce would fire into a bus that no longer
+        // exists and build a fresh impulse for nobody.
+        if (pending[u]) clearTimeout(pending[u]);
+        pending[u] = null;
+    });
+    buses.forEach(function (bus) {
+        if (!bus) return;
+        window.oaDisconnectAll([bus.input, bus.convolver, bus.ret].concat(bus.analysers || []));
+        bus.convolver.buffer = null;
+    });
+    buses.length = 0;
+};
+
+// ---------------------------------------------------------------------------
+// The back end, as the LARC sees it.
+// ---------------------------------------------------------------------------
+
+// The tail, downsampled to something a panel can plot. Rebuilt only when the
+// room is — a display asking sixty times a second gets the same array back.
+const RV_CURVE_LEN = 256;
+const rvCurves = [];
+const rvCurveKey = [];
+
+window.oaRegisterPlugin({
+    id: 'reverb',
+    label: 'Reverb',
+    event: 'oa-reverb-changed',
+    units: function () { return window.OA_REVERB_COUNT; },
+    params: window.OA_REVERB_PARAMS,
+
+    // Every stored program, flattened to one map so a generic panel can load
+    // one by name. The LARC still addresses them by bank and number, which is
+    // how the machine it copies works — oaLoadReverbProgram is unchanged.
+    presets: (function () {
+        const out = {};
+        window.OA_REVERB_BANKS.forEach(function (bank, b) {
+            bank.programs.forEach(function (prog, p) {
+                out[b + ':' + p] = { label: bank.name + ' — ' + prog.name, bank: b, prog: p };
+            });
+        });
+        return out;
+    })(),
+
+    state: function (i) { return window.oaReverbUnit(i); },
+    set: function (i, key, value) { window.oaSetReverb(i, key, value); },
+    preset: function (i, name) {
+        const p = window.oaPluginPresets('reverb')[name];
+        if (p) window.oaLoadReverbProgram(i, p.bank, p.prog);
+    },
+
+    slots: window.OA_SLOT.USER + 2,
+    layout: {
+        /** 1 while the machine is in standby or muted — the panel's POWER lamp. */
+        SILENT: window.OA_SLOT.USER,
+        /** Return level actually in force, after mute and standby. */
+        RETURN: window.OA_SLOT.USER + 1,
+    },
+
+    read: function (ctx, i, frame) {
+        const S = window.OA_SLOT;
+        const unit = window.oaReverbUnit(i);
+        const bus = ctx && ctx.__oaReverbs && ctx.__oaReverbs[i];
+        frame[S.ACTIVE] = bus && !unit.standby ? 1 : 0;
+        frame[S.USER] = (unit.standby || (bus && bus.muted)) ? 1 : 0;
+        frame[S.USER + 1] = bus ? window.oaReverbGain(i, bus) : 0;
+        if (!bus || !bus.analysers) {
+            frame[S.PEAK_L] = 0;
+            frame[S.PEAK_R] = 0;
+            return;
+        }
+        window.oaWritePeak(frame, S.PEAK_L, window.oaAnalyserPeak(bus.analysers[0]));
+        window.oaWritePeak(frame, S.PEAK_R, window.oaAnalyserPeak(bus.analysers[1]));
+    },
+
+    /**
+     * The shape of the tail, as an envelope of 256 points, 0..1. This is what a
+     * display draws when it draws a reverb — and it comes from the impulse the
+     * convolver is ACTUALLY running, not from a second guess at the maths.
+     */
+    curve: function (i) {
+        const unit = window.oaReverbUnit(i);
+        const key = window.OA_REVERB_PARAMS.map(function (p) { return unit[p.key]; }).join('|');
+        if (rvCurveKey[i] === key && rvCurves[i]) return rvCurves[i];
+
+        const ctx = window.OA_AUDIO_CTX;
+        const bus = ctx && ctx.__oaReverbs && ctx.__oaReverbs[i];
+        const buf = bus && bus.convolver && bus.convolver.buffer;
+        if (!buf) return rvCurves[i] || null;
+
+        const d = buf.getChannelData(0);
+        const out = rvCurves[i] || (rvCurves[i] = new Float32Array(RV_CURVE_LEN));
+        const per = Math.max(1, Math.floor(d.length / RV_CURVE_LEN));
+        let top = 1e-9;
+        for (let k = 0; k < RV_CURVE_LEN; k++) {
+            let peak = 0;
+            const start = k * per;
+            for (let j = 0; j < per && start + j < d.length; j++) {
+                const a = d[start + j] < 0 ? -d[start + j] : d[start + j];
+                if (a > peak) peak = a;
+            }
+            out[k] = peak;
+            if (peak > top) top = peak;
+        }
+        // Normalised, because a panel plots a shape and the absolute level of an
+        // impulse response is a property of the convolver's own normalisation.
+        for (let k = 0; k < RV_CURVE_LEN; k++) out[k] /= top;
+        rvCurveKey[i] = key;
+        return out;
+    },
+
+    dispose: window.oaDisposeReverb,
+});

@@ -183,5 +183,21 @@ window.useSeqScheduler = (
         }
     };
 
-    return { timerIDRef, nextNoteTimeRef, scheduler, stopScheduler };
+    // STOP is not the same as GO AWAY. stopScheduler() parks the clock between
+    // transport presses and the Worker is reused on the next play, which is what
+    // you want — spinning a thread up costs milliseconds and the first note is
+    // due immediately. But a Worker outlives the component that made it unless
+    // it is told not to, so unmounting the Sequencer without this leaves a live
+    // thread and its Blob URL behind, and mounting it again makes another.
+    const disposeScheduler = () => {
+        stopScheduler();
+        if (workerRef.current) {
+            workerRef.current.terminate();
+            workerRef.current = null;
+        }
+    };
+
+    React.useEffect(() => disposeScheduler, []);
+
+    return { timerIDRef, nextNoteTimeRef, scheduler, stopScheduler, disposeScheduler };
 };

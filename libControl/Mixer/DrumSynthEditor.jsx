@@ -42,19 +42,20 @@ const NoteFader = ({ spec, value, onChange, audition }) => {
 // The SYNTH panel for one mixer channel. Every control is generated from the
 // engine's parameter schema, so adding a knob to an engine adds it here too.
 window.DrumSynthEditor = ({ idx, name, onClose }) => {
-    const [, force] = React.useReducer((n) => n + 1, 0);
-    React.useEffect(() => {
-        const onChange = (e) => { if (e.detail && e.detail.idx === idx) force(); };
-        window.addEventListener('oa-synth-changed', onChange);
-        return () => window.removeEventListener('oa-synth-changed', onChange);
-    }, [idx]);
+    // The patch and the faceplate both come through the plugin interface: this
+    // panel no longer knows that a drum voice is stored in OA_DRUM_SYNTH or that
+    // its knobs are declared on OA_SYNTH_ENGINES. It asks for unit `idx` of the
+    // 'drumsynth' plugin and renders what it is handed — which is what lets the
+    // same panel work for an engine added later.
+    const patch = window.useOaState('drumsynth', idx);
+    const specs = window.useOaParams('drumsynth', idx);
 
     // Every edit writes straight through to the live patch and localStorage, so
     // the only way back is a copy taken before any of it happened. Re-taken when
     // the panel switches voice, not on every render.
     const opened = React.useRef(null);
     React.useEffect(() => {
-        opened.current = window.oaSynthPatch(window.OA_DRUM_SYNTH[idx]);
+        opened.current = window.oaPluginState('drumsynth', idx);
     }, [idx]);
 
     const abort = () => {
@@ -62,13 +63,13 @@ window.DrumSynthEditor = ({ idx, name, onClose }) => {
         window.oaSetSynthPatch(idx, opened.current);
     };
 
-    const patch = window.oaSynthPatch(window.OA_DRUM_SYNTH[idx]);
+    if (!patch || !specs.length) return null;
     const engine = window.OA_SYNTH_ENGINES[patch.engine];
     if (!engine) return null;
 
     const dirty = !!opened.current && JSON.stringify(opened.current) !== JSON.stringify(patch);
 
-    const set = (key, value) => window.oaSetSynthParam(idx, key, value);
+    const set = (key, value) => window.oaPluginSet('drumsynth', idx, key, value);
     const audition = () => window.oaTriggerDrum(idx, 0.9);
 
     const label = { fontSize: '10px', color: '#aaa', letterSpacing: '0.3px' };
@@ -106,8 +107,8 @@ window.DrumSynthEditor = ({ idx, name, onClose }) => {
                     onChange={(e) => set('engine', e.target.value)}
                     style={{ background: '#222', color: 'var(--accent)', border: '1px solid #444', borderRadius: '3px', fontSize: '11px', padding: '3px 6px' }}
                 >
-                    {Object.keys(window.OA_SYNTH_ENGINES).map((k) => (
-                        <option key={k} value={k}>{window.OA_SYNTH_ENGINES[k].label}</option>
+                    {Object.entries(window.oaPluginPresets('drumsynth')).map(([k, p]) => (
+                        <option key={k} value={k}>{p.label}</option>
                     ))}
                 </select>
                 <span style={{ fontSize: '10px', color: '#777', fontStyle: 'italic' }}>{engine.blurb}</span>
@@ -116,8 +117,8 @@ window.DrumSynthEditor = ({ idx, name, onClose }) => {
             {/* One parameter per row, always — a two-column grid put a knob's
                 Hz and note faders side by side with an unrelated control. */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px' }}>
-                {Object.keys(engine.params).map((key) => {
-                    const spec = engine.params[key];
+                {specs.map((spec) => {
+                    const key = spec.key;
                     const v = patch[key];
                     if (spec.options) {
                         return (

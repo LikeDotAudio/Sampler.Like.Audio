@@ -22,11 +22,84 @@
 
 window.OA_FX_SEND_EPSILON = 0.001;
 
+// ---------------------------------------------------------------------------
+// Voice retirement
+//
+// Everything oaVoiceOut() builds is PER HIT: a panner, a send gain for each bus
+// this channel feeds, and — on a driven channel — a whole pedal, waveshaper and
+// all. At sixteenth notes across a full grid that is a few hundred nodes a
+// second being wired into a graph that reaches the destination.
+//
+// The spec says a node with no references and no live input is collectable, and
+// the browser does eventually collect them. "Eventually" is the problem: the
+// collector runs when IT decides to, the pause lands wherever it lands, and a
+// pause during playback is heard. Cutting each chain loose the moment its voice
+// is done turns an unbounded pile of maybe-collectable nodes into a bounded one
+// that is definitely gone, and moves the cost off the audio thread's back.
+//
+// Retirement is swept, not timed. A setTimeout per voice would be one timer per
+// hit — the same churn in a different currency.
+// ---------------------------------------------------------------------------
+
+/** Disconnect every chain whose voice has finished. Cheap, and runs per hit. */
+const sweep = function (ctx) {
+    const q = ctx.__oaRetire;
+    if (!q || !q.length) return;
+    const now = ctx.currentTime;
+    let keep = 0;
+    for (let i = 0; i < q.length; i++) {
+        if (q[i].at > now) {
+            q[keep++] = q[i];
+            continue;
+        }
+        const chain = q[i].chain;
+        for (let n = 0; n < chain.length; n++) {
+            try { chain[n].disconnect(); } catch (e) {}
+        }
+    }
+    q.length = keep;
+};
+
+/**
+ * Hand a voice's chain back once it has stopped sounding. `at` is the context
+ * time the voice goes quiet; the chain is held until then and dropped after.
+ */
+window.oaRetireVoice = function (ctx, node, at) {
+    const chain = node && node.__oaChain;
+    if (!chain || !chain.length) return;
+    const q = ctx.__oaRetire || (ctx.__oaRetire = []);
+    // A tail longer than the voice: the reverb and delay sends are still being
+    // fed for as long as the note rings, and cutting them at the note's end
+    // would clip the send rather than the sound.
+    q.push({ chain: chain, at: (at || ctx.currentTime) + 0.25 });
+    node.__oaChain = null;
+    sweep(ctx);
+};
+
+/** How many chains are waiting to be released. Flat means nothing is leaking. */
+window.oaPendingVoices = function (ctx) {
+    return (ctx && ctx.__oaRetire) ? ctx.__oaRetire.length : 0;
+};
+
+/**
+ * Run the sweep without building a voice. Playing normally there is always a
+ * next hit to carry it, but the last voice of a session has nothing behind it —
+ * so the meter pump calls this, and so do the tests, which is how the queue is
+ * observed draining to zero rather than assumed to.
+ */
+window.oaSweepVoices = function (ctx) { if (ctx) sweep(ctx); };
+
 /**
  * The node a voice should connect to. Handles panning, the dry path to the
  * output, and this channel's reverb + delay sends. Returns the input node.
+ *
+ * Every node built here is recorded on `__oaChain` so oaRetireVoice() can let
+ * go of the whole thing in one move when the voice is done.
  */
 window.oaVoiceOut = function (ctx, idx, pan) {
+    sweep(ctx);
+
+    const chain = [];
     let node;
     if (pan && ctx.createStereoPanner) {
         const p = ctx.createStereoPanner();
@@ -35,6 +108,8 @@ window.oaVoiceOut = function (ctx, idx, pan) {
     } else {
         node = ctx.createGain();
     }
+    chain.push(node);
+
     // Null on a channel that has never been compressed, and the pan goes
     // straight out the way it always did.
     const comp = window.oaCompStrip ? window.oaCompStrip(ctx, idx) : null;
@@ -46,6 +121,7 @@ window.oaVoiceOut = function (ctx, idx, pan) {
         sg.gain.value = amount;
         node.connect(sg);
         sg.connect(target);
+        chain.push(sg);
     };
 
     const rv = (window.OA_REVERB && window.OA_REVERB.units) || [];
@@ -62,8 +138,10 @@ window.oaVoiceOut = function (ctx, idx, pan) {
 
     // Returns null on a clean channel, and the voice connects straight to the
     // pan the way it always did — bit for bit, not "distortion turned down".
-    const drive = window.oaDriveNode ? window.oaDriveNode(ctx, idx, node) : null;
-    return drive || node;
+    const drive = window.oaDriveNode ? window.oaDriveNode(ctx, idx, node, chain) : null;
+    const head = drive || node;
+    head.__oaChain = chain;
+    return head;
 };
 
 /**
@@ -98,3 +176,82 @@ window.oaWarmFx = async function (ctx) {
         }
     }
 };
+
+/**
+ * Cut every voice loose at once, and take the effects rack down with it. Used
+ * when a context is abandoned, and by the leak tests as the last step before
+ * asking the graph what is left.
+ */
+window.oaDisposeVoices = function (ctx) {
+    if (!ctx) return;
+    // Every sounding source, stopped and disconnected. A looping pad that was
+    // never toggled off is exactly the voice this has to catch.
+    (window.OA_LIVE_VOICES || []).slice().forEach(function (src) {
+        try { src.stop(); } catch (e) {}
+        try { src.disconnect(); } catch (e) {}
+    });
+    if (window.OA_LIVE_VOICES) window.OA_LIVE_VOICES.length = 0;
+    Object.keys(window.OA_DRUM_LOOPS || {}).forEach(function (k) { window.OA_DRUM_LOOPS[k] = null; });
+
+    const q = ctx.__oaRetire;
+    if (q) {
+        q.forEach(function (entry) {
+            entry.chain.forEach(function (n) { try { n.disconnect(); } catch (e) {} });
+        });
+        q.length = 0;
+    }
+};
+
+// ---------------------------------------------------------------------------
+// The voice counter, as a plugin.
+//
+// This one has no panel of its own and no sound. It exists because the failure
+// that started all of this — the app getting slower and dirtier the longer it
+// ran — was completely invisible while it was happening. Every number that
+// would have shown it is published here, in the same binary frame as everything
+// else, so a display can put it on screen and the tests can assert on it.
+//
+// If VOICES or PENDING climbs and does not come back down while nothing is
+// playing, something is holding on. That is the whole diagnostic.
+// ---------------------------------------------------------------------------
+
+window.oaRegisterPlugin({
+    id: 'voices',
+    label: 'Voices',
+    units: function () { return 1; },
+    params: [],
+
+    slots: window.OA_SLOT.USER + 4,
+    layout: {
+        /** Sources sounding right now. */
+        VOICES: window.OA_SLOT.USER,
+        /** Voice chains built and waiting to be released. Should stay small. */
+        PENDING: window.OA_SLOT.USER + 1,
+        /** Megabytes held by the Tone Mode pre-render cache. */
+        CACHE_MB: window.OA_SLOT.USER + 2,
+        /** Effect buses currently built: reverbs + delays + compressor strips. */
+        BUSES: window.OA_SLOT.USER + 3,
+    },
+
+    read: function (ctx, i, frame) {
+        const S = window.OA_SLOT;
+        // The last voice of a run has no next hit to carry the sweep, so the
+        // pump does it. One pass over a short queue, once a frame.
+        window.oaSweepVoices(ctx);
+        const live = (window.OA_LIVE_VOICES || []).length;
+        frame[S.ACTIVE] = live > 0 ? 1 : 0;
+        frame[S.PEAK_L] = 0;
+        frame[S.PEAK_R] = 0;
+        frame[S.USER] = live;
+        frame[S.USER + 1] = window.oaPendingVoices(ctx);
+        frame[S.USER + 2] = window.oaToneCacheBytes
+            ? window.oaToneCacheBytes() / (1024 * 1024)
+            : 0;
+        const count = function (a) { return (a || []).filter(Boolean).length; };
+        frame[S.USER + 3] = ctx
+            ? count(ctx.__oaReverbs) + count(ctx.__oaDelays) + count(ctx.__oaComps)
+            : 0;
+    },
+
+    dispose: window.oaDisposeVoices,
+});

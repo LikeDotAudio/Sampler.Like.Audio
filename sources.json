@@ -5,6 +5,8 @@
   "libControl/Header/Header.jsx",
   "libControl/Footer/Footer.jsx",
   "libControl/SoundSynth/oaPadGrid.js",
+  "libControl/SoundSynth/oaPlugin.js",
+  "libControl/SoundSynth/useOaPlugin.js",
   "libControl/SoundSynth/oaDrumSynthEngines.js",
   "libControl/SoundSynth/oaDrumSynthPatches.js",
   "libControl/SoundSynth/oaReverb.js",

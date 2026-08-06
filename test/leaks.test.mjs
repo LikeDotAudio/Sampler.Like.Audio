@@ -211,7 +211,16 @@ describe('the tone cache', () => {
         // the old one.
         loadSample(w, 0, 0.25);
 
-        assert.equal(window.OA_TONE_CACHE[0], undefined, 'the old renders survived a sample change');
+        // `assert.ok` on an identity check, not `assert.equal` on the cache
+        // itself: a failing equal() asks node to render a diff of whatever it
+        // was given, and what it would be given here is sixty-one pre-rendered
+        // buffers. That inspection has been measured taking gigabytes — enough
+        // to get the test runner OOM-killed, which takes the editor that
+        // launched it down too. A failing test must fail, not kill the machine.
+        assert.ok(
+            window.OA_TONE_CACHE[0] === undefined,
+            'the old renders survived a sample change',
+        );
         assert.equal(window.oaToneCacheBytes(), 0, 'the cache still reports bytes it no longer holds');
     });
 
@@ -230,8 +239,10 @@ describe('the tone cache', () => {
 
         const playing = window.OA_LIVE_VOICES[window.OA_LIVE_VOICES.length - 1];
         assert.ok(playing, 'the tone did not sound at all');
-        assert.notEqual(playing.buffer, first, 'tone mode played the sample that used to be on this pad');
-        assert.equal(playing.buffer, second, 'tone mode should play the sample that is on the pad now');
+        // Identity, via assert.ok, for the same reason as above — these are
+        // audio buffers, and a diff of one is a wall of Float32Array.
+        assert.ok(playing.buffer !== first, 'tone mode played the sample that used to be on this pad');
+        assert.ok(playing.buffer === second, 'tone mode should play the sample that is on the pad now');
     });
 
     test('stays inside its budget across many pads', async () => {

@@ -139,6 +139,34 @@ describe('effect panels', () => {
         w.cleanup();
     });
 
+    test('the whole app boots', async () => {
+        // Everything the browser loads, including the mount point — the one
+        // check that says the bundle as a whole executes rather than each
+        // panel in isolation. A file that throws on load takes every file after
+        // it with it, and this is the only test that would notice.
+        const r = makeReact();
+        const mounted = [];
+        const ReactDOM = {
+            render(element, container) { mounted.push({ element, container }); },
+            createRoot(container) {
+                return { render(element) { mounted.push({ element, container }); } };
+            },
+        };
+
+        const allSources = JSON.parse(readFileSync(join(ROOT, 'sources.json'), 'utf8'));
+        let w;
+        await assert.doesNotReject(
+            async () => {
+                w = await createWarmWorld({ sources: allSources, React: r.React, ReactDOM });
+            },
+            'the bundle threw while loading',
+        );
+
+        assert.ok(w.window.Mixer, 'the app loaded but defined no Mixer');
+        assert.ok(w.window.oaPluginIds().length >= 7, 'the plugins did not all register');
+        w.cleanup();
+    });
+
     test('the Mixer opens with the full rack behind it', async () => {
         const { w, r } = await openWorld();
         const { window } = w;

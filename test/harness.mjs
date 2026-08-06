@@ -164,6 +164,41 @@ export async function createWorld(opts = {}) {
     window.URL = FakeURL;
     window.AudioWorkletNode = null;   // set below, needs ctx-aware construction
     window.performance = { now: () => 0 };
+    window.innerWidth = 1280;
+    window.innerHeight = 900;
+    window.matchMedia = (q) => ({ matches: false, media: q, addListener() {}, removeListener() {}, addEventListener() {}, removeEventListener() {} });
+
+    // Just enough DOM for the mount point to find a container and for a panel
+    // to set a style on a ref. Nothing here lays anything out — a panel that
+    // depends on a measured size is asking a question this cannot answer, and
+    // should be reading it from a frame instead.
+    const makeElement = (tag) => ({
+        tagName: (tag || 'div').toUpperCase(),
+        style: {},
+        dataset: {},
+        children: [],
+        classList: { add() {}, remove() {}, toggle() {}, contains: () => false },
+        textContent: '',
+        offsetHeight: 0,
+        offsetWidth: 0,
+        appendChild(c) { this.children.push(c); return c; },
+        removeChild(c) { this.children = this.children.filter((x) => x !== c); return c; },
+        setAttribute() {},
+        getAttribute: () => null,
+        addEventListener() {},
+        removeEventListener() {},
+        getBoundingClientRect: () => ({ top: 0, left: 0, width: 100, height: 100, right: 100, bottom: 100 }),
+    });
+    window.document = {
+        documentElement: makeElement('html'),
+        body: makeElement('body'),
+        createElement: makeElement,
+        getElementById: () => makeElement('div'),
+        querySelector: () => makeElement('div'),
+        querySelectorAll: () => [],
+        addEventListener() {},
+        removeEventListener() {},
+    };
 
     window.addEventListener = (type, fn) => {
         if (!listeners.has(type)) listeners.set(type, []);
@@ -254,8 +289,25 @@ export async function createWorld(opts = {}) {
                 'AudioWorkletNode', 'AudioContext', 'OfflineAudioContext',
                 'requestAnimationFrame', 'cancelAnimationFrame',
                 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval',
-                'console', 'performance', 'React',
-                `"use strict";\n${code}\n//# sourceURL=${rel}`,
+                'console', 'performance', 'React', 'ReactDOM', 'document', 'navigator',
+                // `with (window)` because that is genuinely how the bundle
+                // resolves names in a browser, and nothing else reproduces it.
+                //
+                // build.mjs gives each source its own IIFE, so a component
+                // declared `const SvgFader = …` in one file is NOT in lexical
+                // scope in another. The files export by assigning window.X, and
+                // the browser then resolves a bare `SvgFader` elsewhere by
+                // walking the scope chain out to the real global object — where
+                // window.X is a property, because in a browser window IS the
+                // global. Here `window` is an ordinary object, so that last hop
+                // does not exist and every cross-file reference would fail.
+                //
+                // `with` puts it back exactly. The cost is that this cannot be
+                // strict-mode code; the alternative is node:vm, which is a
+                // separate realm and would break `instanceof Float32Array` on
+                // every array these modules hand around — a far worse trade for
+                // an audio codebase.
+                `with (window) {\n${code}\n}\n//# sourceURL=${rel}`,
             );
         } catch (e) {
             throw new Error(`${rel}: failed to parse — ${e.message}`);
@@ -266,7 +318,7 @@ export async function createWorld(opts = {}) {
                 FakeWorkletNode, TestAudioContext, TestOfflineAudioContext,
                 window.requestAnimationFrame, window.cancelAnimationFrame,
                 setTimeoutShim, clearTimeoutShim, setInterval, clearInterval,
-                console, window.performance, opts.React || null,
+                console, window.performance, opts.React || null, opts.ReactDOM || null, window.document, { userAgent: 'oa-test' },
             );
         } catch (e) {
             throw new Error(`${rel}: threw while loading — ${e.stack}`);

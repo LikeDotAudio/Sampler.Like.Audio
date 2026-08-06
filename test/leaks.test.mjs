@@ -99,18 +99,31 @@ describe('memory', () => {
         const w = await createWarmWorld();
         loadSample(w, 0);
 
+        // A driven channel with a send: the widest chain a voice can build, so
+        // the most to leave behind if it is not released.
+        w.window.oaSetReverbSend(0, 0, 0.4);
+        w.window.oaPluginSet('drive', 0, 'mix', 0.7);
+
         // Warm up first: the compressor strips and effect buses are built once
         // and are meant to persist, so they must not count as growth.
         play(w, 20);
         settle(w);
-        const baseline = w.ctx.retained();
+        const attached = w.ctx.connectedToDestination();
+        const audible = w.ctx.retained();
 
         play(w, 400);
         settle(w);
 
+        // STILL ATTACHED is the one that catches an unreleased chain. Nothing
+        // is feeding those nodes, so they make no sound and `retained` cannot
+        // see them — but the browser still holds every one of them in its graph.
         assert.equal(
-            w.ctx.retained(), baseline,
-            `${w.ctx.retained() - baseline} nodes are still wired into the destination after every voice ended`,
+            w.ctx.connectedToDestination(), attached,
+            `${w.ctx.connectedToDestination() - attached} nodes from 400 voices are still wired into the destination`,
+        );
+        assert.equal(
+            w.ctx.retained(), audible,
+            'something is still being fed after every voice ended',
         );
     });
 

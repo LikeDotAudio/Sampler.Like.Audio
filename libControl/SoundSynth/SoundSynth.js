@@ -144,8 +144,6 @@ window.oaSetDrumSample = function (idx, buffer, opts) {
     // weight — and worse than dead, because oaTriggerTone reads the cache FIRST
     // and would go on playing the sample that used to be here. Drop it before
     // the new entry lands.
-    if (window.oaEvictToneCache) window.oaEvictToneCache(idx);
-
     window.OA_DRUM_SAMPLES[idx] = entry;
     if (window.oaPrecachePad) window.oaPrecachePad(entry);
     // A loaded sample takes over from the synth voice — the Mixer hides SYNTH.

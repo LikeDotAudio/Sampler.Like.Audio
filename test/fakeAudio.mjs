@@ -574,6 +574,41 @@ class FakeAudioContext {
         return count;
     }
 
+    /**
+     * Nodes still WIRED into the destination, whether or not anything is
+     * feeding them.
+     *
+     * This is the count that catches a chain nobody disconnected, and it is a
+     * different question from retained(): once a voice's source ends, retained()
+     * stops counting its chain because nothing live feeds it any more — so a
+     * chain that was never disconnected looks identical to one that was. It is
+     * the right measure for "is anything still audible", and useless for "is
+     * anything still attached".
+     *
+     * Attached is what matters for a leak. Every node here is one the browser
+     * has to keep in its graph and consider on every render quantum, and the
+     * pile only grows.
+     */
+    connectedToDestination() {
+        const incoming = new Map();
+        this.__all.forEach((n) => {
+            n.__out.forEach((e) => {
+                const target = e.dest instanceof FakeParam ? e.dest.__node : e.dest;
+                if (!incoming.has(target.__id)) incoming.set(target.__id, []);
+                incoming.get(target.__id).push(n);
+            });
+        });
+        const seen = new Set();
+        const stack = [this.destination];
+        while (stack.length) {
+            const n = stack.pop();
+            if (seen.has(n.__id)) continue;
+            seen.add(n.__id);
+            (incoming.get(n.__id) || []).forEach((p) => stack.push(p));
+        }
+        return seen.size - 1;      // the destination itself is not a leak
+    }
+
     /** Sources that started and never ended — a looping voice nobody stopped. */
     danglingSources() {
         return this.__sources.filter((s) => s.__started !== null && !s.__ended

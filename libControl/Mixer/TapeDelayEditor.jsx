@@ -1,9 +1,49 @@
+// The rhythmic partner to a head's millisecond fader. Same underlying time,
+// stepped in 16th notes at the current tempo — and the step it lands on is
+// remembered, so the head follows the BPM instead of drifting off the grid.
+// Its range is clamped to whole 16ths inside the head's own min/max, so it can
+// never push the time out of bounds.
+const BeatFader = ({ u, side, spec, value, bpm, locked, color }) => {
+    const step = window.OA_DELAY_SIXTEENTH(bpm);
+    const lo = Math.max(1, Math.ceil(spec.min / step));
+    const hi = Math.floor(spec.max / step);
+    if (hi <= lo) return null;                       // no whole 16th fits
+
+    // Round for display so a millisecond nudge does not show a fractional
+    // division, but keep the slider on the true position — otherwise it jumps
+    // under the cursor.
+    const exact = value / step;
+    const nearest = Math.max(lo, Math.min(hi, Math.round(exact)));
+    const onGrid = locked && Math.abs(exact - nearest) < 0.002;
+
+    return (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '9px', color: '#666', minWidth: '78px', textAlign: 'right', paddingRight: '2px' }}>
+                beat
+            </span>
+            <input
+                type="range" min={lo} max={hi} step={1} value={nearest}
+                onChange={(e) => window.oaSetDelaySync(u, side, Number(e.target.value), bpm)}
+                title={`Lock head ${side} to the grid at ${bpm} BPM`}
+                style={{ flex: 1, minWidth: '70px', accentColor: onGrid ? color : '#5a6472', cursor: 'pointer' }}
+            />
+            <span style={{
+                fontSize: '10px', minWidth: '62px', textAlign: 'right',
+                color: onGrid ? color : '#5a6472', fontVariantNumeric: 'tabular-nums'
+            }}>
+                {window.oaBeatLabel(nearest)}
+                {!onGrid ? <span style={{ color: '#666', fontSize: '9px' }}> ~</span> : null}
+            </span>
+        </div>
+    );
+};
+
 /**
  * The TAPE panel for one delay return. Every fader writes straight through to
  * the live bus — the tape is already running, so a move is heard on the repeats
  * that are still in the loop rather than only on the next hit.
  */
-window.TapeDelayEditor = ({ u, onClose }) => {
+window.TapeDelayEditor = ({ u, bpm, onClose }) => {
     const [, force] = React.useReducer((n) => n + 1, 0);
     React.useEffect(() => {
         const onChange = (e) => { if (e.detail && e.detail.unit === u) force(); };
@@ -41,6 +81,9 @@ window.TapeDelayEditor = ({ u, onClose }) => {
                 <span style={{ fontSize: '12px', color: meta.color, fontWeight: 'bold', letterSpacing: '1px' }}>
                     {meta.name} — TAPE ECHO
                 </span>
+                <span style={{ fontSize: '9px', color: '#666', fontVariantNumeric: 'tabular-nums' }}>
+                    {bpm} BPM
+                </span>
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
                     <window.SeqButton label="⟲ Abort" onClick={abort} disabled={!dirty}
                         color={dirty ? '#b71c1c' : undefined} textColor={dirty ? '#fff' : undefined}
@@ -68,19 +111,31 @@ window.TapeDelayEditor = ({ u, onClose }) => {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px' }}>
-                {params.map((p) => (
-                    <div key={p.key} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ ...label, minWidth: '78px' }}>{p.label}</span>
-                        <input
-                            type="range" min={p.min} max={p.max} step={p.step} value={unit[p.key]}
-                            onChange={(e) => window.oaSetDelay(u, p.key, Number(e.target.value))}
-                            style={{ flex: 1, minWidth: '70px', accentColor: meta.color, cursor: 'pointer' }}
-                        />
-                        <span style={{ fontSize: '10px', color: meta.color, minWidth: '62px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
-                            {p.fmt(unit[p.key])}
-                        </span>
-                    </div>
-                ))}
+                {params.map((p) => {
+                    // The two heads carry a second fader that snaps to the grid.
+                    const side = p.key === 'timeL' ? 'L' : (p.key === 'timeR' ? 'R' : null);
+                    return (
+                        <div key={p.key} style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ ...label, minWidth: '78px' }}>{p.label}</span>
+                                <input
+                                    type="range" min={p.min} max={p.max} step={p.step} value={unit[p.key]}
+                                    onChange={(e) => window.oaSetDelay(u, p.key, Number(e.target.value))}
+                                    style={{ flex: 1, minWidth: '70px', accentColor: meta.color, cursor: 'pointer' }}
+                                />
+                                <span style={{ fontSize: '10px', color: meta.color, minWidth: '62px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>
+                                    {p.fmt(unit[p.key])}
+                                </span>
+                            </div>
+                            {side && (
+                                <BeatFader
+                                    u={u} side={side} spec={p} value={unit[p.key]} bpm={bpm}
+                                    locked={!!unit['sync' + side]} color={meta.color}
+                                />
+                            )}
+                        </div>
+                    );
+                })}
             </div>
 
             {/* Aux out of an aux: throw the repeats into a room. */}

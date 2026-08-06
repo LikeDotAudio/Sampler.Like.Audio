@@ -3,6 +3,7 @@
   "libControl/App/Mocks.jsx",
   "libControl/Header/Header.jsx",
   "libControl/Footer/Footer.jsx",
+  "libControl/SoundSynth/oaPadGrid.js",
   "libControl/SoundSynth/oaDrumSynthEngines.js",
   "libControl/SoundSynth/oaDrumSynthPatches.js",
   "libControl/SoundSynth/oaReverb.js",

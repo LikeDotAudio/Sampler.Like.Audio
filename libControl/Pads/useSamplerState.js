@@ -2,7 +2,7 @@ window.useSamplerState = (setSampleNames) => {
     const [toneRoot, setToneRoot] = React.useState(null);
     const toneRootRef = React.useRef(toneRoot); toneRootRef.current = toneRoot;
     
-    const [velocities, setVelocities] = React.useState(Array(16).fill(0));
+    const [velocities, setVelocities] = React.useState(Array(window.OA_PAD_MAX).fill(0));
     const [browsePad, setBrowsePad] = React.useState(null);
     const [pendingAssign, setPendingAssign] = React.useState(null); // { file, meta }
     const [showPadBrowse, setShowPadBrowse] = React.useState(false);
@@ -14,7 +14,7 @@ window.useSamplerState = (setSampleNames) => {
     const mqttMessages = window.useMqttMessages ? window.useMqttMessages() : {};
     const kitMeta = React.useMemo(() => {
         const m = {};
-        for (let i = 0; i < 16; i++) {
+        for (let i = 0; i < window.OA_PAD_COUNT; i++) {
             const raw = mqttMessages[`OpenAir/Gui/DrumKit/${i}/sample`];
             if (raw) { try { const o = JSON.parse(raw); if (o && o.name) m[i] = o; } catch (e) {} }
         }
@@ -30,7 +30,7 @@ window.useSamplerState = (setSampleNames) => {
         const res = await window.oaRestoreKit(kitMeta);
         if (res.ok) {
             setRestoreMsg(`restored ${res.restored}`);
-            setSampleNames((prev) => { const n = [...prev]; for (let i = 0; i < 16; i++) { const e = window.OA_DRUM_SAMPLES[i]; if (e) n[i] = e.name || '(loaded)'; } return n; });
+            setSampleNames((prev) => { const n = [...prev]; for (let i = 0; i < window.OA_PAD_COUNT; i++) { const e = window.OA_DRUM_SAMPLES[i]; if (e) n[i] = e.name || '(loaded)'; } return n; });
         } else setRestoreMsg(res.reason === 'no-folder' ? 'pick a folder first' : 'permission denied');
         setTimeout(() => setRestoreMsg(''), 2500);
     };

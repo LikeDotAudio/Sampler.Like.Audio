@@ -1,6 +1,8 @@
 const Mixer = () => {
-    const { trackVol, setTrackVol, trackPan, setTrackPan, mutes, toggleMute, solos, toggleSolo, clearSolos, masterVol, setMasterVol, clickVol, setClickVol, recording } = window.useSeqState('Pattern Sequencer', 16, window.OA_DRUM_KIT || []);
+    const { trackVol, setTrackVol, trackPan, setTrackPan, mutes, toggleMute, solos, toggleSolo, clearSolos, masterVol, setMasterVol, clickVol, setClickVol, recording, bpm } = window.useSeqState('Pattern Sequencer', 16, window.OA_DRUM_KIT || []);
     const tracks = window.OA_DRUM_KIT || [];
+    // One strip per pad — a bigger grid grows the mixer with it.
+    window.useOaPadGrid();
 
     const PALETTE = ["#f4902c", "#f7a048", "#f08018", "#f4902c", "#faa552", "#e67300",
                      "#f4902c", "#f28b22", "#f79b39", "#f4902c", "#e0750d", "#fca858",
@@ -63,6 +65,11 @@ const Mixer = () => {
             window.removeEventListener('oa-delay-changed', onFx);
         };
     }, []);
+
+    // A head locked to the grid is stored as a count of 16ths, so a tempo change
+    // has to re-derive its time. The Mixer is where the two meet: it is always
+    // mounted and it already reads the transport.
+    React.useEffect(() => { window.oaResyncDelays(bpm); }, [bpm]);
 
     // A tail and a tape repeat decay on their own schedule, so unlike the
     // per-hit track meters these are polled from each bus's analysers.
@@ -510,7 +517,7 @@ const Mixer = () => {
             )}
 
             {tapeUnit != null && window.TapeDelayEditor && ReactDOM.createPortal(
-                <window.TapeDelayEditor u={tapeUnit} onClose={() => setTapeUnit(null)} />,
+                <window.TapeDelayEditor u={tapeUnit} bpm={bpm} onClose={() => setTapeUnit(null)} />,
                 document.body
             )}
         </div>

@@ -13,6 +13,10 @@ window.SeqControls = ({
     const STEP_OPTIONS = [4, 8, 16, 32, 64];
     const [footerNode, setFooterNode] = React.useState(null);
     const [configBtnNode, setConfigBtnNode] = React.useState(null);
+    // The grid size is a plain global, so read it back through the hook that
+    // re-renders on a change rather than holding a second copy of it.
+    const padLayout = window.useOaPadGrid() && window.OA_PAD_LAYOUT;
+    const setPadLayout = (key) => window.oaSetPadLayout(key);
     React.useEffect(() => {
         setFooterNode(document.getElementById('seq-footer-slot'));
         setConfigBtnNode(document.getElementById('config-footer-slot'));
@@ -81,6 +85,27 @@ window.SeqControls = ({
                 <span style={{ fontSize: '14px', fontWeight: 'bold', color: tapping ? '#fff' : '#f4902c', fontVariantNumeric: 'tabular-nums', minWidth: '54px', textAlign: 'right' }}>
                     {bpm} <span style={{ fontSize: '9px', color: '#888' }}>BPM</span>
                 </span>
+            </div>
+
+            {/* How many pads the kit has. One choice resizes the pad grid, the
+                mixer strips and the sequencer rows together — they are all one
+                voice list. Growing appends voices; shrinking only hides the
+                tail, so anything loaded onto pad 25 is still there if the grid
+                comes back. */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '12px', color: '#aaa' }}>Pads</span>
+                <div style={{ display: 'flex', gap: '6px' }}>
+                    {window.OA_PAD_LAYOUTS.map((l) => (
+                        <SeqButton
+                            key={l.key}
+                            label={l.label}
+                            onClick={() => setPadLayout(l.key)}
+                            active={padLayout === l.key}
+                            title={`${l.cols * l.rows} pads, mixer channels and sequencer tracks`}
+                            style={{ padding: '5px 10px' }}
+                        />
+                    ))}
+                </div>
             </div>
 
             {/* Steps, Render and Clear now live in the Patterns section of SONG

@@ -37,8 +37,7 @@ window.OA_REVERB_COUNT = window.OA_REVERB_UNITS.length;
 const rvUnit = function (saved, i) {
     const d = window.OA_REVERB_UNITS[i];
     const s = saved || {};
-    const sends = Array.isArray(s.sends) ? s.sends.slice(0, 16).map((v) => Number(v) || 0) : [];
-    while (sends.length < 16) sends.push(0);
+    const sends = window.oaFxSendArray(s.sends);
     return {
         sends: sends,
         tone: window.OA_REVERB_TONES[s.tone] ? s.tone : d.tone,

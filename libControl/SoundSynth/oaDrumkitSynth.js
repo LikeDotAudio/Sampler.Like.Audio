@@ -4,7 +4,7 @@
 window.oaPlayDrumVoice = function (ctx, track, time, volume, pan) {
     if (!track) return;
     const idx = track.idx != null ? track.idx : (window.OA_DRUM_KIT || []).indexOf(track);
-    const patch = window.oaSynthPatch((window.OA_DRUM_SYNTH || {})[idx] || window.OA_SYNTH_FACTORY[idx]);
+    const patch = window.oaSynthPatch((window.OA_DRUM_SYNTH || {})[idx] || window.oaFactoryPatch(idx));
     const engine = window.OA_SYNTH_ENGINES[patch.engine] || window.OA_SYNTH_ENGINES.membrane;
 
     // Tone Mode hands us a ratio; shift every frequency-shaped parameter by it.

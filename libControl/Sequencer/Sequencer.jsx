@@ -1,6 +1,7 @@
-// The 16-voice drum kit is shared with the Sampler (DrumKit.js) so a Sampler pad
-// and the matching Sequencer track are the SAME voice — including any sample
-// loaded onto that pad.
+// The drum kit is shared with the Sampler (DrumKit.js) so a Sampler pad and the
+// matching Sequencer track are the SAME voice — including any sample loaded onto
+// that pad. Held by reference: changing the pad grid resizes this same array, so
+// the track list follows without this module reloading.
 const TRACKS = window.OA_DRUM_KIT || [];
 const STEP_OPTIONS = [4, 8, 16, 32, 64];   // selectable pattern lengths
 const DEFAULT_STEPS = 16;
@@ -25,6 +26,9 @@ const SeqButton = window.SeqButton;
 const TrackSampleMenu = window.TrackSampleMenu;
 
 const Sequencer = ({ activeTabs = ['SEQ'], label = "Pattern Sequencer" }) => {
+    // One row per pad. TRACKS is the kit array itself, so it has already
+    // resized — this is what tells React to draw the difference.
+    window.useOaPadGrid();
     const {
         safeLabel, isPlaying, setIsPlaying, currentStep, setCurrentStep,
         seq, setSeq, steps, pattern, bpm, toneTrack, toneRoot,
@@ -214,7 +218,7 @@ const Sequencer = ({ activeTabs = ['SEQ'], label = "Pattern Sequencer" }) => {
                   const openMenu = (e) => { e.stopPropagation(); setTrackMenu({ trkIdx, x: e.clientX, y: e.clientY }); };
                   return (
                     <window.SeqTrack 
-                        key={trackName}
+                        key={trkIdx}
                         trackName={trackName}
                         trkIdx={trkIdx}
                         muted={muted}

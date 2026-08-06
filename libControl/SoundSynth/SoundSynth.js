@@ -12,9 +12,11 @@
  * Version: 26.07.11.1
  */
 
-// 16 voices: name + synth pitch (Hz) + oscillator type (used when no sample loaded).
-// Pad index (0-15) === Sequencer track index === key into OA_DRUM_SAMPLES.
-window.OA_DRUM_KIT = [
+// Every voice the kit can offer: name + synth pitch (Hz) + oscillator type
+// (used when no sample is loaded). The first 16 are the original 4 × 4 kit; the
+// rest fill out a 5 × 5. Pad index === Sequencer track index === key into
+// OA_DRUM_SAMPLES.
+window.OA_DRUM_VOICES = [
     { name: 'Kick',    freq: 60,   type: 'sine' },
     { name: 'Snare',   freq: 200,  type: 'sine' },
     { name: 'Hi-Hat',  freq: 800,  type: 'square' },
@@ -31,7 +33,39 @@ window.OA_DRUM_KIT = [
     { name: 'Clave',   freq: 1100, type: 'sine' },
     { name: 'Shaker',  freq: 1500, type: 'square' },
     { name: 'FX',      freq: 700,  type: 'sawtooth' },
+    // 5 × 5 adds a second kick and snare, the open hat the 4 × 4 had no room
+    // for, a floor tom, and the metal and hand percussion to go with them.
+    { name: 'Kick 2',  freq: 70,   type: 'sine' },
+    { name: 'Snare 2', freq: 240,  type: 'sine' },
+    { name: 'Open Hat',freq: 850,  type: 'square' },
+    { name: 'Tom Fl',  freq: 80,   type: 'sine' },
+    { name: 'Crash',   freq: 1300, type: 'square' },
+    { name: 'Splash',  freq: 1600, type: 'square' },
+    { name: 'Block',   freq: 1150, type: 'square' },
+    { name: 'Triangle',freq: 1100, type: 'sine' },
+    { name: 'Bongo',   freq: 520,  type: 'sine' },
 ];
+
+// The live kit, cut to the current grid. MUTATED in place rather than replaced —
+// several modules read it once at load time, and they all have to see the same
+// array change size.
+window.OA_DRUM_KIT = window.OA_DRUM_KIT || [];
+
+window.oaBuildDrumKit = function () {
+    const kit = window.OA_DRUM_KIT;
+    const n = window.OA_PAD_COUNT;
+    kit.length = 0;
+    for (let i = 0; i < n; i++) {
+        // Past the named voices a pad still needs a name and a pitch; carry on
+        // up the list an octave at a time.
+        const v = window.OA_DRUM_VOICES[i % window.OA_DRUM_VOICES.length];
+        const lap = Math.floor(i / window.OA_DRUM_VOICES.length);
+        kit.push(lap === 0 ? Object.assign({}, v)
+                           : { name: `${v.name} ${lap + 1}`, freq: v.freq * Math.pow(2, lap), type: v.type });
+    }
+    return kit;
+};
+window.oaBuildDrumKit();
 
 // Shared AudioContext so buffers decoded by the Sampler play in the Sequencer.
 window.oaAudioCtx = function () {

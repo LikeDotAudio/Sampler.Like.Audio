@@ -42,6 +42,19 @@ window.OA_DELAY_PRESETS = {
     oscillate:{label: 'Runaway',   timeL: 0.34,  timeR: 0.51,  feedback: 1.02, drive: 2.0, wowRate: 0.6,  wowDepth: 0.0040, damp: 3000 },
 };
 
+// A head can be locked to the grid instead of set in milliseconds. The lock is
+// stored as a count of 16th notes, so it survives a tempo change: the head time
+// is re-derived whenever the BPM moves.
+window.OA_DELAY_SIXTEENTH = (bpm) => 15 / Math.max(20, bpm || 120);   // 60 / bpm / 4
+
+const BEAT_NAMES = {
+    1: '1/16', 2: '1/8', 3: '1/8.', 4: '1/4', 6: '1/4.', 8: '1/2', 12: '1/2.',
+    16: '1 bar', 24: '1.5 bars', 32: '2 bars', 48: '3 bars', 64: '4 bars',
+};
+window.oaBeatLabel = function (steps) {
+    return BEAT_NAMES[steps] || steps + '/16';
+};
+
 window.OA_DELAY_UNITS = [
     { name: 'DLY 1', color: '#cbbcff', preset: 'slap' },
     { name: 'DLY 2', color: '#a893ff', preset: 'tape' },
@@ -53,13 +66,17 @@ window.OA_DELAY_COUNT = window.OA_DELAY_UNITS.length;
 const dlUnit = function (saved, i) {
     const base = window.OA_DELAY_PRESETS[window.OA_DELAY_UNITS[i].preset];
     const s = saved || {};
-    const sends = Array.isArray(s.sends) ? s.sends.slice(0, 16).map((v) => Number(v) || 0) : [];
-    while (sends.length < 16) sends.push(0);
+    const sends = window.oaFxSendArray(s.sends);
     // How much of this delay's return is thrown into each reverb.
     const toRv = Array.isArray(s.toRv) ? s.toRv.slice(0, window.OA_REVERB_COUNT).map((v) => Number(v) || 0) : [];
     while (toRv.length < window.OA_REVERB_COUNT) toRv.push(0);
 
-    const unit = { sends: sends, toRv: toRv, ret: typeof s.ret === 'number' ? s.ret : 0.5 };
+    const unit = {
+        sends: sends, toRv: toRv, ret: typeof s.ret === 'number' ? s.ret : 0.5,
+        // 16ths each head is locked to; 0 means it is set free in milliseconds.
+        syncL: Math.max(0, Math.min(64, Number(s.syncL) || 0)),
+        syncR: Math.max(0, Math.min(64, Number(s.syncR) || 0)),
+    };
     window.OA_DELAY_PARAMS.forEach((p) => {
         const v = Number(s[p.key]);
         unit[p.key] = isFinite(v) && s[p.key] !== undefined
@@ -447,9 +464,15 @@ window.oaDelayToReverb = function (ctx, u, r, amount) {
     feed.gain.setTargetAtTime(amount, ctx.currentTime, 0.02);
 };
 
-window.oaSetDelay = function (u, key, value) {
+window.oaSetDelay = function (u, key, value, keepSync) {
     const unit = window.oaDelayUnit(u);
     unit[key] = value;
+    // Dialling a head in milliseconds takes it off the grid — including when a
+    // preset rewrites the tape, which goes through here one parameter at a time.
+    if (!keepSync) {
+        if (key === 'timeL') unit.syncL = 0;
+        else if (key === 'timeR') unit.syncR = 0;
+    }
     window.oaSaveDelay();
 
     const ctx = window.OA_AUDIO_CTX;
@@ -480,6 +503,33 @@ window.oaSetDelayToReverb = function (u, r, value) {
     const ctx = window.OA_AUDIO_CTX;
     if (ctx && ctx.__oaDelays && ctx.__oaDelays[u]) window.oaDelayToReverb(ctx, u, r, toRv[r]);
     window.dispatchEvent(new CustomEvent('oa-delay-changed', { detail: { unit: u, rv: r } }));
+};
+
+// Lock a head to `steps` 16th notes at the current tempo. `side` is 'L' or 'R'.
+window.oaSetDelaySync = function (u, side, steps, bpm) {
+    const key = side === 'R' ? 'timeR' : 'timeL';
+    const spec = window.OA_DELAY_PARAMS.find((p) => p.key === key);
+    const secs = steps * window.OA_DELAY_SIXTEENTH(bpm);
+    window.oaDelayUnit(u)['sync' + side] = steps;
+    window.oaSetDelay(u, key, Math.max(spec.min, Math.min(spec.max, secs)), true);
+};
+
+// Re-derive every locked head after a tempo change, so a delay set to a 1/8 is
+// still a 1/8 at the new BPM. A lock that no longer fits the head's range holds
+// at the end stop and snaps back when the tempo comes back.
+window.oaResyncDelays = function (bpm) {
+    if (!bpm) return;
+    const step = window.OA_DELAY_SIXTEENTH(bpm);
+    window.OA_DELAY.units.forEach((unit, u) => {
+        ['L', 'R'].forEach((side) => {
+            const steps = unit['sync' + side];
+            if (!steps) return;
+            const key = side === 'R' ? 'timeR' : 'timeL';
+            const spec = window.OA_DELAY_PARAMS.find((p) => p.key === key);
+            const secs = Math.max(spec.min, Math.min(spec.max, steps * step));
+            if (Math.abs(secs - unit[key]) > 1e-6) window.oaSetDelay(u, key, secs, true);
+        });
+    });
 };
 
 window.oaApplyDelayPreset = function (u, key) {

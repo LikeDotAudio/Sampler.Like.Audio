@@ -478,7 +478,7 @@ window.useSamplerSets = (setSampleNames, publishSample) => {
 
     const snapshotPads = () => {
         const arr = [];
-        for (let i = 0; i < 16; i++) {
+        for (let i = 0; i < window.OA_PAD_COUNT; i++) {
             const e = window.OA_DRUM_SAMPLES && window.OA_DRUM_SAMPLES[i];
             arr.push(e && e.buffer ? { name: e.name || '', folder: e.folder || '', pitch: e.pitch || 1, loop: !!e.loop, fade: !!e.fade, offset: e.offset || 0 } : null);
         }
@@ -516,7 +516,7 @@ window.useSamplerSets = (setSampleNames, publishSample) => {
         }
         
         // Manual fetch for factory sets (they have url property)
-        for (let i = 0; i < 16; i++) {
+        for (let i = 0; i < window.OA_PAD_COUNT; i++) {
             const e = set[i];
             if (e && e.url && (!window.OA_DRUM_SAMPLES[i] || window.OA_DRUM_SAMPLES[i].name !== e.name)) {
                 try {
@@ -531,7 +531,7 @@ window.useSamplerSets = (setSampleNames, publishSample) => {
         }
 
         set.forEach((e, i) => { if (e && window.OA_DRUM_SAMPLES[i]) window.oaUpdateDrumSample(i, { pitch: e.pitch, loop: e.loop, fade: e.fade, offset: e.offset }); });
-        setSampleNames((prev) => { const n = [...prev]; for (let i = 0; i < 16; i++) { const loaded = window.OA_DRUM_SAMPLES[i]; n[i] = loaded ? (loaded.name || '(loaded)') : (metaByIdx[i] ? metaByIdx[i].name : n[i]); } return n; });
+        setSampleNames((prev) => { const n = [...prev]; for (let i = 0; i < window.OA_PAD_COUNT; i++) { const loaded = window.OA_DRUM_SAMPLES[i]; n[i] = loaded ? (loaded.name || '(loaded)') : (metaByIdx[i] ? metaByIdx[i].name : n[i]); } return n; });
     };
     
     return { sets, currentSet, newSet, deleteSet, loadSet, isFactorySet };

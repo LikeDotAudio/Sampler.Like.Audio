@@ -14,12 +14,20 @@ window.useKeyboardPads = (triggerPadKey) => {
     //
     // The bottom row is the exception: 0 joins 1 2 3 so the four keys under
     // your thumb cover the whole kit -- 0 kick, 1 snare, 2 hat, 3 perc.
-    const NUMPAD_TO_PADNUM = { 0: 1, 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 7, 7: 9, 8: 10, 9: 11 };
-    const NUMPAD_OP_TO_PADNUM = {
-        NumpadDivide: 13,
-        NumpadMultiply: 14,
-        NumpadSubtract: 15,
-        NumpadAdd: 12,
+    //
+    // Held as grid POSITIONS rather than pad numbers: on a 5 x 5 the numpad
+    // still covers the bottom-left corner of the grid, which is where the keys
+    // physically are. Each entry is [row, col] counting from the bottom left.
+    const NUMPAD_TO_CELL = {
+        0: [0, 0], 1: [0, 1], 2: [0, 2], 3: [0, 3],
+        4: [1, 0], 5: [1, 1], 6: [1, 2],
+        7: [2, 0], 8: [2, 1], 9: [2, 2],
+    };
+    const NUMPAD_OP_TO_CELL = {
+        NumpadDivide: [3, 0],
+        NumpadMultiply: [3, 1],
+        NumpadSubtract: [3, 2],
+        NumpadAdd: [2, 3],
     };
 
     // The number ROW is a straight line, not a grid, so it keeps running along
@@ -31,13 +39,14 @@ window.useKeyboardPads = (triggerPadKey) => {
         const onKey = (e) => {
             const t = e.target;
             if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable)) return;
-            const op = NUMPAD_OP_TO_PADNUM[e.code];
+            const op = NUMPAD_OP_TO_CELL[e.code];
             const m = /^(Numpad|Digit)([0-9])$/.exec(e.code || '');
             if (!op && !m) return;
-            const padNum = op || (m[1] === 'Numpad'
-                ? NUMPAD_TO_PADNUM[parseInt(m[2], 10)]
-                : DIGIT_TO_PADNUM[parseInt(m[2], 10)]);
-            if (!padNum) return;
+            const cell = op || (m[1] === 'Numpad' ? NUMPAD_TO_CELL[parseInt(m[2], 10)] : null);
+            const padNum = cell
+                ? window.oaPadAt(cell[0], cell[1])
+                : DIGIT_TO_PADNUM[parseInt(m[2], 10)];
+            if (!padNum || padNum > window.OA_PAD_COUNT) return;
             e.preventDefault();
             triggerPadKey(padNum - 1, padNum);
         };

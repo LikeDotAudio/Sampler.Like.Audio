@@ -15,10 +15,12 @@ window.OA_SONG_FILE_VERSION = 2;
 const SAMPLE_FIELDS = ['name', 'folder', 'pitch', 'sampleRoot', 'offset', 'end', 'loop', 'fade'];
 
 // idx -> serializable sample meta, or null for a track running the synth.
+// Walks the largest grid, not the current one: a pad parked outside a 4 x 4
+// still has its sample, and a song is worth exporting whole.
 window.oaSnapshotKit = function () {
     const src = window.OA_DRUM_SAMPLES || {};
     const kit = [];
-    for (let i = 0; i < 16; i++) {
+    for (let i = 0; i < window.OA_PAD_MAX; i++) {
         const e = src[i];
         if (!e || !e.name) { kit.push(null); continue; }
         const out = {};
@@ -38,7 +40,8 @@ window.oaExportSong = function (library, song, name, mixer) {
         kit: window.oaSnapshotKit(),
         // Levels live in React/MQTT state, so the caller hands them over.
         mixer: mixer || null,
-        // These two are plain globals — read them straight from the audio layer.
+        // The rest are plain globals — read them straight from the audio layer.
+        padLayout: window.OA_PAD_LAYOUT,
         synth: JSON.parse(JSON.stringify(window.OA_DRUM_SYNTH || {})),
         reverb: JSON.parse(JSON.stringify(window.OA_REVERB || {})),
         delay: JSON.parse(JSON.stringify(window.OA_DELAY || {})),
@@ -68,7 +71,7 @@ window.oaParseSongFile = function (text) {
     const clean = patterns.filter((p) => p && typeof p.name === 'string' && Array.isArray(p.data));
     // A song with no patterns is still worth importing if it carries a kit,
     // mixer or synth settings — only a file with nothing at all is an error.
-    const hasState = doc.kit || doc.mixer || doc.synth || doc.reverb || doc.delay;
+    const hasState = doc.kit || doc.mixer || doc.synth || doc.reverb || doc.delay || doc.padLayout;
     if (!clean.length && !hasState) throw new Error('No usable patterns found in that file.');
     return {
         patterns: clean,
@@ -79,6 +82,7 @@ window.oaParseSongFile = function (text) {
         synth: doc.synth && typeof doc.synth === 'object' ? doc.synth : null,
         reverb: doc.reverb && typeof doc.reverb === 'object' ? doc.reverb : null,
         delay: doc.delay && typeof doc.delay === 'object' ? doc.delay : null,
+        padLayout: typeof doc.padLayout === 'string' ? doc.padLayout : null,
     };
 };
 
@@ -86,10 +90,17 @@ window.oaParseSongFile = function (text) {
 // samples themselves. Async because re-reading the audio hits the filesystem.
 // Returns a short report so the caller can tell the user what actually landed.
 window.oaApplySongState = async function (parsed) {
-    const report = { synth: 0, reverb: false, delay: false, samples: 0, sampleNote: '' };
+    const report = { synth: 0, reverb: false, delay: false, pads: '', samples: 0, sampleNote: '' };
+
+    // First: a song cut on a 5 x 5 has to land on a 5 x 5, or everything after
+    // this only restores the first 16 voices.
+    if (parsed.padLayout && parsed.padLayout !== window.OA_PAD_LAYOUT) {
+        window.oaSetPadLayout(parsed.padLayout);
+        report.pads = window.oaPadLayoutFor(window.OA_PAD_LAYOUT).label;
+    }
 
     if (parsed.synth) {
-        for (let i = 0; i < 16; i++) {
+        for (let i = 0; i < window.OA_PAD_MAX; i++) {
             const p = parsed.synth[i];
             if (p) { window.oaSetSynthPatch(i, p); report.synth++; }
         }
@@ -107,6 +118,9 @@ window.oaApplySongState = async function (parsed) {
     }
 
     if (parsed.delay && Array.isArray(parsed.delay.units)) {
+        // The tempo travels with the mixer levels; the Mixer re-derives every
+        // locked head anyway once that tempo lands in React state.
+        const bpm = (parsed.mixer && parsed.mixer.bpm) || 120;
         parsed.delay.units.slice(0, window.OA_DELAY_COUNT).forEach((dl, u) => {
             if (!dl) return;
             if (Array.isArray(dl.sends)) dl.sends.forEach((v, i) => window.oaSetDelaySend(u, i, v));
@@ -115,6 +129,12 @@ window.oaApplySongState = async function (parsed) {
                 if (dl[p.key] !== undefined) window.oaSetDelay(u, p.key, Math.max(p.min, Math.min(p.max, Number(dl[p.key]))));
             });
             if (dl.ret !== undefined) window.oaSetDelay(u, 'ret', Number(dl.ret) || 0);
+            // After the times, so a head locked to the grid re-takes its lock —
+            // and lands on the imported song's tempo, not the one it was cut at.
+            ['L', 'R'].forEach((side) => {
+                const steps = Number(dl['sync' + side]) || 0;
+                if (steps > 0) window.oaSetDelaySync(u, side, steps, bpm);
+            });
         });
         report.delay = true;
     }

@@ -8,7 +8,18 @@ window.useSeqState = (label, DEFAULT_STEPS, TRACKS) => {
     const emptyPattern = (steps) => Array(TRACKS.length).fill().map(() => Array(steps).fill(0));
     const [seq, setSeq] = window.useMqttState(patternTopic, { grid: emptyPattern(DEFAULT_STEPS), bpm: 120, steps: DEFAULT_STEPS, toneTrack: [], toneRoot: null });
     const steps = (seq && seq.steps) || DEFAULT_STEPS;
-    const pattern = (seq && seq.grid) || emptyPattern(steps);
+    // A pattern saved on a 4 x 4 has 16 rows; on a 5 x 5 the last nine tracks
+    // would index into nothing. Fit the grid to the kit on the way out, and
+    // hand back the original array untouched when it already fits so nothing
+    // downstream sees a new pattern on every render.
+    const fitRows = (grid) => {
+        if (!Array.isArray(grid)) return emptyPattern(steps);
+        if (grid.length === TRACKS.length) return grid;
+        const out = grid.slice(0, TRACKS.length);
+        while (out.length < TRACKS.length) out.push(Array(steps).fill(0));
+        return out;
+    };
+    const pattern = fitRows(seq && seq.grid);
     const bpm = (seq && seq.bpm) || 120;
     const toneTrack = (seq && seq.toneTrack) || [];
     const toneRoot = (seq && seq.toneRoot !== undefined) ? seq.toneRoot : null;

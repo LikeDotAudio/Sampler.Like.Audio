@@ -2,13 +2,15 @@ const loadDrumSets = () => { try { return JSON.parse(window.localStorage.getItem
 const midiNoteName = window.midiNoteName;
 const PadWave = window.PadWave;
 const Pads = ({ label = "Drum Pads", centerVelocity = 100, edgeVelocity = 10, onHit = null, showSets = true }) => {
-    // Shared drum kit — the SAME 16 voices the Sequencer uses (DrumKit.js).
+    // Shared drum kit — the SAME voices the Sequencer uses (DrumKit.js), as
+    // many as the current grid holds.
+    const grid = window.useOaPadGrid();
     const KIT = window.OA_DRUM_KIT || [];
     // Per-pad loaded-sample file name (for display); null = uses the synth voice.
     // The decoded audio lives in window.OA_DRUM_SAMPLES so the Sequencer plays it
     // too. Seed from that shared store so pads loaded before a remount still show.
     const [sampleNames, setSampleNames] = React.useState(() =>
-        Array(16).fill(null).map((_, i) => {
+        Array(window.OA_PAD_MAX).fill(null).map((_, i) => {
             const e = window.OA_DRUM_SAMPLES && window.OA_DRUM_SAMPLES[i];
             return e ? (e.name || '(loaded)') : null;
         }));
@@ -33,7 +35,7 @@ const Pads = ({ label = "Drum Pads", centerVelocity = 100, edgeVelocity = 10, on
         centerVelocity, edgeVelocity, onHit, toneRoot, midiBaseRef, 
         setVelocities, setToneRoot, padButtons
     );
-    const layout = [13, 14, 15, 16, 9, 10, 11, 12, 5, 6, 7, 8, 1, 2, 3, 4];
+    const layout = window.oaPadNumbers();
     const { midiStatus, midiNote } = window.useMidiPads(midiBase, toneRootRef, padButtons, triggerPadAt, setVelocities);
     window.useKeyboardPads(triggerPadKey);
     // Glow a pad whenever the Sequencer plays that voice (intensity = step velocity).
@@ -75,7 +77,7 @@ const Pads = ({ label = "Drum Pads", centerVelocity = 100, edgeVelocity = 10, on
                    stop being a fixed 120px and share the width evenly instead. */
                 @media (max-width: 800px) {
                     .oa-pad-grid {
-                        grid-template-columns: repeat(4, 1fr) !important;
+                        grid-template-columns: repeat(${grid.cols}, 1fr) !important;
                         gap: 1px !important;
                         padding: 0 1px;
                     }
@@ -91,7 +93,7 @@ const Pads = ({ label = "Drum Pads", centerVelocity = 100, edgeVelocity = 10, on
                     .oa-pad-name { font-size: 10px !important; }
                 }
             `}</style>
-            <div className="oa-pad-grid" style={{ width: '100%', maxWidth: '800px', display: 'grid', gridTemplateColumns: 'repeat(4, max-content)', gap: '8px', justifyContent: 'center' }}>
+            <div className="oa-pad-grid" style={{ width: '100%', maxWidth: `${Math.min(1100, 200 * grid.cols)}px`, display: 'grid', gridTemplateColumns: `repeat(${grid.cols}, max-content)`, gap: '8px', justifyContent: 'center' }}>
                 {layout.map((padNum) => {
                     const idx = padNum - 1;
                     const name = (KIT[idx] && KIT[idx].name) || `Pad ${padNum}`;

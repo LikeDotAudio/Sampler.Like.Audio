@@ -87,7 +87,7 @@ const Key = ({ label, onClick, onDown, onUp, lit, title, wide, tone = 'cream', s
  * is a fader with a real position on a real scale, so grabbing halfway up the
  * slot should put it halfway up, exactly as your hand expects from the picture.
  */
-const LarcSlider = ({ value, onChange, height = 108 }) => {
+const LarcSlider = ({ value, onChange, height = 190 }) => {
     const trackRef = React.useRef(null);
     const CAP_H = 13;
 
@@ -209,6 +209,7 @@ window.LarcRemote = ({ u, onClose }) => {
     };
     React.useEffect(() => () => { if (msgTimer.current) clearTimeout(msgTimer.current); }, []);
 
+    const [showHelp, setShowHelp] = React.useState(false);
     const [held, setHeld] = React.useState(null);      // which key is physically down
     const [dispHold, setDispHold] = React.useState(false);
     const [ioMeter, setIoMeter] = React.useState('OUT');
@@ -332,10 +333,34 @@ window.LarcRemote = ({ u, onClose }) => {
                 {unit.standby && (
                     <span style={{ fontSize: '9px', color: '#e5533d', fontWeight: '700' }}>STANDBY</span>
                 )}
-                <div style={{ marginLeft: 'auto' }}>
+                <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
+                    <window.SeqButton
+                        label={showHelp ? '✖ Help' : '? Help'}
+                        onClick={() => setShowHelp(!showHelp)}
+                        active={showHelp}
+                        title="How the banks, programs and pages work"
+                        style={{ padding: '4px 10px' }} />
                     <window.SeqButton label="✖ Close" onClick={onClose} style={{ padding: '4px 10px' }} />
                 </div>
             </div>
+
+            {/* Folded away by default. The remote is tall enough already, and
+                once you know how the banks work you never need this again. */}
+            {showHelp && (
+                <div style={{
+                    fontSize: '9px', color: '#9aa3ae', lineHeight: 1.55, marginBottom: '9px',
+                    background: '#1b1f26', border: '1px solid #333', borderRadius: '5px', padding: '8px 10px'
+                }}>
+                    Walk the banks with ◀ BANK ▶ — the bank line dims while you are browsing and
+                    nothing has changed yet. Press a numeric key to load that program from it, or
+                    step with ◀ PROGRAM ▶. The six sliders edit whatever the program loaded; a
+                    <Led size={9} style={{ margin: '0 3px' }}>*</Led> beside the name means you have
+                    moved it off the stored settings. ◀ PAGE ▶ swaps the sliders for the other six
+                    parameters. Press a slider's key to spell its full name out in the display.
+                    SHAPE draws the curve of the reverb's buildup and SPREAD stretches it —
+                    together they are why a big hall sounds big rather than merely long.
+                </div>
+            )}
 
             {/* ---------------- the box ---------------- */}
             <div style={{
@@ -487,16 +512,6 @@ window.LarcRemote = ({ u, onClose }) => {
                         </div>
                     ))}
                 </div>
-            </div>
-
-            <div style={{ fontSize: '9px', color: '#666', marginTop: '9px', lineHeight: 1.5 }}>
-                Walk the banks with ◀ BANK ▶ — the bank line dims while you are browsing and
-                nothing has changed yet. Press a numeric key to load that program from it, or
-                step with ◀ PROGRAM ▶. The six sliders edit whatever the program loaded; a
-                <Led size={9} style={{ margin: '0 3px' }}>*</Led> beside the name means you have
-                moved it off the stored settings. ◀ PAGE ▶ swaps the sliders for the other six
-                parameters. SHAPE draws the curve of the reverb's buildup and SPREAD stretches
-                it — together they are why a big hall sounds big rather than merely long.
             </div>
         </div>
     );

@@ -1,0 +1,23 @@
+<!doctype html><html><head><meta charset="utf-8"><title>DRIVE panel check</title>
+<script src="./vendor/react.production.min.js"></script>
+<script src="./vendor/react-dom.production.min.js"></script>
+<style>:root{--panel:#1e2128;--bg:#15171b;--strip:#20242b;--muted:#7a828e}
+body{background:#15171b;margin:0;font-family:system-ui,sans-serif;height:1100px}</style>
+</head><body><div id="root"></div>
+<script src="./dist/app.js"></script>
+<script>
+// Four pedals side by side, each showing a different part of the range, so one
+// screenshot covers bypass, overdrive, tube and a starved octave fuzz.
+const SETUPS = [
+  { name:'01 Kick — BYPASS', p:{} },
+  { name:'02 Snare — CRUNCH', p:{mode:'od', drive:9, tone:9000, mix:0.55} },
+  { name:'03 Bass — TUBE', p:{mode:'tube', drive:5, tone:7500, mix:0.45} },
+  { name:'04 Lead — OCTAVIA', p:{mode:'fuzz', drive:20, starve:0.30, rect:0.9, tone:6000, level:0.85, mix:0.9} },
+];
+SETUPS.forEach((s,i) => Object.keys(s.p).forEach(k => window.oaSetDrive(i, k, s.p[k])));
+const App = () => React.createElement('div', {style:{display:'flex',flexWrap:'wrap'}},
+  SETUPS.map((s,i) => React.createElement('div', {key:i, style:{position:'relative', width:'50%', height:'520px'}},
+    React.createElement('div', {style:{position:'absolute', inset:0, transform:'scale(0.98)'}},
+      React.createElement(window.DriveEditor, {idx:i, name:s.name, onClose:()=>{}})))));
+ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
+</script></body></html>

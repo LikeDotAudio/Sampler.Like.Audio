@@ -286,10 +286,14 @@ const tapeModuleUrl = function () {
 };
 
 /**
- * Register the tape processor on a context. Resolves to true if the worklet is
- * usable. Cached per context, and `ctx.__oaWorkletOk` is set once it settles so
- * bus construction can go straight to the right engine without waiting — which
- * an OfflineAudioContext needs, since it schedules and renders in one tick.
+ * Register every worklet processor the effects need on a context — the tape
+ * echo here, and the channel compressor from oaCompressor.js. Resolves to true
+ * if worklets are usable, and `ctx.__oaWorkletOk` is set once it settles so bus
+ * construction can go straight to the right engine without waiting — which an
+ * OfflineAudioContext needs, since it schedules and renders in one tick.
+ *
+ * One entry point for both because they share the same answer: a context either
+ * has AudioWorklet or it does not, and every bus wants to know before it builds.
  */
 window.oaPrepareFx = function (ctx) {
     if (!ctx.__oaFxReady) {
@@ -298,10 +302,11 @@ window.oaPrepareFx = function (ctx) {
             try {
                 if (ctx.audioWorklet && window.AudioWorkletNode && window.Blob && window.URL) {
                     await ctx.audioWorklet.addModule(tapeModuleUrl());
+                    if (window.oaCompModuleUrl) await ctx.audioWorklet.addModule(window.oaCompModuleUrl());
                     ok = true;
                 }
             } catch (e) {
-                console.warn('⚠️ [TapeDelay] worklet unavailable, using native chain:', e && e.message);
+                console.warn('⚠️ [FX] worklet unavailable, using native chains:', e && e.message);
             }
             ctx.__oaWorkletOk = ok;
             return ok;

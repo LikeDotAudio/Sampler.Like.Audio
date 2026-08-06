@@ -41,6 +41,7 @@ window.oaExportSong = function (library, song, name, mixer) {
         // These two are plain globals — read them straight from the audio layer.
         synth: JSON.parse(JSON.stringify(window.OA_DRUM_SYNTH || {})),
         reverb: JSON.parse(JSON.stringify(window.OA_REVERB || {})),
+        delay: JSON.parse(JSON.stringify(window.OA_DELAY || {})),
     };
     const blob = new Blob([JSON.stringify(doc, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -67,7 +68,7 @@ window.oaParseSongFile = function (text) {
     const clean = patterns.filter((p) => p && typeof p.name === 'string' && Array.isArray(p.data));
     // A song with no patterns is still worth importing if it carries a kit,
     // mixer or synth settings — only a file with nothing at all is an error.
-    const hasState = doc.kit || doc.mixer || doc.synth || doc.reverb;
+    const hasState = doc.kit || doc.mixer || doc.synth || doc.reverb || doc.delay;
     if (!clean.length && !hasState) throw new Error('No usable patterns found in that file.');
     return {
         patterns: clean,
@@ -77,6 +78,7 @@ window.oaParseSongFile = function (text) {
         mixer: doc.mixer && typeof doc.mixer === 'object' ? doc.mixer : null,
         synth: doc.synth && typeof doc.synth === 'object' ? doc.synth : null,
         reverb: doc.reverb && typeof doc.reverb === 'object' ? doc.reverb : null,
+        delay: doc.delay && typeof doc.delay === 'object' ? doc.delay : null,
     };
 };
 
@@ -84,7 +86,7 @@ window.oaParseSongFile = function (text) {
 // samples themselves. Async because re-reading the audio hits the filesystem.
 // Returns a short report so the caller can tell the user what actually landed.
 window.oaApplySongState = async function (parsed) {
-    const report = { synth: 0, reverb: false, samples: 0, sampleNote: '' };
+    const report = { synth: 0, reverb: false, delay: false, samples: 0, sampleNote: '' };
 
     if (parsed.synth) {
         for (let i = 0; i < 16; i++) {
@@ -94,10 +96,27 @@ window.oaApplySongState = async function (parsed) {
     }
 
     if (parsed.reverb) {
-        const rv = parsed.reverb;
-        if (Array.isArray(rv.sends)) rv.sends.forEach((v, i) => window.oaSetReverbSend(i, v));
-        ['tone', 'size', 'ret'].forEach((k) => { if (rv[k] !== undefined) window.oaSetReverb(k, rv[k]); });
+        // A v1 export carried one flat reverb; it lands on unit A.
+        const units = Array.isArray(parsed.reverb.units) ? parsed.reverb.units : [parsed.reverb];
+        units.slice(0, window.OA_REVERB_COUNT).forEach((rv, u) => {
+            if (!rv) return;
+            if (Array.isArray(rv.sends)) rv.sends.forEach((v, i) => window.oaSetReverbSend(u, i, v));
+            ['tone', 'size', 'ret'].forEach((k) => { if (rv[k] !== undefined) window.oaSetReverb(u, k, rv[k]); });
+        });
         report.reverb = true;
+    }
+
+    if (parsed.delay && Array.isArray(parsed.delay.units)) {
+        parsed.delay.units.slice(0, window.OA_DELAY_COUNT).forEach((dl, u) => {
+            if (!dl) return;
+            if (Array.isArray(dl.sends)) dl.sends.forEach((v, i) => window.oaSetDelaySend(u, i, v));
+            if (Array.isArray(dl.toRv)) dl.toRv.forEach((v, r) => window.oaSetDelayToReverb(u, r, v));
+            window.OA_DELAY_PARAMS.forEach((p) => {
+                if (dl[p.key] !== undefined) window.oaSetDelay(u, p.key, Math.max(p.min, Math.min(p.max, Number(dl[p.key]))));
+            });
+            if (dl.ret !== undefined) window.oaSetDelay(u, 'ret', Number(dl.ret) || 0);
+        });
+        report.delay = true;
     }
 
     if (parsed.kit && parsed.kit.some(Boolean)) {

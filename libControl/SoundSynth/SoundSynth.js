@@ -42,6 +42,13 @@ window.oaAudioCtx = function () {
         // Best-effort resume (browsers gate audio until a user gesture).
         try { window.OA_AUDIO_CTX.resume(); } catch (e) {}
     }
+    // The tape delays run in an AudioWorklet, which has to be fetched and
+    // registered before a node can exist. Kick that off the moment there is a
+    // context, so it is ready long before the first hit.
+    if (window.oaWarmFx && !window.OA_AUDIO_CTX.__oaWarmed) {
+        window.OA_AUDIO_CTX.__oaWarmed = true;
+        try { window.oaWarmFx(window.OA_AUDIO_CTX).catch(() => {}); } catch (e) {}
+    }
     return window.OA_AUDIO_CTX;
 };
 

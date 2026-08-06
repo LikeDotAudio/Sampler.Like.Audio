@@ -39,7 +39,7 @@ window.SeqSong = ({ songPos, song, togglePlayback, playSong, setSongItems, setSo
             if (parsed.song.length) setSongItems(parsed.song.map((n) => renamed[n] || n));
             applyMixer(parsed.mixer);
 
-            let state = { synth: 0, samples: 0, sampleNote: '', reverb: false };
+            let state = { synth: 0, samples: 0, sampleNote: '', reverb: false, delay: false };
             try { state = await window.oaApplySongState(parsed); }
             catch (err) { console.error('🛑 [Song] could not restore state:', err); }
 
@@ -50,6 +50,7 @@ window.SeqSong = ({ songPos, song, togglePlayback, playSong, setSongItems, setSo
                 parsed.mixer ? 'mixer levels' : null,
                 state.synth ? `${state.synth} synth voice(s)` : null,
                 state.reverb ? 'reverb' : null,
+                state.delay ? 'tape delays' : null,
                 state.samples ? `${state.samples} sample(s)` : null,
             ].filter(Boolean);
             window.alert(`Imported ${parsed.patterns.length} pattern(s)` +

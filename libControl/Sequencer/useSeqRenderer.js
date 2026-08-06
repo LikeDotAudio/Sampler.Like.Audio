@@ -16,7 +16,12 @@ window.useSeqRenderer = (pattern, steps, mutes, bpm, safeLabel) => {
             const tailSec = 2.0;
             const offline = new Offline(2, Math.max(1, Math.ceil((dur + tailSec) * rate)), rate);
             const TRACKS = window.OA_DRUM_KIT || [];
-            
+
+            // Reverbs and tape delays print with the pattern. The tape worklet
+            // has to be registered on THIS context before any voice asks for a
+            // send, because scheduling and rendering happen in one tick.
+            if (window.oaWarmFx) { try { await window.oaWarmFx(offline); } catch (e) {} }
+
             for (let step = 0; step < totalSteps; step++) {
                 const t = step * secPerStep;
                 pattern.forEach((track, trkIdx) => {

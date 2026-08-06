@@ -1,10 +1,13 @@
 /**
  * Header: oaReverb.js
- * Purpose: A single shared reverb bus for the whole kit.
+ * Purpose: Two shared reverb buses for the whole kit.
  * Description: Every voice splits into a dry path straight to the output and a
- *   per-channel send into one convolver. The impulse response is generated at
- *   runtime from two controls — tone (bright/dull) and size (short → extra
- *   long) — so no external IR file is needed.
+ *   per-channel send into one of two convolvers. Each unit has its own tone
+ *   (bright/dull), size (short → extra long) and return level, so one can be a
+ *   tight room while the other is a long tail. The impulse responses are
+ *   generated at runtime, so no external IR file is needed.
+ *
+ *   The tape delays (oaTapeDelay.js) feed these buses too — see `toRv` there.
  */
 
 window.OA_REVERB_SIZES = {
@@ -21,24 +24,41 @@ window.OA_REVERB_TONES = {
     dull:   { label: 'Dull',   lowpass: 2200,  highpass: 90 },
 };
 
-const OA_REVERB_DEFAULTS = {
-    sends: Array(16).fill(0),
-    tone: 'bright',
-    size: 'medium',
-    ret: 0.4,
+// Two units. A starts as the general-purpose room, B as the long dark tail so
+// the pair is useful before anyone touches a control.
+window.OA_REVERB_UNITS = [
+    { name: 'RV A', color: '#5f9ea0', tone: 'bright', size: 'medium',    ret: 0.4 },
+    { name: 'RV B', color: '#4a7fb0', tone: 'dull',   size: 'extralong', ret: 0.4 },
+];
+window.OA_REVERB_COUNT = window.OA_REVERB_UNITS.length;
+
+// Fill in whatever a saved (or hand-edited) unit is missing, and drop anything
+// that no longer names a real tone/size.
+const rvUnit = function (saved, i) {
+    const d = window.OA_REVERB_UNITS[i];
+    const s = saved || {};
+    const sends = Array.isArray(s.sends) ? s.sends.slice(0, 16).map((v) => Number(v) || 0) : [];
+    while (sends.length < 16) sends.push(0);
+    return {
+        sends: sends,
+        tone: window.OA_REVERB_TONES[s.tone] ? s.tone : d.tone,
+        size: window.OA_REVERB_SIZES[s.size] ? s.size : d.size,
+        ret: typeof s.ret === 'number' ? s.ret : d.ret,
+    };
 };
 
 window.OA_REVERB = (function () {
-    try {
-        const saved = JSON.parse(window.localStorage.getItem('oaReverb'));
-        if (saved) {
-            const sends = Array.isArray(saved.sends) ? saved.sends.slice(0, 16) : [];
-            while (sends.length < 16) sends.push(0);
-            return Object.assign({}, OA_REVERB_DEFAULTS, saved, { sends: sends });
-        }
-    } catch (e) {}
-    return Object.assign({}, OA_REVERB_DEFAULTS, { sends: OA_REVERB_DEFAULTS.sends.slice() });
+    let saved = null;
+    try { saved = JSON.parse(window.localStorage.getItem('oaReverb')); } catch (e) {}
+    // The first version stored a single flat unit — it becomes RV A, and B
+    // comes up on its defaults.
+    const units = (saved && Array.isArray(saved.units)) ? saved.units : [saved];
+    return { units: window.OA_REVERB_UNITS.map((d, i) => rvUnit(units[i], i)) };
 })();
+
+window.oaReverbUnit = function (u) {
+    return window.OA_REVERB.units[u] || window.OA_REVERB.units[0];
+};
 
 window.oaSaveReverb = function () {
     try { window.localStorage.setItem('oaReverb', JSON.stringify(window.OA_REVERB)); } catch (e) {}
@@ -75,15 +95,18 @@ window.oaMakeImpulse = function (ctx, sizeKey, toneKey) {
     return buf;
 };
 
-// One bus per AudioContext — the offline renderer gets its own.
-window.oaReverbBus = function (ctx) {
-    if (!ctx.__oaReverb) {
+// One set of buses per AudioContext — the offline renderer gets its own.
+window.oaReverbBus = function (ctx, u) {
+    const idx = Math.max(0, Math.min(window.OA_REVERB_COUNT - 1, u | 0));
+    const buses = ctx.__oaReverbs || (ctx.__oaReverbs = []);
+    if (!buses[idx]) {
+        const unit = window.oaReverbUnit(idx);
         const input = ctx.createGain();          // everything sends in here
         const convolver = ctx.createConvolver();
         const ret = ctx.createGain();
         convolver.normalize = true;
-        convolver.buffer = window.oaMakeImpulse(ctx, window.OA_REVERB.size, window.OA_REVERB.tone);
-        ret.gain.value = window.OA_REVERB.ret;
+        convolver.buffer = window.oaMakeImpulse(ctx, unit.size, unit.tone);
+        ret.gain.value = unit.ret;
         input.connect(convolver);
         convolver.connect(ret);
         ret.connect(ctx.destination);
@@ -101,56 +124,33 @@ window.oaReverbBus = function (ctx) {
                 return a;
             });
         }
-        ctx.__oaReverb = { input: input, convolver: convolver, ret: ret, analysers: analysers };
+        buses[idx] = { input: input, convolver: convolver, ret: ret, analysers: analysers };
     }
-    return ctx.__oaReverb;
+    return buses[idx];
 };
 
-// Rebuild the tail for the live context after a tone/size change.
-window.oaRefreshReverb = function () {
+// Rebuild a tail for the live context after a tone/size change.
+window.oaRefreshReverb = function (u) {
     const ctx = window.OA_AUDIO_CTX;
-    if (ctx && ctx.__oaReverb) {
-        ctx.__oaReverb.convolver.buffer = window.oaMakeImpulse(ctx, window.OA_REVERB.size, window.OA_REVERB.tone);
-        ctx.__oaReverb.ret.gain.value = window.OA_REVERB.ret;
-    }
+    const bus = ctx && ctx.__oaReverbs && ctx.__oaReverbs[u];
+    if (!bus) return;
+    const unit = window.oaReverbUnit(u);
+    bus.convolver.buffer = window.oaMakeImpulse(ctx, unit.size, unit.tone);
+    bus.ret.gain.value = unit.ret;
 };
 
-window.oaSetReverb = function (key, value) {
-    window.OA_REVERB[key] = value;
+window.oaSetReverb = function (u, key, value) {
+    window.oaReverbUnit(u)[key] = value;
     window.oaSaveReverb();
-    window.oaRefreshReverb();
-    window.dispatchEvent(new CustomEvent('oa-reverb-changed', { detail: { key: key } }));
+    window.oaRefreshReverb(u);
+    window.dispatchEvent(new CustomEvent('oa-reverb-changed', { detail: { unit: u, key: key } }));
 };
 
-window.oaSetReverbSend = function (idx, value) {
-    const sends = window.OA_REVERB.sends.slice();
+window.oaSetReverbSend = function (u, idx, value) {
+    const unit = window.oaReverbUnit(u);
+    const sends = unit.sends.slice();
     sends[idx] = Math.max(0, Math.min(1, value));
-    window.OA_REVERB.sends = sends;
+    unit.sends = sends;
     window.oaSaveReverb();
-    window.dispatchEvent(new CustomEvent('oa-reverb-changed', { detail: { idx: idx } }));
-};
-
-/**
- * The node a voice should connect to. Handles panning, the dry path to the
- * output and the reverb send for this channel. Returns the input node.
- */
-window.oaVoiceOut = function (ctx, idx, pan) {
-    let node;
-    if (pan && ctx.createStereoPanner) {
-        const p = ctx.createStereoPanner();
-        p.pan.value = Math.max(-1, Math.min(1, pan));
-        node = p;
-    } else {
-        node = ctx.createGain();
-    }
-    node.connect(ctx.destination);
-
-    const send = (window.OA_REVERB.sends && window.OA_REVERB.sends[idx]) || 0;
-    if (send > 0.001) {
-        const sg = ctx.createGain();
-        sg.gain.value = send;
-        node.connect(sg);
-        sg.connect(window.oaReverbBus(ctx).input);
-    }
-    return node;
+    window.dispatchEvent(new CustomEvent('oa-reverb-changed', { detail: { unit: u, idx: idx } }));
 };

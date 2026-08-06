@@ -14,6 +14,7 @@ const Mixer = () => {
     // Which channel's SYNTH panel is open, and a re-render when samples change
     // so a channel that just got a sample loses its SYNTH button.
     const [synthPad, setSynthPad] = React.useState(null);
+    const [tapeUnit, setTapeUnit] = React.useState(null);
     const [, forceSamples] = React.useReducer((n) => n + 1, 0);
     React.useEffect(() => {
         const onSample = () => forceSamples();
@@ -29,54 +30,83 @@ const Mixer = () => {
     }, []);
     const hasSample = (i) => !!(window.OA_DRUM_SAMPLES && window.OA_DRUM_SAMPLES[i] && window.OA_DRUM_SAMPLES[i].buffer);
 
-    // Reverb lives outside React state (the audio graph reads it directly), so
-    // mirror its changes back into a render.
-    const [, forceReverb] = React.useReducer((n) => n + 1, 0);
+    // Every effect return, in strip order: the two reverbs, then the four tape
+    // delays. One list drives the send knobs, the meters and the return strips,
+    // so the three can never disagree about what exists.
+    const FX = React.useMemo(() => [
+        ...window.OA_REVERB_UNITS.map((m, i) => ({
+            kind: 'rv', i, key: `rv${i}`, name: m.name, color: m.color,
+            short: 'R' + String.fromCharCode(65 + i),
+        })),
+        ...window.OA_DELAY_UNITS.map((m, i) => ({
+            kind: 'dl', i, key: `dl${i}`, name: m.name, color: m.color,
+            short: 'D' + (i + 1),
+        })),
+    ], []);
+
+    const sendOf = (fx, ch) => {
+        const unit = fx.kind === 'rv' ? window.oaReverbUnit(fx.i) : window.oaDelayUnit(fx.i);
+        return (unit.sends && unit.sends[ch]) || 0;
+    };
+    const setSend = (fx, ch, v) => (fx.kind === 'rv' ? window.oaSetReverbSend : window.oaSetDelaySend)(fx.i, ch, v);
+    const busOf = (ctx, fx) => (fx.kind === 'rv' ? ctx.__oaReverbs : ctx.__oaDelays) || [];
+
+    // The effect state lives outside React (the audio graph reads it directly),
+    // so mirror its changes back into a render.
+    const [, forceFx] = React.useReducer((n) => n + 1, 0);
     React.useEffect(() => {
-        const onRv = () => forceReverb();
-        window.addEventListener('oa-reverb-changed', onRv);
-        return () => window.removeEventListener('oa-reverb-changed', onRv);
+        const onFx = () => forceFx();
+        window.addEventListener('oa-reverb-changed', onFx);
+        window.addEventListener('oa-delay-changed', onFx);
+        return () => {
+            window.removeEventListener('oa-reverb-changed', onFx);
+            window.removeEventListener('oa-delay-changed', onFx);
+        };
     }, []);
-    // The reverb tail decays on its own schedule, so unlike the per-hit track
-    // meters these are polled from the bus's analysers each frame.
-    const rvMeterRefs = React.useRef([null, null]);
+
+    // A tail and a tape repeat decay on their own schedule, so unlike the
+    // per-hit track meters these are polled from each bus's analysers.
+    const fxMeterRefs = React.useRef({});
     React.useEffect(() => {
         let raf = null;
         const buf = new Float32Array(1024);
-        const peaks = [0, 0];
+        const peaks = {};
         const tick = () => {
             const ctx = window.OA_AUDIO_CTX;
-            const bus = ctx && ctx.__oaReverb;
-            if (bus && bus.analysers) {
-                bus.analysers.forEach((an, ch) => {
-                    const el = rvMeterRefs.current[ch];
-                    if (!el) return;
-                    an.getFloatTimeDomainData(buf);
-                    let peak = 0;
-                    for (let i = 0; i < buf.length; i++) {
-                        const a = Math.abs(buf[i]);
-                        if (a > peak) peak = a;
-                    }
-                    // Fall away smoothly so the tail reads as a decay, not a flicker.
-                    peaks[ch] = Math.max(peak, peaks[ch] * 0.86);
-                    el.style.height = `${Math.max(0, (1 - Math.min(1, peaks[ch])) * 100)}%`;
+            if (ctx) {
+                FX.forEach((fx) => {
+                    const bus = busOf(ctx, fx)[fx.i];
+                    const els = fxMeterRefs.current[fx.key];
+                    if (!bus || !bus.analysers || !els) return;
+                    const p = peaks[fx.key] || (peaks[fx.key] = [0, 0]);
+                    bus.analysers.forEach((an, ch) => {
+                        const el = els[ch];
+                        if (!el) return;
+                        an.getFloatTimeDomainData(buf);
+                        let peak = 0;
+                        for (let i = 0; i < buf.length; i++) {
+                            const a = Math.abs(buf[i]);
+                            if (a > peak) peak = a;
+                        }
+                        // Fall away smoothly so the tail reads as a decay, not a flicker.
+                        p[ch] = Math.max(peak, p[ch] * 0.86);
+                        el.style.height = `${Math.max(0, (1 - Math.min(1, p[ch])) * 100)}%`;
+                    });
                 });
             }
             raf = requestAnimationFrame(tick);
         };
         raf = requestAnimationFrame(tick);
         return () => cancelAnimationFrame(raf);
-    }, []);
+    }, [FX]);
 
-    const rv = window.OA_REVERB;
-    const sends = rv.sends || [];
     const selStyle = {
         width: '100%', background: '#222', color: '#7fd4d6', border: '1px solid #444',
         borderRadius: '3px', fontSize: '10px', padding: '2px 3px', cursor: 'pointer'
     };
     const masterRefs = React.useRef([null, null]);
     const masterPeaks = React.useRef({ L: 0, R: 0, pending: false });
-    
+
     const stateRef = React.useRef({ trackVol, mutes, solos, isAnySolo, trackPan });
     React.useEffect(() => {
         stateRef.current = { trackVol, mutes, solos, isAnySolo, trackPan };
@@ -93,35 +123,35 @@ const Mixer = () => {
             if (idx == null) return;
             const el = meterRefs.current[idx];
             if (!el) return;
-            
+
             const { trackVol: tVol, mutes: tMutes, solos: tSolos, isAnySolo: tAnySolo } = stateRef.current;
             const vol = tVol[idx] == null ? 1 : tVol[idx];
-            
+
             if (tMutes[idx] || (tAnySolo && !tSolos[idx]) || vol === 0) return;
-            
+
             const i = Math.max(0, Math.min(1, ((e.detail.velocity || 0) / 100) * vol));
             const targetHeight = (1 - i) * 100;
-            
+
             el.style.transition = 'none';
             el.style.height = `${targetHeight}%`;
-            
+
             // 1. Animate Individual Track Meter
             el.style.transition = 'none';
             el.style.height = `${targetHeight}%`;
             void el.offsetHeight;
             el.style.transition = 'height 0.3s cubic-bezier(0.2, 1, 0.3, 1)';
             el.style.height = '100%';
-            
+
             // 2. Accumulate Master Meter Peaks
             const tPan = stateRef.current.trackPan[idx] || 0;
             // Simple equal power panning approximation
             const lFactor = Math.cos((tPan + 1) * Math.PI / 4);
             const rFactor = Math.sin((tPan + 1) * Math.PI / 4);
             const hitVol = ((e.detail.velocity || 0) / 100) * vol;
-            
+
             masterPeaks.current.L = Math.min(1.05, masterPeaks.current.L + hitVol * lFactor * 0.9);
             masterPeaks.current.R = Math.min(1.05, masterPeaks.current.R + hitVol * rFactor * 0.9);
-            
+
             if (!masterPeaks.current.pending) {
                 masterPeaks.current.pending = true;
                 requestAnimationFrame(() => {
@@ -162,6 +192,23 @@ const Mixer = () => {
 
     const panLabel = v => Math.abs(v) < 0.02 ? "C" : (v < 0 ? "L" + Math.round(-v * 100) : "R" + Math.round(v * 100));
 
+    // A pair of meter bars for one effect return, gradient-tinted to the unit.
+    const fxMeters = (fx) => (
+        <React.Fragment>
+            {[0, 1].map((ch) => (
+                <div key={ch} style={{
+                    width: '6px', borderRadius: '2px', position: 'relative', overflow: 'hidden', border: '1px solid #0008',
+                    background: `linear-gradient(to top, #1e2430 0%, ${fx.color} 74%, ${fx.color} 88%, #ffffff 100%)`
+                }}>
+                    <i ref={(el) => {
+                        const slot = fxMeterRefs.current[fx.key] || (fxMeterRefs.current[fx.key] = [null, null]);
+                        slot[ch] = el;
+                    }}
+                       style={{ position: 'absolute', left: 0, right: 0, top: 0, height: '100%', background: '#15171b' }}></i>
+                </div>
+            ))}
+        </React.Fragment>
+    );
 
     return (
         <div className="chunky-scrollbar" style={{ display: 'flex', gap: 0, padding: 0, overflowX: 'auto', alignItems: 'stretch', justifyContent: 'safe center', backgroundColor: 'var(--bg)' }}>
@@ -179,10 +226,10 @@ const Mixer = () => {
                     <div key={i} style={{
                         // Strips butt up against each other — a single rule line is the only separator.
                         background: 'var(--strip)', border: 'none', borderRight: '1px solid #3a3f49', borderRadius: 0,
-                        width: '74px', flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center',
+                        width: '76px', flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center',
                         padding: '0 3px 8px', overflow: 'hidden'
                     }}>
-                        
+
                         {/* The channel name IS the ON button — lit means the track is live. Solo sits under it. */}
                         <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: '3px', marginTop: '6px', marginBottom: '8px' }}>
                             <button
@@ -221,8 +268,8 @@ const Mixer = () => {
                             }}>
                                 <i ref={el => meterRefs.current[i] = el} style={{ position: 'absolute', left: 0, right: 0, top: 0, height: '100%', background: '#15171b' }}></i>
                             </div>
-                            <SvgFader 
-                                value={vol} color={color} width={36} height={180} 
+                            <SvgFader
+                                value={vol} color={color} width={36} height={180}
                                 onChange={(v) => setTrackVol((prev) => { const n = [...prev]; n[i] = v; return n; })}
                             />
                         </div>
@@ -247,21 +294,35 @@ const Mixer = () => {
 
                         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
                             <SvgKnob
-                                value={pan} min={-1} max={1} defaultVal={0} bipolar={true} color={color} size={32} 
+                                value={pan} min={-1} max={1} defaultVal={0} bipolar={true} color={color} size={32}
                                 onChange={(v) => setTrackPan((pprev) => { const n = [...pprev]; n[i] = v; return n; })}
                             />
                             <div style={{ fontSize: '8px', color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>{panLabel(pan)}</div>
                         </div>
 
-                        {/* Reverb send — how much of this channel feeds the shared tail. */}
-                        <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', marginTop: '4px' }}>
-                            <SvgKnob
-                                value={sends[i] || 0} min={0} max={1} defaultVal={0} color="#5f9ea0" size={28}
-                                onChange={(v) => window.oaSetReverbSend(i, v)}
-                            />
-                            <div style={{ fontSize: '8px', color: (sends[i] || 0) > 0.001 ? '#7fd4d6' : 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>
-                                RV {Math.round((sends[i] || 0) * 100)}
-                            </div>
+                        {/* Sends — how much of this channel feeds each shared effect.
+                            Two reverbs on the top row, then the four tape delays. */}
+                        <div style={{
+                            width: '100%', marginTop: '6px', paddingTop: '5px', borderTop: '1px solid #3a3f49',
+                            display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px 2px', justifyItems: 'center'
+                        }}>
+                            {FX.map((fx) => {
+                                const amount = sendOf(fx, i);
+                                return (
+                                    <div key={fx.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px' }}>
+                                        <SvgKnob
+                                            value={amount} min={0} max={1} defaultVal={0} color={fx.color} size={26}
+                                            onChange={(v) => setSend(fx, i, v)}
+                                        />
+                                        <div title={`${track.name || 'Track'} → ${fx.name}`} style={{
+                                            fontSize: '7px', letterSpacing: '.2px', fontVariantNumeric: 'tabular-nums',
+                                            color: amount > 0.001 ? fx.color : 'var(--muted)'
+                                        }}>
+                                            {fx.short} {Math.round(amount * 100)}
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
 
                     </div>
@@ -276,7 +337,7 @@ const Mixer = () => {
                 boxShadow: recording ? '0 0 10px rgba(211,47,47,0.5)' : 'none'
             }}>
                 <div style={{ fontSize: '10px', color: recording ? '#ff8a80' : '#aaa', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '8px', fontWeight: recording ? 'bold' : 'normal' }}>Click</div>
-                
+
                 <div style={{ display: 'flex', gap: '4px', alignItems: 'stretch', height: '180px', justifyContent: 'center' }}>
                     <div style={{
                         width: '6px', borderRadius: '2px', position: 'relative', overflow: 'hidden', border: '1px solid #0008',
@@ -286,61 +347,112 @@ const Mixer = () => {
                     </div>
                     <SvgFader value={clickVol} color={recording ? "#d32f2f" : "#aaa"} width={36} height={180} onChange={(v) => setClickVol(v)} />
                 </div>
-                
+
                 <div style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '700', fontVariantNumeric: 'tabular-nums', marginTop: '23px' }}>{Math.round(clickVol * 100)}</div>
             </div>
 
-            {/* Reverb Return — the wet path everything sends into */}
-            <div style={{
-                background: 'var(--strip)', border: 'none', borderRight: '1px solid #3a3f49', borderRadius: 0,
-                width: '78px', flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center',
-                padding: '8px 4px 8px', gap: '8px'
-            }}>
-                <div style={{ fontSize: '10px', color: '#7fd4d6', letterSpacing: '1px', textTransform: 'uppercase' }}>Reverb</div>
+            {/* Reverb Returns — the wet paths everything sends into */}
+            {window.OA_REVERB_UNITS.map((meta, u) => {
+                const fx = FX[u];
+                const unit = window.oaReverbUnit(u);
+                return (
+                    <div key={fx.key} style={{
+                        background: 'var(--strip)', border: 'none', borderRight: '1px solid #3a3f49', borderRadius: 0,
+                        width: '78px', flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center',
+                        padding: '8px 4px 8px', gap: '8px'
+                    }}>
+                        <div style={{ fontSize: '10px', color: meta.color, letterSpacing: '1px', textTransform: 'uppercase' }}>{meta.name}</div>
 
-                <select
-                    value={rv.tone}
-                    onChange={(e) => window.oaSetReverb('tone', e.target.value)}
-                    title="Tone of the tail"
-                    style={selStyle}
-                >
-                    {Object.keys(window.OA_REVERB_TONES).map((k) => (
-                        <option key={k} value={k}>{window.OA_REVERB_TONES[k].label}</option>
-                    ))}
-                </select>
+                        <select
+                            value={unit.tone}
+                            onChange={(e) => window.oaSetReverb(u, 'tone', e.target.value)}
+                            title="Tone of the tail"
+                            style={{ ...selStyle, color: meta.color }}
+                        >
+                            {Object.keys(window.OA_REVERB_TONES).map((k) => (
+                                <option key={k} value={k}>{window.OA_REVERB_TONES[k].label}</option>
+                            ))}
+                        </select>
 
-                <select
-                    value={rv.size}
-                    onChange={(e) => window.oaSetReverb('size', e.target.value)}
-                    title="How long the tail rings"
-                    style={selStyle}
-                >
-                    {Object.keys(window.OA_REVERB_SIZES).map((k) => (
-                        <option key={k} value={k}>{window.OA_REVERB_SIZES[k].label}</option>
-                    ))}
-                </select>
+                        <select
+                            value={unit.size}
+                            onChange={(e) => window.oaSetReverb(u, 'size', e.target.value)}
+                            title="How long the tail rings"
+                            style={{ ...selStyle, color: meta.color }}
+                        >
+                            {Object.keys(window.OA_REVERB_SIZES).map((k) => (
+                                <option key={k} value={k}>{window.OA_REVERB_SIZES[k].label}</option>
+                            ))}
+                        </select>
 
-                <div style={{ display: 'flex', gap: '3px', alignItems: 'stretch', height: '140px', justifyContent: 'center' }}>
-                    {[0, 1].map((ch) => (
-                        <div key={ch} style={{
-                            width: '6px', borderRadius: '2px', position: 'relative', overflow: 'hidden', border: '1px solid #0008',
-                            background: 'linear-gradient(to top, #2f6f70 0%, #59a9ab 74%, #7fd4d6 88%, #b8ecee 100%)'
-                        }}>
-                            <i ref={(el) => { rvMeterRefs.current[ch] = el; }}
-                               style={{ position: 'absolute', left: 0, right: 0, top: 0, height: '100%', background: '#15171b' }}></i>
+                        <div style={{ display: 'flex', gap: '3px', alignItems: 'stretch', height: '140px', justifyContent: 'center' }}>
+                            {fxMeters(fx)}
+                            <SvgFader
+                                value={unit.ret} color={meta.color} width={36} height={140}
+                                onChange={(v) => window.oaSetReverb(u, 'ret', v)}
+                            />
                         </div>
-                    ))}
-                    <SvgFader
-                        value={rv.ret} color="#5f9ea0" width={36} height={140}
-                        onChange={(v) => window.oaSetReverb('ret', v)}
-                    />
-                </div>
 
-                <div style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '700', fontVariantNumeric: 'tabular-nums' }}>
-                    {Math.round(rv.ret * 100)}
-                </div>
-                <div style={{ fontSize: '9px', color: 'var(--muted)' }}>RETURN</div>
-            </div>
+                        <div style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '700', fontVariantNumeric: 'tabular-nums' }}>
+                            {Math.round(unit.ret * 100)}
+                        </div>
+                        <div style={{ fontSize: '9px', color: 'var(--muted)' }}>RETURN</div>
+                    </div>
+                );
+            })}
+
+            {/* Tape Delay Returns — a Space Echo per strip. TAPE opens the heads. */}
+            {window.OA_DELAY_UNITS.map((meta, u) => {
+                const fx = FX[window.OA_REVERB_COUNT + u];
+                const unit = window.oaDelayUnit(u);
+                const open = tapeUnit === u;
+                const thrown = unit.toRv
+                    .map((v, r) => (v > 0.005 ? `${window.OA_REVERB_UNITS[r].name.replace('RV ', 'R')} ${Math.round(v * 100)}` : null))
+                    .filter(Boolean);
+                return (
+                    <div key={fx.key} style={{
+                        background: 'var(--strip)', border: 'none', borderRight: '1px solid #3a3f49', borderRadius: 0,
+                        width: '74px', flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center',
+                        padding: '8px 4px 8px', gap: '6px'
+                    }}>
+                        <div style={{ fontSize: '10px', color: meta.color, letterSpacing: '1px', textTransform: 'uppercase' }}>{meta.name}</div>
+
+                        <button
+                            onClick={() => setTapeUnit(open ? null : u)}
+                            title={`${meta.name} — heads, wow, flutter and tape drive`}
+                            style={{
+                                width: '100%', padding: '3px 0', textAlign: 'center', borderRadius: '4px',
+                                border: `1px solid ${open ? meta.color : '#444b57'}`,
+                                background: open ? '#332c55' : '#2a2f38',
+                                color: open ? meta.color : '#9aa3ae',
+                                cursor: 'pointer', fontSize: '9px', fontWeight: '700', letterSpacing: '.5px'
+                            }}
+                        >
+                            TAPE
+                        </button>
+
+                        <div style={{ fontSize: '8px', color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>
+                            {Math.round(unit.timeL * 1000)}/{Math.round(unit.timeR * 1000)} ms
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '3px', alignItems: 'stretch', height: '140px', justifyContent: 'center' }}>
+                            {fxMeters(fx)}
+                            <SvgFader
+                                value={unit.ret} color={meta.color} width={36} height={140}
+                                onChange={(v) => window.oaSetDelay(u, 'ret', v)}
+                            />
+                        </div>
+
+                        <div style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '700', fontVariantNumeric: 'tabular-nums' }}>
+                            {Math.round(unit.ret * 100)}
+                        </div>
+                        {/* Where this tape's repeats end up besides the output. */}
+                        <div style={{ fontSize: '8px', color: thrown.length ? '#7fd4d6' : 'var(--muted)', textAlign: 'center', minHeight: '10px' }}>
+                            {thrown.length ? `→ ${thrown.join(' ')}` : 'RETURN'}
+                        </div>
+                    </div>
+                );
+            })}
 
             {/* Master Strip */}
             <div style={{
@@ -349,7 +461,7 @@ const Mixer = () => {
                 padding: '8px 3px 8px', gap: '8px'
             }}>
                 <div style={{ fontSize: '10px', color: '#aaa', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '8px' }}>Master</div>
-                
+
                 <div style={{ display: 'flex', gap: '4px', alignItems: 'stretch', height: '180px' }}>
                     {/* L Meter */}
                     <div style={{
@@ -368,12 +480,12 @@ const Mixer = () => {
                         <i ref={el => masterRefs.current[1] = el} style={{ position: 'absolute', left: 0, right: 0, top: 0, height: '100%', background: '#15171b', transition: 'height 0.05s linear' }}></i>
                     </div>
                 </div>
-                
+
                 <div style={{ display: 'flex', gap: '22px', fontSize: '9px', color: '#777' }}>
                     <span>L</span><span>R</span>
                 </div>
 
-                <button 
+                <button
                     onClick={clearSolos}
                     style={{
                         width: '56px', padding: '5px 0', textAlign: 'center', borderRadius: '5px',
@@ -394,6 +506,11 @@ const Mixer = () => {
                     name={(tracks[synthPad] && tracks[synthPad].name) || `Track ${synthPad + 1}`}
                     onClose={() => setSynthPad(null)}
                 />,
+                document.body
+            )}
+
+            {tapeUnit != null && window.TapeDelayEditor && ReactDOM.createPortal(
+                <window.TapeDelayEditor u={tapeUnit} onClose={() => setTapeUnit(null)} />,
                 document.body
             )}
         </div>

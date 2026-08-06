@@ -45,6 +45,7 @@
   "libControl/Sequencer/Sequencer.jsx",
   "libControl/Mixer/SvgKnob.jsx",
   "libControl/Mixer/SvgFader.jsx",
+  "libControl/Mixer/GalaxyKnob.jsx",
   "libControl/Mixer/DrumSynthEditor.jsx",
   "libControl/Mixer/TapeDelayEditor.jsx",
   "libControl/Mixer/ChorusEditor.jsx",

@@ -81,7 +81,7 @@ window.OA_SYNTH_ENGINES = {
             let node = g;
             if (p.drive > 0.01) {
                 const shaper = ctx.createWaveShaper();
-                shaper.curve = window.oaDriveCurve(p.drive);
+                shaper.curve = drumDriveCurve(p.drive);
                 // Drive adds gain as well as harmonics; trim it back so turning
                 // the knob up changes the tone, not the level.
                 const trim = ctx.createGain();
@@ -361,20 +361,30 @@ window.OA_SYNTH_ENGINES = {
 // The point count is ODD so the middle sample lands exactly on x=0 and maps to
 // 0. With an even count the curve is sampled either side of zero, and silence
 // comes out as a constant DC offset that never decays.
-window.oaDriveCurve = function (amount) {
-    const key = Math.round(amount * 100);
-    window.OA_DRIVE_CURVES = window.OA_DRIVE_CURVES || {};
-    if (window.OA_DRIVE_CURVES[key]) return window.OA_DRIVE_CURVES[key];
-    const n = 1025;
-    const curve = new Float32Array(n);
-    const k = amount * 60;
-    for (let i = 0; i < n; i++) {
-        const x = (i / (n - 1)) * 2 - 1;
-        curve[i] = ((1 + k) * x) / (1 + k * Math.abs(x));
-    }
-    window.OA_DRIVE_CURVES[key] = curve;
-    return curve;
-};
+//
+// FILE-LOCAL ON PURPOSE. This used to be window.oaDriveCurve, which is also the
+// name the DRIVE pedal (oaDrive.js) uses for its own curve baker — and that file
+// loads later, so it silently replaced this one. The two take different
+// arguments: this wants a 0..1 knob amount, the pedal's wants a whole unit
+// object. Every membrane hit with drive above 0.01 then called the pedal's
+// version with a number and threw. Each source gets its own scope from
+// build.mjs, so keeping it local here means the collision cannot come back.
+const drumDriveCurve = (function () {
+    const cache = {};
+    return function (amount) {
+        const key = Math.round(amount * 100);
+        if (cache[key]) return cache[key];
+        const n = 1025;
+        const curve = new Float32Array(n);
+        const k = amount * 60;
+        for (let i = 0; i < n; i++) {
+            const x = (i / (n - 1)) * 2 - 1;
+            curve[i] = ((1 + k) * x) / (1 + k * Math.abs(x));
+        }
+        cache[key] = curve;
+        return curve;
+    };
+})();
 
 // Fill in any parameter the stored patch is missing, so adding a new knob to an
 // engine never breaks a patch someone already saved.

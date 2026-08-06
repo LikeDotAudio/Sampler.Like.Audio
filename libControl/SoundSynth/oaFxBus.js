@@ -6,6 +6,10 @@
  *   plus one send gain per effect bus that this channel feeds. Sends are read
  *   when the voice is built, so a knob move lands on the next hit rather than
  *   re-levelling notes that are already ringing.
+ *
+ *   The channel's DRIVE pedal (oaDrive.js) goes in FRONT of all of that, so the
+ *   reverbs and tapes are fed the distorted signal — a pedal sits on the floor
+ *   before the desk, not in the aux rack. On a clean channel it builds nothing.
  */
 
 window.OA_FX_SEND_EPSILON = 0.001;
@@ -45,7 +49,10 @@ window.oaVoiceOut = function (ctx, idx, pan) {
         if (amount > window.OA_FX_SEND_EPSILON) tap(amount, window.oaDelayBus(ctx, d).input);
     }
 
-    return node;
+    // Returns null on a clean channel, and the voice connects straight to the
+    // pan the way it always did — bit for bit, not "distortion turned down".
+    const drive = window.oaDriveNode ? window.oaDriveNode(ctx, idx, node) : null;
+    return drive || node;
 };
 
 /**

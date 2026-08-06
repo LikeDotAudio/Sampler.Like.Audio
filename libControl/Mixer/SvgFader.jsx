@@ -4,7 +4,12 @@ const gainToPos = g => g <= 0 ? 0 : Math.max(0, Math.min(1, (20 * Math.log10(g) 
 const posToGain = p => p <= 0.004 ? 0 : Math.pow(10, (DB_MIN + p * (DB_MAX - DB_MIN)) / 20);
 
 const SvgFader = ({ value = 0, color = "#f4902c", width = 50, height = 180, onChange }) => {
-    const padTop = 6, padBot = 6, travel = height - padTop - padBot;
+    // A tall cap, so it can be grabbed with a fingertip rather than a cursor.
+    const thumbW = 30, thumbH = 34;
+    // Half a cap of clearance at each end. The cap's CENTRE travels the slot,
+    // so without this the top and bottom of it would hang outside the control
+    // and sit over whatever is next to it in the strip.
+    const padTop = thumbH / 2 + 2, padBot = padTop, travel = height - padTop - padBot;
     const slotCx = 14, slotW = 9, slotX = slotCx - slotW / 2;
     const yAt = p => padTop + (1 - p) * travel;
 
@@ -49,7 +54,7 @@ const SvgFader = ({ value = 0, color = "#f4902c", width = 50, height = 180, onCh
         );
     });
 
-    const thumbW = 30, thumbH = 17, thumbX = slotCx - thumbW / 2;
+    const thumbX = slotCx - thumbW / 2;
 
     return (
         <svg 
@@ -61,7 +66,13 @@ const SvgFader = ({ value = 0, color = "#f4902c", width = 50, height = 180, onCh
             <rect x={slotX} y={y} width={slotW} height={Math.max(0, (padTop + travel) - y)} rx={4} fill={color} opacity={0.5} />
             {ticks}
             <g transform={`translate(${thumbX}, ${y - thumbH / 2})`}>
-                <rect width={thumbW} height={thumbH} rx={3} fill="#dcdcdc" stroke="#555" />
+                <rect width={thumbW} height={thumbH} rx={4} fill="#dcdcdc" stroke="#555" />
+                {/* Grip ridges, so a cap this tall still reads as a cap — the
+                    dark centre line is the one that marks the value. */}
+                {[-9, -6, 6, 9].map((d) => (
+                    <line key={d} x1={5} y1={thumbH / 2 + d} x2={thumbW - 5} y2={thumbH / 2 + d}
+                          stroke="#b4b4b4" strokeWidth={2} />
+                ))}
                 <line x1={3} y1={thumbH / 2} x2={thumbW - 3} y2={thumbH / 2} stroke="#333" strokeWidth={2} />
             </g>
         </svg>

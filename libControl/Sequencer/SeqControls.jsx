@@ -22,6 +22,72 @@ window.SeqControls = ({
         setConfigBtnNode(document.getElementById('config-footer-slot'));
     }, []);
 
+    // ---- Cached app files -------------------------------------------------
+    // The service worker (sw.js) holds the entire machine — the bundle, the
+    // vendored React, the whole sample library — so a running instance never
+    // waits on the network. The cost is that a bad or stale copy of the shell
+    // stays put, and the only way out used to be clearing the browser's
+    // history, which is a blunt instrument that also signs the user out of
+    // everything else. This button is the targeted version.
+    //
+    // It deletes CACHE STORAGE ONLY. Patterns, kits, samples and every mixer
+    // setting live in localStorage and are deliberately left alone — this is a
+    // "re-download the app" button, not a "throw my work away" button.
+    const [cacheBusy, setCacheBusy] = React.useState(false);
+    const [cacheMsg, setCacheMsg] = React.useState(null);
+    const [cacheHeld, setCacheHeld] = React.useState(null);
+
+    // What the browser is currently holding, so the button says something more
+    // useful than "clear cache" — a number is what tells you it is worth doing.
+    React.useEffect(() => {
+        let alive = true;
+        (async () => {
+            try {
+                if (!navigator.storage || !navigator.storage.estimate) return;
+                const { usage } = await navigator.storage.estimate();
+                if (alive && usage) setCacheHeld(usage);
+            } catch (e) {}
+        })();
+        return () => { alive = false; };
+    }, []);
+
+    const mb = (n) => n >= 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.round(n / 1024) + ' KB';
+
+    const clearCache = async () => {
+        const ok = window.confirm(
+            'Clear the cached app files?\n\n'
+            + 'The app re-downloads itself and reloads.\n\n'
+            + 'Your patterns, kits, samples and mixer settings are stored separately '
+            + 'and are NOT touched.'
+        );
+        if (!ok) return;
+        setCacheBusy(true);
+        setCacheMsg('Clearing…');
+        try {
+            let n = 0;
+            if (window.caches) {
+                const keys = await caches.keys();
+                await Promise.all(keys.map((k) => caches.delete(k)));
+                n = keys.length;
+            }
+            // Unregister the worker too. Deleting its caches alone leaves the
+            // old worker installed and it simply refills them on the next load,
+            // which looks exactly like the button doing nothing.
+            if (navigator.serviceWorker && navigator.serviceWorker.getRegistrations) {
+                const regs = await navigator.serviceWorker.getRegistrations();
+                await Promise.all(regs.map((r) => r.unregister().catch(() => {})));
+            }
+            setCacheMsg(`Cleared ${n} cache${n === 1 ? '' : 's'} — reloading…`);
+            // A beat so the message is readable, then straight back to the
+            // network: with no worker and no caches, an ordinary reload is a
+            // cold start. (reload(true) is ignored by every current browser.)
+            setTimeout(() => window.location.reload(), 500);
+        } catch (e) {
+            setCacheBusy(false);
+            setCacheMsg('Could not clear: ' + ((e && e.message) || 'unknown error'));
+        }
+    };
+
     // Every footer button shares this footprint so the row reads as one set of controls.
     const FOOTER_BTN = window.OA_FOOTER_BTN;
 
@@ -106,6 +172,26 @@ window.SeqControls = ({
                         />
                     ))}
                 </div>
+            </div>
+
+            {/* Cached app files. Sits at the bottom of the drop-up because it
+                reloads the page — it is the last thing you want to hit by
+                accident while reaching for the tempo. */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '12px', color: '#aaa' }}>Storage</span>
+                <SeqButton
+                    label={cacheBusy ? '⟳ Clearing…' : '⟳ Clear Cache'}
+                    onClick={clearCache}
+                    disabled={cacheBusy}
+                    title="Delete the app files this browser has cached and reload. Patterns, kits, samples and mixer settings are kept."
+                    style={{ padding: '5px 10px' }}
+                />
+                <span style={{ fontSize: '10px', color: cacheMsg ? '#f4902c' : '#777' }}>
+                    {cacheMsg
+                        || (cacheHeld != null
+                            ? `holding ${mb(cacheHeld)} — clears the app files only, your work is kept`
+                            : 'clears the app files only, your work is kept')}
+                </span>
             </div>
 
             {/* Steps, Render and Clear now live in the Patterns section of SONG

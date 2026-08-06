@@ -127,10 +127,6 @@ const Mixer = () => {
         return () => cancelAnimationFrame(raf);
     }, [FX]);
 
-    const selStyle = {
-        width: '100%', background: '#222', color: '#7fd4d6', border: '1px solid #444',
-        borderRadius: '3px', fontSize: '10px', padding: '2px 3px', cursor: 'pointer'
-    };
     const masterRefs = React.useRef([null, null]);
     const masterPeaks = React.useRef({ L: 0, R: 0, pending: false });
 

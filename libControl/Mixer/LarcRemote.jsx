@@ -12,18 +12,38 @@
 // reverb buses this app has.
 
 const LARC_RED = '#ff3a1e';
-const LARC_RED_DIM = '#571207';
-const LARC_LCD = '#1c0b06';
+const LARC_RED_DIM = '#7a1c0a';
 const LARC_CREAM = '#e9e3d1';
 const LARC_MONO = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
 
-// Segmented-display text. Every readout on this box is the same red-on-near-
-// black, so it is one component rather than a style repeated nine times.
+// The display glass. Properly black — these are red LED segments behind a dark
+// filter, not a backlit LCD, so everything that is not lit is unlit, and the
+// only colour on the panel comes from the segments themselves.
+const LARC_GLASS = {
+    background: 'radial-gradient(ellipse at 50% 0%, #14100e 0%, #060505 55%, #000 100%)',
+    border: '1px solid #6f6857',
+    borderRadius: '3px',
+    boxShadow: 'inset 0 2px 7px rgba(0,0,0,0.95), inset 0 0 14px rgba(255,60,25,0.05)',
+};
+
+/**
+ * One run of segments. The bloom is two shadows on purpose: a tight bright one
+ * that reads as the segment itself, and a wide dim one that reads as the light
+ * spilling into the filter around it. A single blur gives you a fuzzy letter
+ * instead — the halo has to be much wider than the glyph to look like glow
+ * rather than like something out of focus.
+ */
 const Led = ({ children, size = 11, dim = false, glow = true, style }) => (
     <span style={{
         fontFamily: LARC_MONO, fontSize: `${size}px`, fontWeight: '700',
         color: dim ? LARC_RED_DIM : LARC_RED,
-        textShadow: (glow && !dim) ? `0 0 4px ${LARC_RED}88` : 'none',
+        textShadow: !glow ? 'none'
+            : dim
+                // An unloaded/browsing line still emits — just faintly, the way
+                // a half-driven segment does. Killing its glow entirely made it
+                // read as printed ink rather than as a dimmer light.
+                ? '0 0 4px rgba(255,58,30,0.30)'
+                : '0 0 5px rgba(255,72,40,0.95), 0 0 13px rgba(255,40,10,0.55), 0 0 26px rgba(255,30,0,0.28)',
         letterSpacing: '.5px', whiteSpace: 'pre', ...style
     }}>{children}</span>
 );
@@ -135,7 +155,7 @@ const LarcMeter = ({ dotsRef }) => {
                    ref={(el) => { const s = dotsRef.current[ch] || (dotsRef.current[ch] = []); s[i] = el; }}
                    style={{
                        width: '3px', height: '3px', borderRadius: '50%',
-                       background: LARC_RED_DIM, display: 'block'
+                       background: '#2a0a04', display: 'block'
                    }} />
             ))}
         </div>
@@ -225,9 +245,14 @@ window.LarcRemote = ({ u, onClose }) => {
                 const lit = Math.round(((db + 34) / 46) * els.length);
                 els.forEach((el, i) => {
                     if (!el) return;
-                    el.style.background = i < lit
-                        ? (i >= els.length - 2 ? '#ff8a3a' : LARC_RED)
-                        : LARC_RED_DIM;
+                    const on = i < lit;
+                    const hot = i >= els.length - 2;      // the last two are the ovld pair
+                    el.style.background = on ? (hot ? '#ff8a3a' : LARC_RED) : '#2a0a04';
+                    // A lit dot blooms into the filter exactly like the text
+                    // does; an unlit one is a dark hole and casts nothing.
+                    el.style.boxShadow = on
+                        ? `0 0 4px ${hot ? 'rgba(255,150,60,0.95)' : 'rgba(255,60,25,0.9)'}, 0 0 9px rgba(255,40,10,0.5)`
+                        : 'none';
                 });
             }
             raf = requestAnimationFrame(tick);
@@ -322,9 +347,8 @@ window.LarcRemote = ({ u, onClose }) => {
 
                 {/* Top display: program, bank, page — and the output meter. */}
                 <div style={{
-                    background: LARC_LCD, border: '1px solid #6f6857', borderRadius: '3px',
-                    boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.8)',
-                    padding: '6px 8px', marginBottom: '10px',
+                    ...LARC_GLASS,
+                    padding: '7px 9px', marginBottom: '10px',
                     display: 'flex', gap: '8px', alignItems: 'flex-start'
                 }}>
                     <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '5px' }}>
@@ -404,9 +428,8 @@ window.LarcRemote = ({ u, onClose }) => {
                 {/* The parameter readout: six labels over six values, which is
                     the row of numbers on the front of the real remote. */}
                 <div style={{
-                    background: LARC_LCD, border: '1px solid #6f6857', borderRadius: '3px',
-                    boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.8)',
-                    padding: '5px 6px', marginBottom: '8px',
+                    ...LARC_GLASS,
+                    padding: '6px 6px', marginBottom: '8px',
                     display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '2px', textAlign: 'center'
                 }}>
                     {params.map((p) => (

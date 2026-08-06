@@ -33,7 +33,10 @@ const vuPos = (db) => {
 // are spread evenly across the 270° of travel, low end first.
 // ---------------------------------------------------------------------------
 const RackKnob = ({ value, min, max, defaultVal, ticks, size = 62, onChange }) => {
-    const S = size + 26;                     // room outside the knob for the collar
+    // Room outside the knob for the collar. The engraved numbers sit past the
+    // tick marks and a two-character label is ~10px wide, so the box has to
+    // clear the knob by more than the label radius or the end stops get cropped.
+    const S = size + 36;
     const cx = S / 2, cy = S / 2;
     const bodyR = size / 2;
     const [uid] = React.useState(() => 'ck' + Math.random().toString(36).slice(2, 8));
@@ -166,8 +169,11 @@ const Engraved = ({ children, size = 8, style }) => (
 const VuMeter = ({ posRef, mode }) => {
     const W = 196, H = 92;
     const pivotX = W / 2, pivotY = H * 1.72;
-    const needleR = H * 1.44;
+    // The needle stops just past the scale rather than running on to the edge of
+    // the glass — a pointer that overshoots its own marks reads as pointing
+    // somewhere between them.
     const scaleR = H * 1.30;
+    const needleR = scaleR + 3;
     const A0 = -33, A1 = 33;
 
     const rad = (d) => d * Math.PI / 180;
@@ -377,7 +383,7 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
             position: 'fixed', bottom: '46px', left: '50%', transform: 'translateX(-50%)',
             background: 'var(--panel)', border: '1px solid #444', borderRadius: '8px',
             boxShadow: '0 -4px 24px rgba(0,0,0,0.7)', zIndex: 1200,
-            padding: '14px 16px', width: 'min(760px, 96vw)', maxHeight: '82vh', overflowY: 'auto'
+            padding: '14px 16px', width: 'min(920px, 97vw)', maxHeight: '82vh', overflowY: 'auto'
         }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
                 <span style={{ fontSize: '12px', color: window.OA_COMP_COLOR, fontWeight: 'bold', letterSpacing: '1px' }}>
@@ -414,7 +420,7 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
                     background: 'linear-gradient(to bottom, #e2892a 0%, #cd7016 16%, #b85c0e 60%, #9a4a09 100%)',
                     // Brushed metal: a fine vertical grain over the paint.
                     backgroundImage: 'repeating-linear-gradient(90deg, rgba(255,255,255,0.045) 0 1px, rgba(0,0,0,0.035) 1px 2px), linear-gradient(to bottom, #e2892a 0%, #cd7016 16%, #b85c0e 60%, #9a4a09 100%)',
-                    display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', justifyContent: 'center'
+                    display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', justifyContent: 'center'
                 }}>
                     {/* IN — the only control the original does not have. Something
                         has to be able to take the strip out of circuit. */}

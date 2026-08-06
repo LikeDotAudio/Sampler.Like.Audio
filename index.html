@@ -42,11 +42,38 @@
             --bg: #1b1c1e;
             --panel: #242528;
             --strip: #2b2b2e;
+            /* The one colour the whole app is keyed to. Config's theme picker
+               rewrites this on :root at runtime; everything below is derived
+               from it, so one property changes the entire page. Deliberately
+               NOT persisted — the app comes back up orange on every load. */
             --accent: #f4902c;
+            --accent-rgb: 244, 144, 44;   /* the same colour, for rgba() glows */
             --text: #e8e8e8;
             --muted: #888a8d;
-            --on: #f4902c;
-            --solo: #ffb44d;
+            --on: var(--accent);
+            --solo: var(--accent-t40);
+
+            /* Tints toward white and shades toward black, so a family of
+               related colours follows whatever hue is picked instead of a
+               fixed row of oranges going out of tune with it. */
+            --accent-t15: color-mix(in srgb, var(--accent) 85%, #fff);
+            --accent-t25: color-mix(in srgb, var(--accent) 75%, #fff);
+            --accent-t40: color-mix(in srgb, var(--accent) 60%, #fff);
+            --accent-t60: color-mix(in srgb, var(--accent) 40%, #fff);
+            --accent-s15: color-mix(in srgb, var(--accent) 85%, #000);
+            --accent-s25: color-mix(in srgb, var(--accent) 75%, #000);
+            --accent-s40: color-mix(in srgb, var(--accent) 60%, #000);
+            --accent-s55: color-mix(in srgb, var(--accent) 45%, #000);
+            --accent-s70: color-mix(in srgb, var(--accent) 30%, #000);
+            --accent-s80: color-mix(in srgb, var(--accent) 20%, #000);
+            --accent-s85: color-mix(in srgb, var(--accent) 15%, #000);
+            /* Translucent washes for glows and hover fills. */
+            --accent-a10: color-mix(in srgb, var(--accent) 10%, transparent);
+            --accent-a25: color-mix(in srgb, var(--accent) 25%, transparent);
+            --accent-a50: color-mix(in srgb, var(--accent) 50%, transparent);
+            /* Text that sits ON the accent — near-black reads on every hue the
+               picker can produce, which a white label would not. */
+            --on-accent: #111;
         }
 
         #app-container {
@@ -83,7 +110,7 @@
             cursor: pointer;
         }
         .chunky-scrollbar::-webkit-scrollbar-thumb:hover {
-            background-color: #ffd494;
+            background-color: var(--accent-t60);
         }
     </style>
 </head>

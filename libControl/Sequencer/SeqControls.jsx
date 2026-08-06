@@ -1,3 +1,14 @@
+// A few one-click hues beside the picker. A colour well takes two taps and a
+// system dialog on a phone, which is a lot of ceremony for "try it in blue".
+const THEME_SWATCHES = [
+    { hex: '#f4902c', name: 'Orange — the default' },
+    { hex: '#4aa3ff', name: 'Blue' },
+    { hex: '#3ecf8e', name: 'Green' },
+    { hex: '#c77dff', name: 'Violet' },
+    { hex: '#ff5c7a', name: 'Red' },
+    { hex: '#e8e8e8', name: 'Bone' },
+];
+
 window.SeqControls = ({
     recording, toggleRecording,
     clickVol, setClickVol,
@@ -21,6 +32,13 @@ window.SeqControls = ({
         setFooterNode(document.getElementById('seq-footer-slot'));
         setConfigBtnNode(document.getElementById('config-footer-slot'));
     }, []);
+
+    // Seeded from the default rather than from storage, because there is no
+    // storage — see the Theme block below. Tracked through the event rather
+    // than only from this control's own onChange, so the well and the swatch
+    // ring stay right no matter who moved the colour.
+    const [accent, setAccent] = React.useState(window.OA_ACCENT_DEFAULT);
+    React.useEffect(() => window.oaOnAccent((e) => setAccent(e.detail.accent)), []);
 
     // ---- Cached app files -------------------------------------------------
     // The service worker (sw.js) holds the entire machine — the bundle, the
@@ -146,9 +164,9 @@ window.SeqControls = ({
                     type="range" min={40} max={300} step={1} value={bpm}
                     onChange={(e) => setBpm(Number(e.target.value))}
                     title="Drag to set the tempo"
-                    style={{ flex: 1, minWidth: 0, width: '320px', accentColor: tapping ? '#fff' : '#f4902c', cursor: 'pointer' }}
+                    style={{ flex: 1, minWidth: 0, width: '320px', accentColor: tapping ? '#fff' : 'var(--accent)', cursor: 'pointer' }}
                 />
-                <span style={{ fontSize: '14px', fontWeight: 'bold', color: tapping ? '#fff' : '#f4902c', fontVariantNumeric: 'tabular-nums', minWidth: '54px', textAlign: 'right' }}>
+                <span style={{ fontSize: '14px', fontWeight: 'bold', color: tapping ? '#fff' : 'var(--accent)', fontVariantNumeric: 'tabular-nums', minWidth: '54px', textAlign: 'right' }}>
                     {bpm} <span style={{ fontSize: '9px', color: '#888' }}>BPM</span>
                 </span>
             </div>
@@ -174,6 +192,52 @@ window.SeqControls = ({
                 </div>
             </div>
 
+            {/* The theme colour. One CSS custom property on :root that every
+                accent-coloured thing in the app is keyed to, so this repaints
+                the pads, the mixer, the sequencer and the browser at once.
+
+                Nothing about it is stored — not in localStorage, not over MQTT,
+                not in the service worker's cache. Every load starts from the
+                default below, which is the only reason a bad colour can never
+                strand someone in a UI they cannot read. */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '12px', color: '#aaa' }}>Theme</span>
+                <input
+                    type="color"
+                    value={accent}
+                    onChange={(e) => window.oaSetAccent(e.target.value)}
+                    title="Set the accent colour for this session"
+                    style={{
+                        width: '44px', height: '28px', padding: 0, cursor: 'pointer',
+                        background: '#222', border: '1px solid #666', borderRadius: '4px',
+                    }}
+                />
+                <div style={{ display: 'flex', gap: '4px' }}>
+                    {THEME_SWATCHES.map((c) => (
+                        <button
+                            key={c.hex}
+                            onClick={() => window.oaSetAccent(c.hex)}
+                            title={c.name}
+                            style={{
+                                width: '20px', height: '20px', padding: 0, borderRadius: '50%',
+                                background: c.hex, cursor: 'pointer',
+                                border: accent.toLowerCase() === c.hex ? '2px solid #fff' : '1px solid #555',
+                            }}
+                        />
+                    ))}
+                </div>
+                <SeqButton
+                    label="↺ Default"
+                    onClick={() => window.oaSetAccent(window.OA_ACCENT_DEFAULT)}
+                    disabled={accent.toLowerCase() === window.OA_ACCENT_DEFAULT}
+                    title={`Back to ${window.OA_ACCENT_DEFAULT} — rgb(244, 144, 44)`}
+                    style={{ padding: '5px 10px' }}
+                />
+                <span style={{ fontSize: '10px', color: '#777' }}>
+                    this session only — never saved, resets to orange on reload
+                </span>
+            </div>
+
             {/* Cached app files. Sits at the bottom of the drop-up because it
                 reloads the page — it is the last thing you want to hit by
                 accident while reaching for the tempo. */}
@@ -186,7 +250,7 @@ window.SeqControls = ({
                     title="Delete the app files this browser has cached and reload. Patterns, kits, samples and mixer settings are kept."
                     style={{ padding: '5px 10px' }}
                 />
-                <span style={{ fontSize: '10px', color: cacheMsg ? '#f4902c' : '#777' }}>
+                <span style={{ fontSize: '10px', color: cacheMsg ? 'var(--accent)' : '#777' }}>
                     {cacheMsg
                         || (cacheHeld != null
                             ? `holding ${mb(cacheHeld)} — clears the app files only, your work is kept`

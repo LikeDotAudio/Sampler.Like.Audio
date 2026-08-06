@@ -1,8 +1,8 @@
 // Sequencer knob — a label/readout wrapper around the SHARED window.Knob
 // (libControl/Knobs/Knob). Face, caps, drag/wheel/ALT-to-default behavior all
 // come from the shared component, so a style change there restyles this too.
-window.SeqKnob = ({ value, min, max, onChange, label, display, size = 60, color = '#f4902c', flash, title, step = 1, def }) => (
-    <div title={title} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', filter: flash ? 'drop-shadow(0 0 7px rgba(244,144,44,0.95))' : 'none', transition: 'filter 0.08s' }}>
+window.SeqKnob = ({ value, min, max, onChange, label, display, size = 60, color = 'var(--accent)', flash, title, step = 1, def }) => (
+    <div title={title} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', filter: flash ? 'drop-shadow(0 0 7px rgba(var(--accent-rgb),0.95))' : 'none', transition: 'filter 0.08s' }}>
         <window.Knob
             value={value}
             onChange={(v) => onChange(Math.round(Math.max(min, Math.min(max, v))))}

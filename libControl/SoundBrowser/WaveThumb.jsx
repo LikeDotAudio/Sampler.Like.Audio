@@ -11,6 +11,17 @@ window.WaveThumb = ({ entry, selected, onSelect, scrollRootRef }) => {
         io.observe(el);
         return () => io.disconnect();
     }, []);
+    // Canvases keep the colour they were painted with, so a theme change has to
+    // ask for a repaint by hand. The decoded buffer is kept rather than re-read:
+    // re-decoding every visible thumbnail on a colour change would stall the
+    // grid for a scan's worth of files.
+    const bufRef = React.useRef(null);
+    const paint = React.useCallback(() => {
+        if (bufRef.current) {
+            window.drawWave(canvasRef.current, bufRef.current, selected ? window.oaAccentMix(0.35) : window.oaAccent());
+        }
+    }, [selected]);
+    React.useEffect(() => window.oaOnAccent(paint), [paint]);
     React.useEffect(() => {
         if (!visible) return;
         let cancelled = false;
@@ -18,16 +29,16 @@ window.WaveThumb = ({ entry, selected, onSelect, scrollRootRef }) => {
             try {
                 const file = entry.file || await entry.handle.getFile();
                 const buf = await window.oaDecodeAudio(window.oaAudioCtx(), await file.arrayBuffer());
-                if (!cancelled) window.drawWave(canvasRef.current, buf, selected ? '#ffb74d' : '#f4902c');
+                if (!cancelled) { bufRef.current = buf; paint(); }
             } catch (e) { /* undecodable — leave blank */ }
         })();
         return () => { cancelled = true; };
-    }, [entry, visible]);
+    }, [entry, visible, paint]);
     return (
         <div ref={wrapRef} onClick={onSelect} title={entry.sub ? `${entry.sub}/${entry.name}` : entry.name}
-            style={{ border: selected ? '2px solid #f4902c' : '1px solid #444', borderRadius: '4px', padding: '4px', cursor: 'pointer', background: selected ? '#2a2018' : '#141414', boxSizing: 'border-box' }}>
+            style={{ border: selected ? '2px solid var(--accent)' : '1px solid #444', borderRadius: '4px', padding: '4px', cursor: 'pointer', background: selected ? '#2a2018' : '#141414', boxSizing: 'border-box' }}>
             <canvas ref={canvasRef} style={{ width: '100%', height: '46px', display: 'block', background: '#0a0a0a' }} />
-            <div style={{ fontSize: '10px', color: selected ? '#f4902c' : '#bbb', marginTop: '3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.name}</div>
+            <div style={{ fontSize: '10px', color: selected ? 'var(--accent)' : '#bbb', marginTop: '3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.name}</div>
         </div>
     );
 };

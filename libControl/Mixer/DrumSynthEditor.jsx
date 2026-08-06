@@ -72,7 +72,7 @@ window.DrumSynthEditor = ({ idx, name, onClose }) => {
     const audition = () => window.oaTriggerDrum(idx, 0.9);
 
     const label = { fontSize: '10px', color: '#aaa', letterSpacing: '0.3px' };
-    const value = { fontSize: '10px', color: '#f4902c', fontVariantNumeric: 'tabular-nums' };
+    const value = { fontSize: '10px', color: 'var(--accent)', fontVariantNumeric: 'tabular-nums' };
 
     return (
         <div style={{
@@ -82,7 +82,7 @@ window.DrumSynthEditor = ({ idx, name, onClose }) => {
             padding: '14px 16px', width: 'min(560px, 92vw)', maxHeight: '70vh', overflowY: 'auto'
         }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                <span style={{ fontSize: '12px', color: '#f4902c', fontWeight: 'bold', letterSpacing: '1px' }}>
+                <span style={{ fontSize: '12px', color: 'var(--accent)', fontWeight: 'bold', letterSpacing: '1px' }}>
                     {String(idx + 1).padStart(2, '0')} {name} — SYNTH
                 </span>
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
@@ -104,7 +104,7 @@ window.DrumSynthEditor = ({ idx, name, onClose }) => {
                 <select
                     value={patch.engine}
                     onChange={(e) => set('engine', e.target.value)}
-                    style={{ background: '#222', color: '#f4902c', border: '1px solid #444', borderRadius: '3px', fontSize: '11px', padding: '3px 6px' }}
+                    style={{ background: '#222', color: 'var(--accent)', border: '1px solid #444', borderRadius: '3px', fontSize: '11px', padding: '3px 6px' }}
                 >
                     {Object.keys(window.OA_SYNTH_ENGINES).map((k) => (
                         <option key={k} value={k}>{window.OA_SYNTH_ENGINES[k].label}</option>
@@ -141,7 +141,7 @@ window.DrumSynthEditor = ({ idx, name, onClose }) => {
                                     type="range" min={spec.min} max={spec.max} step={spec.step} value={v}
                                     onChange={(e) => set(key, Number(e.target.value))}
                                     onMouseUp={audition}
-                                    style={{ flex: 1, minWidth: '70px', accentColor: '#f4902c', cursor: 'pointer' }}
+                                    style={{ flex: 1, minWidth: '70px', accentColor: 'var(--accent)', cursor: 'pointer' }}
                                 />
                                 <span style={{ ...value, minWidth: '54px', textAlign: 'right' }}>
                                     {spec.step < 1 ? Number(v).toFixed(2) : Math.round(v)}

@@ -6,7 +6,7 @@ window.Pad = ({
     PadWave
 }) => {
     // Magic numbers for pad rendering and animations extracted here if any
-    const baseColor = isToneMode ? '#c96b18' : (hasSample ? '#f4902c' : '#3a3a3a');
+    const baseColor = isToneMode ? 'var(--accent-s25)' : (hasSample ? 'var(--accent)' : '#3a3a3a');
     const restShadow = (hasSample || isToneMode) ? '0 4px 8px rgba(0,0,0,0.4)' : 'inset 0 1px 3px rgba(0,0,0,0.6)';
 
     const titleText = isToneMode ? `${noteName} — (Tone Mode for Pad ${toneRoot + 1})` : 
@@ -65,7 +65,7 @@ window.Pad = ({
                 {padNum}
             </span>
 
-            <span title={`MIDI note ${midiNote}`} style={{ position: 'absolute', top: '4px', left: '6px', fontSize: '8px', fontWeight: 'bold', opacity: 0.6, color: hasSample ? '#3a1f00' : '#fca858' }}>
+            <span title={`MIDI note ${midiNote}`} style={{ position: 'absolute', top: '4px', left: '6px', fontSize: '8px', fontWeight: 'bold', opacity: 0.6, color: hasSample ? 'var(--accent-s85)' : 'var(--accent-t15)' }}>
                 {window.midiNoteName(midiNote)}
             </span>
 
@@ -74,13 +74,13 @@ window.Pad = ({
                     SMP
                 </span>
             ) : (remembered && (
-                <span title={`Remembered: ${remembered.name}`} style={{ position: 'absolute', bottom: '3px', right: '5px', fontSize: '10px', fontWeight: 'bold', color: '#fca858', opacity: 0.8 }}>
+                <span title={`Remembered: ${remembered.name}`} style={{ position: 'absolute', bottom: '3px', right: '5px', fontSize: '10px', fontWeight: 'bold', color: 'var(--accent-t15)', opacity: 0.8 }}>
                     ○
                 </span>
             ))}
 
             {vel > 0 && (
-                <span style={{ position: 'absolute', top: '4px', right: '6px', fontSize: '10px', fontWeight: 'bold', color: hasSample ? '#3a1f00' : '#f4902c', opacity: 0.9 }}>
+                <span style={{ position: 'absolute', top: '4px', right: '6px', fontSize: '10px', fontWeight: 'bold', color: hasSample ? 'var(--accent-s85)' : 'var(--accent)', opacity: 0.9 }}>
                     {vel}
                 </span>
             )}

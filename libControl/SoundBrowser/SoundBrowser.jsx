@@ -41,8 +41,12 @@ window.SoundBrowser = ({ onClose, onChoose, onChooseOther, targetLabel, inline }
 
     const { playing, loop, setLoop, pos, setPos, togglePlay, rewind, scrub } = window.useSoundBrowseAudio(buffer, autoPreview);
 
-    // Big waveform of the selected file.
-    React.useEffect(() => { drawWave(bigCanvasRef.current, buffer, '#f4902c'); }, [buffer]);
+    // Big waveform of the selected file. Also redrawn when the theme colour
+    // moves: a canvas keeps whatever it was last painted with, so unlike every
+    // var(--accent) style around it, it does not follow on its own.
+    const [accentTick, setAccentTick] = React.useState(0);
+    React.useEffect(() => window.oaOnAccent(() => setAccentTick((n) => n + 1)), []);
+    React.useEffect(() => { drawWave(bigCanvasRef.current, buffer, window.oaAccent()); }, [buffer, accentTick]);
 
     // Read the takes once on open, so the RECORDER tab carries its count before
     // anyone clicks it — otherwise a device full of recordings looks empty.
@@ -73,9 +77,9 @@ window.SoundBrowser = ({ onClose, onChoose, onChooseOther, targetLabel, inline }
             `}</style>
             {/* minWidth must yield to the viewport — a hard 760px pushed the
                 whole dialog off the side of a phone. */}
-            <div className="oa-browse" onClick={(e) => inline ? undefined : e.stopPropagation()} style={{ width: inline ? '100%' : 'min(66vw, 95vw)', minWidth: 'min(760px, 96vw)', maxWidth: '96vw', height: inline ? '100%' : 'min(80vh, 92dvh)', display: 'flex', flexDirection: 'column', background: '#1c1c1c', border: '1px solid #f4902c', borderRadius: '6px', color: '#eee', boxShadow: inline ? 'none' : '0 10px 40px rgba(0,0,0,0.6)' }}>
+            <div className="oa-browse" onClick={(e) => inline ? undefined : e.stopPropagation()} style={{ width: inline ? '100%' : 'min(66vw, 95vw)', minWidth: 'min(760px, 96vw)', maxWidth: '96vw', height: inline ? '100%' : 'min(80vh, 92dvh)', display: 'flex', flexDirection: 'column', background: '#1c1c1c', border: '1px solid var(--accent)', borderRadius: '6px', color: '#eee', boxShadow: inline ? 'none' : '0 10px 40px rgba(0,0,0,0.6)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 16px', borderBottom: '1px solid #333' }}>
-                    <h3 style={{ margin: 0, color: '#f4902c', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '15px' }}>
+                    <h3 style={{ margin: 0, color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '1px', fontSize: '15px' }}>
                         Sound Browse{targetLabel ? ` → ${targetLabel}` : ''}
                     </h3>
                     <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#888', fontSize: '20px', cursor: 'pointer' }}>×</button>
@@ -83,16 +87,16 @@ window.SoundBrowser = ({ onClose, onChoose, onChooseOther, targetLabel, inline }
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '8px 16px', borderBottom: '1px solid #2a2a2a', flexWrap: 'wrap' }}>
                     <div style={{ display: 'flex', border: '1px solid #444', borderRadius: '4px', overflow: 'hidden' }}>
-                        <button onClick={showFiles} style={{ background: view === 'files' ? '#f4902c' : '#222', color: view === 'files' ? '#111' : '#ccc', border: 'none', padding: '5px 12px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>FILES</button>
-                        <button onClick={showFavorites} style={{ background: view === 'favorites' ? '#f4902c' : '#222', color: view === 'favorites' ? '#111' : '#ccc', border: 'none', padding: '5px 12px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>★ Favorites{favorites.length ? ` (${favorites.length})` : ''}</button>
-                        <button onClick={showCloud} style={{ background: view === 'cloud' ? '#f4902c' : '#222', color: view === 'cloud' ? '#111' : '#ccc', border: 'none', padding: '5px 12px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>☁ THE CLOUD</button>
+                        <button onClick={showFiles} style={{ background: view === 'files' ? 'var(--accent)' : '#222', color: view === 'files' ? '#111' : '#ccc', border: 'none', padding: '5px 12px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>FILES</button>
+                        <button onClick={showFavorites} style={{ background: view === 'favorites' ? 'var(--accent)' : '#222', color: view === 'favorites' ? '#111' : '#ccc', border: 'none', padding: '5px 12px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>★ Favorites{favorites.length ? ` (${favorites.length})` : ''}</button>
+                        <button onClick={showCloud} style={{ background: view === 'cloud' ? 'var(--accent)' : '#222', color: view === 'cloud' ? '#111' : '#ccc', border: 'none', padding: '5px 12px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>☁ THE CLOUD</button>
                         <button onClick={showRecorder} title="Record a new sample from this device's input"
-                            style={{ background: view === 'recorder' ? '#f4902c' : '#222', color: view === 'recorder' ? '#111' : '#ccc', border: 'none', padding: '5px 12px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>● RECORDER{recEntries.length ? ` (${recEntries.length})` : ''}</button>
+                            style={{ background: view === 'recorder' ? 'var(--accent)' : '#222', color: view === 'recorder' ? '#111' : '#ccc', border: 'none', padding: '5px 12px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>● RECORDER{recEntries.length ? ` (${recEntries.length})` : ''}</button>
                     </div>
                     {supportsFS ? (
-                        <button onClick={pickFolder} style={tbtn({ background: '#f4902c', color: '#111', border: 'none', fontWeight: 'bold' })}>📁 Choose folder…</button>
+                        <button onClick={pickFolder} style={tbtn({ background: 'var(--accent)', color: '#111', border: 'none', fontWeight: 'bold' })}>📁 Choose folder…</button>
                     ) : (
-                        <label style={tbtn({ background: '#f4902c', color: '#111', border: 'none', fontWeight: 'bold' })}>
+                        <label style={tbtn({ background: 'var(--accent)', color: '#111', border: 'none', fontWeight: 'bold' })}>
                             📁 Choose files…
                             <input type="file" accept="audio/*" multiple style={{ display: 'none' }} onChange={(e) => onPlainFiles(e.target.files)} />
                         </label>
@@ -102,7 +106,7 @@ window.SoundBrowser = ({ onClose, onChoose, onChooseOther, targetLabel, inline }
                     </label>
                     <input type="text" value={filter} onChange={(e) => { setFilter(e.target.value); setSelectedIndex(-1); }} placeholder="Filter (e.g. HH)"
                         style={{ background: '#111', color: '#eee', border: '1px solid #444', borderRadius: '3px', padding: '4px 8px', fontSize: '12px', width: '130px' }} />
-                    {filter.trim() && <span style={{ fontSize: '11px', color: '#fca858' }}>{deepSearching ? 'searching…' : `${shown.length} match${shown.length === 1 ? '' : 'es'}`}</span>}
+                    {filter.trim() && <span style={{ fontSize: '11px', color: 'var(--accent-t15)' }}>{deepSearching ? 'searching…' : `${shown.length} match${shown.length === 1 ? '' : 'es'}`}</span>}
                     <span style={{ fontSize: '11px', color: '#666' }}>↑ ↓ ← → browse · Enter load</span>
                 </div>
 
@@ -130,7 +134,7 @@ window.SoundBrowser = ({ onClose, onChoose, onChooseOther, targetLabel, inline }
                                     return (
                                         <button key={i} onClick={() => { setFilter(active ? '' : c.display); setSelectedIndex(-1); }}
                                             title={`${c.count} files · ${c.folders.size} folders`}
-                                            style={{ background: active ? '#f4902c' : '#2a2a2a', color: active ? '#111' : '#cde', border: '1px solid #444', borderRadius: '12px', padding: '2px 9px', fontSize: '11px', cursor: 'pointer' }}>
+                                            style={{ background: active ? 'var(--accent)' : '#2a2a2a', color: active ? '#111' : '#cde', border: '1px solid #444', borderRadius: '12px', padding: '2px 9px', fontSize: '11px', cursor: 'pointer' }}>
                                             {c.display}
                                         </button>
                                     );
@@ -222,15 +226,15 @@ window.SoundBrowser = ({ onClose, onChoose, onChooseOther, targetLabel, inline }
                             </>
                         )}
                         <button onClick={toggleFav} disabled={!selected} title="Add/remove this file from favorites"
-                            style={tbtn({ background: isFav(selected) ? '#f4902c' : '#333', color: isFav(selected) ? '#111' : '#fff', border: 'none', fontWeight: 'bold' })}>
+                            style={tbtn({ background: isFav(selected) ? 'var(--accent)' : '#333', color: isFav(selected) ? '#111' : '#fff', border: 'none', fontWeight: 'bold' })}>
                             {isFav(selected) ? '★ Favorited' : '☆ Favorite'}
                         </button>
                         <div style={{ flexGrow: 1 }} />
-                        <button onClick={chooseIt} disabled={!selected} style={tbtn({ background: selected ? '#f4902c' : '#553', color: '#111', border: 'none', fontWeight: 'bold', padding: '8px 14px', cursor: selected ? 'pointer' : 'not-allowed' })}>
+                        <button onClick={chooseIt} disabled={!selected} style={tbtn({ background: selected ? 'var(--accent)' : '#553', color: '#111', border: 'none', fontWeight: 'bold', padding: '8px 14px', cursor: selected ? 'pointer' : 'not-allowed' })}>
                             ⭳ Load to {targetLabel || 'pad'}
                         </button>
                         {onChooseOther && (
-                            <button onClick={chooseOther} disabled={!selected} style={tbtn({ background: selected ? '#fca858' : '#345', color: '#111', border: 'none', fontWeight: 'bold', padding: '8px 14px', cursor: selected ? 'pointer' : 'not-allowed' })}>
+                            <button onClick={chooseOther} disabled={!selected} style={tbtn({ background: selected ? 'var(--accent-t15)' : '#345', color: '#111', border: 'none', fontWeight: 'bold', padding: '8px 14px', cursor: selected ? 'pointer' : 'not-allowed' })}>
                                 ⭳ Load to other pad
                             </button>
                         )}

@@ -49,12 +49,12 @@ window.SeqTrack = ({
                                 position: 'relative', overflow: 'hidden',
                                 width: '18px', height: '20px',
                                 backgroundColor: isCurrent ? '#fff' : (isBeat && !isLit ? '#333' : '#1a1a1a'),
-                                border: isFading ? '1px solid #fff' : (isLit ? (isNewlyRecorded ? '1px solid #ff5252' : '1px solid #ffa726') : '1px solid #111'),
+                                border: isFading ? '1px solid #fff' : (isLit ? (isNewlyRecorded ? '1px solid #ff5252' : '1px solid var(--accent-t15)') : '1px solid #111'),
                                 cursor: 'pointer', borderRadius: '2px', touchAction: 'none',
-                                boxShadow: isLit ? (isNewlyRecorded ? `0 0 4px rgba(211, 47, 47, ${0.2 + 0.4 * (vel / 100)})` : `0 0 4px rgba(244, 144, 44, ${0.2 + 0.4 * (vel / 100)})`) : 'none',
+                                boxShadow: isLit ? (isNewlyRecorded ? `0 0 4px rgba(211, 47, 47, ${0.2 + 0.4 * (vel / 100)})` : `0 0 4px rgba(var(--accent-rgb), ${0.2 + 0.4 * (vel / 100)})`) : 'none',
                             }}>
                             {isLit && !isCurrent && (
-                                <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: `${Math.max(14, vel)}%`, background: isNewlyRecorded ? `rgba(211, 47, 47, ${0.4 + 0.6 * (vel / 100)})` : `rgba(244, 144, 44, ${0.4 + 0.6 * (vel / 100)})`, pointerEvents: 'none' }} />
+                                <div style={{ position: 'absolute', left: 0, right: 0, bottom: 0, height: `${Math.max(14, vel)}%`, background: isNewlyRecorded ? `rgba(211, 47, 47, ${0.4 + 0.6 * (vel / 100)})` : `rgba(var(--accent-rgb), ${0.4 + 0.6 * (vel / 100)})`, pointerEvents: 'none' }} />
                             )}
                         </div>
                     );

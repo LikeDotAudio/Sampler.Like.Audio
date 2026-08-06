@@ -1,5 +1,9 @@
 window.SoundCloudView = ({ data, rootHandle, onSelectFile }) => {
-    const CLOUD_PALETTE = ['#f4902c', '#f7a048', '#f08018', '#faa552', '#e67300', '#f28b22', '#f79b39', '#e0750d', '#fca858', '#f59638', '#eb8117', '#ffb44d', '#ffd494', '#c96b18', '#d67615', '#eb8117', '#fff'];
+    // Derived from the accent so the cloud's groups re-colour with the theme.
+    const CLOUD_PALETTE = ['var(--accent)', 'var(--accent-t15)', 'var(--accent-s15)', 'var(--accent-t25)',
+                           'var(--accent-s25)', 'var(--accent-s15)', 'var(--accent-t15)', 'var(--accent-s25)',
+                           'var(--accent-t25)', 'var(--accent-t15)', 'var(--accent-s15)', 'var(--accent-t40)',
+                           'var(--accent-t60)', 'var(--accent-s40)', 'var(--accent-s25)', 'var(--accent-s15)', '#fff'];
     const chartRef = React.useRef(null);
     const echartsInst = React.useRef(null);
     const [detail, setDetail] = React.useState(null);   // clicked sample → side panel
@@ -102,8 +106,8 @@ window.SoundCloudView = ({ data, rootHandle, onSelectFile }) => {
 
     const tab = (m, label, n) => (
         <button onClick={() => setMode(m)} style={{
-            background: mode === m ? '#f4902c' : '#2a2a2a', color: mode === m ? '#111' : '#bbb',
-            border: '1px solid ' + (mode === m ? '#f4902c' : '#444'), borderRadius: '4px',
+            background: mode === m ? 'var(--accent)' : '#2a2a2a', color: mode === m ? '#111' : '#bbb',
+            border: '1px solid ' + (mode === m ? 'var(--accent)' : '#444'), borderRadius: '4px',
             padding: '3px 12px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer',
         }}>{label} <span style={{ opacity: 0.7 }}>({n})</span></button>
     );
@@ -134,8 +138,8 @@ window.SoundCloudView = ({ data, rootHandle, onSelectFile }) => {
             <div style={{ width: '196px', flexShrink: 0, borderLeft: '1px solid #333', padding: '12px', overflowY: 'auto', fontSize: '12px', color: '#ccc' }}>
                 {detail ? (
                     <div>
-                        <div style={{ color: '#f4902c', fontWeight: 'bold', marginBottom: '4px', wordBreak: 'break-word' }}>{detail.name}</div>
-                        <div style={{ fontSize: '11px', color: '#fca858', marginBottom: '10px', wordBreak: 'break-word' }}>{detail.sub || '(root)'}</div>
+                        <div style={{ color: 'var(--accent)', fontWeight: 'bold', marginBottom: '4px', wordBreak: 'break-word' }}>{detail.name}</div>
+                        <div style={{ fontSize: '11px', color: 'var(--accent-t15)', marginBottom: '10px', wordBreak: 'break-word' }}>{detail.sub || '(root)'}</div>
                         <div style={{ marginBottom: '3px' }}>Group: <b style={{ color: colorFor(groupKey(detail)) }}>{detail.group || 'Other'}</b></div>
                         {detail.timbre ? row('Timbre', detail.timbre) : null}
                         {detail.cluster != null && detail.cluster >= 0 ? row('Cluster', '#' + detail.cluster) : null}
@@ -145,7 +149,7 @@ window.SoundCloudView = ({ data, rootHandle, onSelectFile }) => {
                         {row('Complexity', (detail.complexity || 0).toFixed(2))}
                         {detail.attack != null ? row('Attack', (detail.attack || 0).toFixed(3) + ' s') : null}
                         {row('Length', (detail.length || 0).toFixed(2) + ' s')}
-                        <div style={{ marginBottom: '3px' }}>Transients: <b>{detail.transients || 0}</b>{(detail.transients || 0) > 1 ? <span style={{ color: '#f4902c', fontWeight: 'bold' }}> — loop</span> : <span style={{ color: '#8a8', fontWeight: 'bold' }}> — one-shot</span>}</div>
+                        <div style={{ marginBottom: '3px' }}>Transients: <b>{detail.transients || 0}</b>{(detail.transients || 0) > 1 ? <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}> — loop</span> : <span style={{ color: '#8a8', fontWeight: 'bold' }}> — one-shot</span>}</div>
                         {detail.bpm ? row('BPM', detail.bpm.toFixed(1)) : null}
                         {detail.sample_rate ? row('Format', (detail.sample_rate / 1000).toFixed(1) + ' kHz / ' + (detail.bit_depth || '?') + '-bit') : null}
                         <button onClick={() => loadAndDetail(detail)} style={{ marginTop: '10px', background: '#388e3c', color: '#fff', border: 'none', borderRadius: '3px', padding: '5px 12px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>► Play</button>

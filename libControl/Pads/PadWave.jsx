@@ -14,6 +14,10 @@ window.PadWave = ({ idx, ver, synth }) => {
         return () => window.removeEventListener('oa-synth-rendered', onRendered);
     }, [idx, synth, ver]);
 
+    // Repaint on a theme change — the effect below has no dependency list and
+    // so runs on every render, which makes forcing one the whole fix.
+    React.useEffect(() => window.oaOnAccent(redraw), []);
+
     React.useEffect(() => {
         const c = canvasRef.current; if (!c) return;
         c.width = c.clientWidth || 120; c.height = c.clientHeight || 120;
@@ -32,9 +36,10 @@ window.PadWave = ({ idx, ver, synth }) => {
         const data = buffer.getChannelData(0);
         const step = Math.max(1, Math.ceil(data.length / c.width));
         const amp = c.height / 2;
-        // A synth pad has no orange sample background behind it, so its trace
-        // needs to read against the dark pad instead.
-        cx.strokeStyle = synth ? 'rgba(244,144,44,0.40)' : 'rgba(60,30,0,0.45)';
+        // A synth pad has no accent-coloured sample background behind it, so its
+        // trace is the accent itself; a sampled pad already sits on that colour,
+        // so its trace is a dark shade of it instead.
+        cx.strokeStyle = synth ? window.oaAccentRgba(0, 0.40) : window.oaAccentRgba(-0.78, 0.45);
         cx.beginPath();
         for (let x = 0; x < c.width; x++) {
             let mn = 1, mx = -1;

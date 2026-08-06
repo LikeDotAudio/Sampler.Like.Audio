@@ -1,4 +1,4 @@
-const SvgKnob = ({ value = 0, min = 0, max = 1, defaultVal = 0, bipolar = false, color = "#f4902c", size = 42, onChange }) => {
+const SvgKnob = ({ value = 0, min = 0, max = 1, defaultVal = 0, bipolar = false, color = "var(--accent)", size = 42, onChange }) => {
     const cx = size / 2, cy = size / 2, R = size / 2 - 3, bodyR = R - 4;
     const [uid] = React.useState(() => "k" + Math.random().toString(36).slice(2, 8));
     
@@ -70,7 +70,7 @@ const SvgKnob = ({ value = 0, min = 0, max = 1, defaultVal = 0, bipolar = false,
                 </radialGradient>
             </defs>
             <path d={arc(R, -135, 135)} fill="none" stroke="#444b57" strokeWidth={3} strokeLinecap="round" />
-            <path d={arc(R, bipolar ? 0 : -135, a)} fill="none" stroke={color} strokeWidth={3} strokeLinecap="round" />
+            <path d={arc(R, bipolar ? 0 : -135, a)} fill="none" style={{ stroke: color }} strokeWidth={3} strokeLinecap="round" />
             <circle cx={cx} cy={cy} r={bodyR} fill={`url(#${uid})`} stroke="#0a0a0a" strokeWidth={1} />
             {flLines}
             <line x1={ix} y1={iy} x2={ox} y2={oy} stroke="#eef1f5" strokeWidth={2.5} strokeLinecap="round" />

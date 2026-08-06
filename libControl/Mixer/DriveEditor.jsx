@@ -83,9 +83,9 @@ const TransferPlot = ({ unit, color }) => {
             {/* The wire: what a perfectly transparent channel looks like. */}
             <line x1={0} y1={S} x2={S} y2={0} stroke="#5a6472" strokeWidth={1} strokeDasharray="3 3" />
             {/* The pedal on its own, at 100% wet... */}
-            <polyline points={wet.join(' ')} fill="none" stroke={color} strokeWidth={1} opacity={0.3} />
+            <polyline points={wet.join(' ')} fill="none" style={{ stroke: color }} strokeWidth={1} opacity={0.3} />
             {/* ...and what actually leaves the channel once the mix is applied. */}
-            <polyline points={out.join(' ')} fill="none" stroke={color} strokeWidth={2} strokeLinejoin="round" />
+            <polyline points={out.join(' ')} fill="none" style={{ stroke: color }} strokeWidth={2} strokeLinejoin="round" />
             <text x={4} y={S - 4} fill="#5a6472" fontSize="7" letterSpacing="1">IN →</text>
             <text x={4} y={10} fill="#5a6472" fontSize="7" letterSpacing="1">OUT ↑</text>
         </svg>

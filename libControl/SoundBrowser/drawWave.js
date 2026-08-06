@@ -8,7 +8,8 @@ window.drawWave = (canvas, buffer, color) => {
     const data = buffer.getChannelData(0);
     const step = Math.max(1, Math.ceil(data.length / canvas.width));
     const amp = canvas.height / 2;
-    cx.strokeStyle = color || '#f4902c'; cx.beginPath();
+    // A canvas cannot evaluate var(--accent), so the live value is read here.
+    cx.strokeStyle = color || window.oaAccent(); cx.beginPath();
     for (let x = 0; x < canvas.width; x++) {
         let mn = 1, mx = -1;
         for (let j = 0; j < step; j++) { const d = data[x * step + j]; if (d === undefined) break; if (d < mn) mn = d; if (d > mx) mx = d; }

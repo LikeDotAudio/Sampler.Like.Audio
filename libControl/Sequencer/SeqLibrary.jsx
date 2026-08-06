@@ -19,7 +19,7 @@ window.SeqLibrary = ({ library, loadPattern, deletePattern, setSongItems, song,
                             <SeqButton
                                 label={`+${STEP_OPTIONS[i - 1]}`}
                                 onClick={() => doubleTo(n)}
-                                color="#26323a" textColor="#fca858"
+                                color="#26323a" textColor="var(--accent-t15)"
                                 title={`Extend to ${n} steps: copy the first ${n / 2} onto the second ${n / 2}`}
                                 style={{ border: '1px solid #3a4a58' }}
                             />
@@ -70,7 +70,7 @@ window.SeqLibrary = ({ library, loadPattern, deletePattern, setSongItems, song,
                                 }}
                                 onContextMenu={(e) => { e.preventDefault(); if (window.confirm(`Delete pattern "${entry.name}"?`)) deletePattern(entry.name); }}
                                 title={`Load "${entry.name}"${entry.bpm ? ` @ ${entry.bpm} BPM` : ''} into the sequencer to edit · right-click to delete`}
-                                style={{ background: 'transparent', color: '#f4902c', border: 'none', padding: '5px 10px', cursor: 'pointer', fontSize: '12px' }}
+                                style={{ background: 'transparent', color: 'var(--accent)', border: 'none', padding: '5px 10px', cursor: 'pointer', fontSize: '12px' }}
                             >
                                 {entry.name}
                             </button>

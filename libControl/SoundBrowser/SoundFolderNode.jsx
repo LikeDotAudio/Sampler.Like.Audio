@@ -13,7 +13,7 @@ window.SoundFolderNode = ({ name, handle, depth, defaultOpen, onSelectFolder, se
     return (
         <div>
             <div onClick={() => { onSelectFolder(handle, pathPrefix); if (!open) { setOpen(true); if (subdirs === null) load(); } }}
-                style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '3px 4px', paddingLeft: `${4 + depth * 12}px`, cursor: 'pointer', fontSize: '12px', background: isSel ? '#33291a' : 'transparent', color: isSel ? '#f4902c' : '#cdd', borderRadius: '3px' }}>
+                style={{ display: 'flex', alignItems: 'center', gap: '3px', padding: '3px 4px', paddingLeft: `${4 + depth * 12}px`, cursor: 'pointer', fontSize: '12px', background: isSel ? '#33291a' : 'transparent', color: isSel ? 'var(--accent)' : '#cdd', borderRadius: '3px' }}>
                 <span onClick={(e) => { e.stopPropagation(); const nx = !open; setOpen(nx); if (nx && subdirs === null) load(); }} style={{ width: '10px', color: '#888' }}>{open ? '▾' : '▸'}</span>
                 <span>📁 {name}</span>
             </div>

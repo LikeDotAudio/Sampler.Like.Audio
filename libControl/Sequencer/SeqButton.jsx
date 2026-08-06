@@ -4,7 +4,7 @@ window.OA_FOOTER_BTN = { padding: '5px 12px', fontSize: '12px', fontWeight: 'bol
 
 // Sequencer button — the SHARED window.OcaButton (libControl/buttons/Button)
 // compacted for the toolbar. Style tweaks to OcaButton flow in here.
-window.SeqButton = ({ label, onClick, active, color = '#333', activeColor = '#f4902c', textColor, title, disabled, style }) => (
+window.SeqButton = ({ label, onClick, active, color = '#333', activeColor = 'var(--accent)', textColor, title, disabled, style }) => (
     <window.OcaButton
         label={label}
         onClick={onClick}

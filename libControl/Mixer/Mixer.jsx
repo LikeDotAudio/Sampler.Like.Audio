@@ -4,9 +4,14 @@ const Mixer = () => {
     // One strip per pad — a bigger grid grows the mixer with it.
     window.useOaPadGrid();
 
-    const PALETTE = ["#f4902c", "#f7a048", "#f08018", "#f4902c", "#faa552", "#e67300",
-                     "#f4902c", "#f28b22", "#f79b39", "#f4902c", "#e0750d", "#fca858",
-                     "#f4902c", "#f59638", "#eb8117", "#f4902c"];
+    // Sixteen near-neighbours of the accent, so adjacent channel strips are
+    // distinguishable without any of them looking like a different theme.
+    // Built as tints and shades of var(--accent) rather than fixed oranges:
+    // pick a blue in Config and the whole rack turns blue together.
+    const PALETTE = ["var(--accent)", "var(--accent-t15)", "var(--accent-s15)", "var(--accent)",
+                     "var(--accent-t25)", "var(--accent-s25)", "var(--accent)", "var(--accent-s15)",
+                     "var(--accent-t15)", "var(--accent)", "var(--accent-s25)", "var(--accent-t25)",
+                     "var(--accent)", "var(--accent-t15)", "var(--accent-s15)", "var(--accent)"];
 
     const isAnySolo = solos.some(v => v);
 
@@ -263,14 +268,14 @@ const Mixer = () => {
                                     // is the channel's on/off, and it is hit constantly.
                                     width: '100%', minWidth: 0, padding: '12px 2px', textAlign: 'center', borderRadius: '4px',
                                     border: `1px solid ${!isMuted ? 'var(--on)' : '#444b57'}`,
-                                    background: !isMuted ? '#6b3f14' : '#353b45',
+                                    background: !isMuted ? 'var(--accent-s70)' : '#353b45',
                                     cursor: 'pointer', fontSize: '9px', fontWeight: '700',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '3px',
                                     overflow: 'hidden'
                                 }}
                             >
                                 <span style={{ color: !isMuted ? color : 'var(--muted)' }}>{String(i + 1).padStart(2, '0')}</span>
-                                <span style={{ color: !isMuted ? '#ffe9d4' : 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{track.name || 'Track'}</span>
+                                <span style={{ color: !isMuted ? 'var(--accent-t60)' : 'var(--muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{track.name || 'Track'}</span>
                             </button>
                             <button
                                 onClick={() => toggleSolo(i)}
@@ -289,7 +294,7 @@ const Mixer = () => {
                         <div style={{ display: 'flex', gap: '4px', alignItems: 'stretch', height: '180px', opacity: mutedBySolo ? 0.4 : 1, transition: 'opacity 0.2s', width: '100%', justifyContent: 'center', marginBottom: '6px' }}>
                             <div style={{
                                 width: '6px', borderRadius: '2px', position: 'relative', overflow: 'hidden', border: '1px solid #0008',
-                                background: 'linear-gradient(to top, #c26915 0%, #e87b10 74%, #f4902c 78%, #f7a048 88%, #ffb44d 93%, #ffd494 100%)'
+                                background: 'linear-gradient(to top, var(--accent-s25) 0%, var(--accent-s15) 74%, var(--accent) 78%, var(--accent-t15) 88%, var(--accent-t40) 93%, var(--accent-t60) 100%)'
                             }}>
                                 <i ref={el => meterRefs.current[i] = el} style={{ position: 'absolute', left: 0, right: 0, top: 0, height: '100%', background: '#15171b' }}></i>
                             </div>
@@ -306,9 +311,9 @@ const Mixer = () => {
                                 title={`Edit the ${track.name || 'Track'} synth voice`}
                                 style={{
                                     width: '100%', padding: '3px 0', textAlign: 'center', borderRadius: '4px',
-                                    border: `1px solid ${synthPad === i ? '#f4902c' : '#444b57'}`,
-                                    background: synthPad === i ? '#6b3f14' : '#2a2f38',
-                                    color: synthPad === i ? '#ffe9d4' : '#9aa3ae',
+                                    border: `1px solid ${synthPad === i ? 'var(--accent)' : '#444b57'}`,
+                                    background: synthPad === i ? 'var(--accent-s70)' : '#2a2f38',
+                                    color: synthPad === i ? 'var(--accent-t60)' : '#9aa3ae',
                                     cursor: 'pointer', fontSize: '9px', fontWeight: '700', letterSpacing: '.5px',
                                     marginBottom: '4px'
                                 }}
@@ -584,7 +589,7 @@ const Mixer = () => {
                     {/* L Meter */}
                     <div style={{
                         width: '6px', borderRadius: '2px', position: 'relative', overflow: 'hidden', border: '1px solid #0008',
-                        background: 'linear-gradient(to top, #c26915 0%, #e87b10 74%, #f4902c 78%, #f7a048 88%, #ffb44d 93%, #ffd494 100%)'
+                        background: 'linear-gradient(to top, var(--accent-s25) 0%, var(--accent-s15) 74%, var(--accent) 78%, var(--accent-t15) 88%, var(--accent-t40) 93%, var(--accent-t60) 100%)'
                     }}>
                         <i ref={el => masterRefs.current[0] = el} style={{ position: 'absolute', left: 0, right: 0, top: 0, height: '100%', background: '#15171b', transition: 'height 0.05s linear' }}></i>
                     </div>
@@ -593,7 +598,7 @@ const Mixer = () => {
                     {/* R Meter */}
                     <div style={{
                         width: '6px', borderRadius: '2px', position: 'relative', overflow: 'hidden', border: '1px solid #0008',
-                        background: 'linear-gradient(to top, #c26915 0%, #e87b10 74%, #f4902c 78%, #f7a048 88%, #ffb44d 93%, #ffd494 100%)'
+                        background: 'linear-gradient(to top, var(--accent-s25) 0%, var(--accent-s15) 74%, var(--accent) 78%, var(--accent-t15) 88%, var(--accent-t40) 93%, var(--accent-t60) 100%)'
                     }}>
                         <i ref={el => masterRefs.current[1] = el} style={{ position: 'absolute', left: 0, right: 0, top: 0, height: '100%', background: '#15171b', transition: 'height 0.05s linear' }}></i>
                     </div>

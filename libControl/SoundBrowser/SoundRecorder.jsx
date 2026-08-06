@@ -244,7 +244,7 @@ window.SoundRecorder = ({ onSaved }) => {
                 </select>
 
                 {!open ? (
-                    <button onClick={openInput} style={btn({ background: '#f4902c', color: '#111', border: 'none', fontWeight: 'bold' })}>
+                    <button onClick={openInput} style={btn({ background: 'var(--accent)', color: '#111', border: 'none', fontWeight: 'bold' })}>
                         🎙 Open input
                     </button>
                 ) : (

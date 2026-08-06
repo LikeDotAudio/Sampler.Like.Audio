@@ -14,10 +14,10 @@
 // The display runs in the app's own orange rather than the LED red the real
 // 480L used. Every other lit thing in this app is --accent, and one panel
 // glowing a different colour read as a bug rather than as period detail.
-const LARC_LED = '#f4902c';             // === --accent
-const LARC_LED_DIM = '#7a4a12';
-const LARC_LED_HOT = '#ffc46a';         // the ovld pair, hotter but still orange
-const LARC_LED_OFF = '#2a1706';         // an unlit segment behind the filter
+const LARC_LED = 'var(--accent)';             // === --accent
+const LARC_LED_DIM = 'var(--accent-s55)';
+const LARC_LED_HOT = 'var(--accent-t40)';   // the ovld pair, a brighter cast of the same
+const LARC_LED_OFF = 'var(--accent-s85)';   // an unlit segment behind the filter
 const LARC_CREAM = '#e9e3d1';
 const LARC_MONO = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
 const LARC_METER_GAIN = 2;              // display-only lift on the metered signal
@@ -29,7 +29,7 @@ const LARC_GLASS = {
     background: 'radial-gradient(ellipse at 50% 0%, #14100e 0%, #060505 55%, #000 100%)',
     border: '1px solid #6f6857',
     borderRadius: '3px',
-    boxShadow: 'inset 0 2px 7px rgba(0,0,0,0.95), inset 0 0 14px rgba(244,144,44,0.06)',
+    boxShadow: 'inset 0 2px 7px rgba(0,0,0,0.95), inset 0 0 14px rgba(var(--accent-rgb),0.06)',
 };
 
 /**
@@ -48,8 +48,8 @@ const Led = ({ children, size = 11, dim = false, glow = true, style }) => (
                 // An unloaded/browsing line still emits — just faintly, the way
                 // a half-driven segment does. Killing its glow entirely made it
                 // read as printed ink rather than as a dimmer light.
-                ? '0 0 4px rgba(244,144,44,0.32)'
-                : '0 0 5px rgba(255,176,90,0.95), 0 0 13px rgba(244,144,44,0.55), 0 0 26px rgba(230,120,20,0.28)',
+                ? '0 0 4px rgba(var(--accent-rgb),0.32)'
+                : '0 0 5px rgba(var(--accent-rgb),0.95), 0 0 13px rgba(var(--accent-rgb),0.55), 0 0 26px rgba(var(--accent-rgb),0.28)',
         letterSpacing: '.5px', whiteSpace: 'pre', ...style
     }}>{children}</span>
 );
@@ -273,7 +273,7 @@ window.LarcRemote = ({ u, onClose }) => {
                     // A lit dot blooms into the filter exactly like the text
                     // does; an unlit one is a dark hole and casts nothing.
                     el.style.boxShadow = on
-                        ? `0 0 4px ${hot ? 'rgba(255,205,130,0.95)' : 'rgba(255,176,90,0.9)'}, 0 0 9px rgba(244,144,44,0.5)`
+                        ? `0 0 4px ${hot ? 'rgba(var(--accent-rgb),0.95)' : 'rgba(var(--accent-rgb),0.9)'}, 0 0 9px rgba(var(--accent-rgb),0.5)`
                         : 'none';
                 });
             }

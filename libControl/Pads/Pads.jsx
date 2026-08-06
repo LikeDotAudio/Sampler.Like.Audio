@@ -76,10 +76,10 @@ const Pads = ({ label = "Drum Pads", centerVelocity = 100, edgeVelocity = 10, on
             <style>{`
                 @keyframes oaPadGlow {
                     from {
-                        box-shadow: 0 0 calc(12px + var(--gi, 0.5) * 48px) calc(3px + var(--gi, 0.5) * 16px) rgba(244, 144, 44, calc(0.5 + var(--gi, 0.5) * 0.5));
+                        box-shadow: 0 0 calc(12px + var(--gi, 0.5) * 48px) calc(3px + var(--gi, 0.5) * 16px) rgba(var(--accent-rgb), calc(0.5 + var(--gi, 0.5) * 0.5));
                     }
                     to {
-                        box-shadow: 0 0 0 0 rgba(244, 144, 44, 0);
+                        box-shadow: 0 0 0 0 rgba(var(--accent-rgb), 0);
                     }
                 }
                 /* On a phone the four columns must fit the viewport, so the pads
@@ -176,7 +176,7 @@ const Pads = ({ label = "Drum Pads", centerVelocity = 100, edgeVelocity = 10, on
             {missingCount > 0 && (
                 <div style={{ marginTop: '10px', textAlign: 'center' }}>
                     <button onClick={restoreSounds} title="Re-load the samples remembered on these pads (from MQTT) using the saved folder"
-                        style={{ background: '#fca858', color: '#111', border: 'none', borderRadius: '3px', padding: '5px 12px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>
+                        style={{ background: 'var(--accent-t15)', color: '#111', border: 'none', borderRadius: '3px', padding: '5px 12px', fontSize: '11px', fontWeight: 'bold', cursor: 'pointer' }}>
                         ↻ Restore {missingCount} sample{missingCount > 1 ? 's' : ''}{restoreMsg ? ` · ${restoreMsg}` : ''}
                     </button>
                 </div>
@@ -198,9 +198,9 @@ const Pads = ({ label = "Drum Pads", centerVelocity = 100, edgeVelocity = 10, on
                             </span>
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <span style={{ fontSize: '11px', color: '#888' }}>Pad 1 Note:</span>
-                                <input type="number" value={midiBase} onChange={(e) => setMidiBase(Number(e.target.value))} title="MIDI note number that triggers pad 1" style={{ width: '50px', background: '#000', color: '#f4902c', border: '1px solid #444', textAlign: 'center', borderRadius: '3px', fontSize: '11px' }} />
+                                <input type="number" value={midiBase} onChange={(e) => setMidiBase(Number(e.target.value))} title="MIDI note number that triggers pad 1" style={{ width: '50px', background: '#000', color: 'var(--accent)', border: '1px solid #444', textAlign: 'center', borderRadius: '3px', fontSize: '11px' }} />
                             </div>
-                            {midiNote != null && <span style={{ fontSize: '11px', color: '#888' }}>Last Note: <b style={{ color: '#f4902c' }}>{midiNote}</b></span>}
+                            {midiNote != null && <span style={{ fontSize: '11px', color: '#888' }}>Last Note: <b style={{ color: 'var(--accent)' }}>{midiNote}</b></span>}
                         </div>,
                 setsNode
             )}
@@ -220,7 +220,7 @@ const Pads = ({ label = "Drum Pads", centerVelocity = 100, edgeVelocity = 10, on
                                 {Object.keys(sets).map((n) => (
                                     <button key={n} onClick={() => { loadSet(n); closeConfig(); }}
                                         style={{
-                                            background: currentSet === n ? '#f4902c' : '#222',
+                                            background: currentSet === n ? 'var(--accent)' : '#222',
                                             color: currentSet === n ? '#111' : '#ccc',
                                             border: '1px solid #444',
                                             borderRadius: '3px',
@@ -241,7 +241,7 @@ const Pads = ({ label = "Drum Pads", centerVelocity = 100, edgeVelocity = 10, on
                                 </button>
                                 {window.PadBrowse && (
                                     <button onClick={() => { setShowPadBrowse(true); closeConfig(); }} title="Browse a folder into all 16 pads at once"
-                                        style={{ background: '#fca858', color: '#111', border: 'none', borderRadius: '3px', padding: '5px 12px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', flex: 1 }}>
+                                        style={{ background: 'var(--accent-t15)', color: '#111', border: 'none', borderRadius: '3px', padding: '5px 12px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', flex: 1 }}>
                                         🎛 Pad Browser
                                     </button>
                                 )}
@@ -266,7 +266,7 @@ const Pads = ({ label = "Drum Pads", centerVelocity = 100, edgeVelocity = 10, on
                 <window.PadBrowse onClose={() => setShowPadBrowse(false)} />
             )}
             {pendingAssign && (
-                <div style={{ position: 'fixed', top: '12px', left: '50%', transform: 'translateX(-50%)', zIndex: 10001, background: '#fca858', color: '#111', padding: '8px 16px', borderRadius: '4px', fontSize: '13px', fontWeight: 'bold', boxShadow: '0 4px 16px rgba(0,0,0,0.5)' }}>
+                <div style={{ position: 'fixed', top: '12px', left: '50%', transform: 'translateX(-50%)', zIndex: 10001, background: 'var(--accent-t15)', color: '#111', padding: '8px 16px', borderRadius: '4px', fontSize: '13px', fontWeight: 'bold', boxShadow: '0 4px 16px rgba(0,0,0,0.5)' }}>
                     👆 Click a pad to assign "{pendingAssign.meta && pendingAssign.meta.name}" — Esc to cancel
                 </div>
             )}

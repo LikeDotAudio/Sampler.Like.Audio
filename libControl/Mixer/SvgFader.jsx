@@ -3,7 +3,7 @@ const MAX_GAIN = Math.pow(10, DB_MAX / 20);
 const gainToPos = g => g <= 0 ? 0 : Math.max(0, Math.min(1, (20 * Math.log10(g) - DB_MIN) / (DB_MAX - DB_MIN)));
 const posToGain = p => p <= 0.004 ? 0 : Math.pow(10, (DB_MIN + p * (DB_MAX - DB_MIN)) / 20);
 
-const SvgFader = ({ value = 0, color = "#f4902c", width = 50, height = 180, onChange }) => {
+const SvgFader = ({ value = 0, color = "var(--accent)", width = 50, height = 180, onChange }) => {
     // A tall cap, so it can be grabbed with a fingertip rather than a cursor.
     const thumbW = 30, thumbH = 34;
     // Half a cap of clearance at each end. The cap's CENTRE travels the slot,
@@ -63,7 +63,7 @@ const SvgFader = ({ value = 0, color = "#f4902c", width = 50, height = 180, onCh
             onPointerDown={handlePointerDown}
         >
             <rect x={slotX} y={padTop} width={slotW} height={travel} rx={4} fill="#050505" stroke="#222" />
-            <rect x={slotX} y={y} width={slotW} height={Math.max(0, (padTop + travel) - y)} rx={4} fill={color} opacity={0.5} />
+            <rect x={slotX} y={y} width={slotW} height={Math.max(0, (padTop + travel) - y)} rx={4} style={{ fill: color }} opacity={0.5} />
             {ticks}
             <g transform={`translate(${thumbX}, ${y - thumbH / 2})`}>
                 <rect width={thumbW} height={thumbH} rx={4} fill="#dcdcdc" stroke="#555" />

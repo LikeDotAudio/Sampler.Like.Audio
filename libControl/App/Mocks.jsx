@@ -18,7 +18,7 @@
                     onChange={(e) => onChange(Number(e.target.value))}
                     style={{ 
                         width: `${sz}px`, 
-                        accentColor: config?.indicator_color || '#f4902c',
+                        accentColor: config?.indicator_color || 'var(--accent)',
                         margin: '5px 0'
                     }}
                 />

@@ -27,11 +27,11 @@ window.TrackSampleMenu = ({ trkIdx, trackName, anchor, version, onBrowse, onClos
         if (!e || !e.buffer) return;
         const data = e.buffer.getChannelData(0);
         const step = Math.ceil(data.length / c.width); const amp = c.height / 2;
-        cx.strokeStyle = '#f4902c'; cx.beginPath();
+        cx.strokeStyle = window.oaAccent(); cx.beginPath();
         for (let x = 0; x < c.width; x++) { let mn = 1, mx = -1; for (let j = 0; j < step; j++) { const d = data[x * step + j]; if (d === undefined) break; if (d < mn) mn = d; if (d > mx) mx = d; } cx.moveTo(x, (1 + mn) * amp); cx.lineTo(x, (1 + mx) * amp); }
         cx.stroke();
         if (e.buffer.duration) {
-            const ox = (e.offset || 0) / e.buffer.duration * c.width; cx.strokeStyle = '#fca858'; cx.beginPath(); cx.moveTo(ox, 0); cx.lineTo(ox, c.height); cx.stroke();
+            const ox = (e.offset || 0) / e.buffer.duration * c.width; cx.strokeStyle = window.oaAccentMix(0.35); cx.beginPath(); cx.moveTo(ox, 0); cx.lineTo(ox, c.height); cx.stroke();
             const endSec = (e.end != null ? e.end : e.buffer.duration);
             const ex = endSec / e.buffer.duration * c.width; cx.strokeStyle = '#e57373'; cx.beginPath(); cx.moveTo(ex, 0); cx.lineTo(ex, c.height); cx.stroke();
         }
@@ -55,9 +55,9 @@ window.TrackSampleMenu = ({ trkIdx, trackName, anchor, version, onBrowse, onClos
     return (
         <React.Fragment>
             <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 9999 }} />
-            <div style={{ position: 'fixed', zIndex: 10000, width: '300px', top: Math.min(anchor.y, window.innerHeight - 340), left: Math.min(anchor.x, window.innerWidth - 320), background: '#1c1c1c', border: '1px solid #f4902c', borderRadius: '6px', padding: '12px', color: '#eee', boxShadow: '0 8px 30px rgba(0,0,0,0.6)' }}>
+            <div style={{ position: 'fixed', zIndex: 10000, width: '300px', top: Math.min(anchor.y, window.innerHeight - 340), left: Math.min(anchor.x, window.innerWidth - 320), background: '#1c1c1c', border: '1px solid var(--accent)', borderRadius: '6px', padding: '12px', color: '#eee', boxShadow: '0 8px 30px rgba(0,0,0,0.6)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <span style={{ color: '#f4902c', fontWeight: 'bold', fontSize: '13px' }}>{trackName}</span>
+                    <span style={{ color: 'var(--accent)', fontWeight: 'bold', fontSize: '13px' }}>{trackName}</span>
                     <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#888', cursor: 'pointer', fontSize: '16px' }}>×</button>
                 </div>
                 <div style={{ fontSize: '11px', color: '#aaa', marginBottom: '6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -67,18 +67,18 @@ window.TrackSampleMenu = ({ trkIdx, trackName, anchor, version, onBrowse, onClos
                     <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block' }} />
                 </div>
                 <div style={{ display: 'flex', gap: '8px', marginTop: '8px', alignItems: 'center' }}>
-                    <button onClick={onBrowse} style={{ flex: 1, background: '#f4902c', color: '#111', border: 'none', borderRadius: '3px', padding: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}>📁 Browse sample…</button>
+                    <button onClick={onBrowse} style={{ flex: 1, background: 'var(--accent)', color: '#111', border: 'none', borderRadius: '3px', padding: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}>📁 Browse sample…</button>
                     <label title="Loop the sample (Sampler pad hold)" style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#ccc', cursor: 'pointer' }}>
                         <input type="checkbox" checked={loop} disabled={!hasBuf} onChange={(e) => applyLoop(e.target.checked)} /> Loop
                     </label>
                     <button onClick={() => window.oaTriggerDrum && window.oaTriggerDrum(trkIdx, 1)} title="Preview" style={{ background: '#333', color: '#fff', border: '1px solid #444', borderRadius: '3px', padding: '6px 12px', cursor: 'pointer', fontSize: '12px' }}>►</button>
                 </div>
                 <div style={{ marginTop: '10px', opacity: hasBuf ? 1 : 0.4 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#aaa' }}><span>PITCH</span><span style={{ color: '#f4902c' }}>{pitchSemi > 0 ? '+' : ''}{pitchSemi} st</span></div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#aaa' }}><span>PITCH</span><span style={{ color: 'var(--accent)' }}>{pitchSemi > 0 ? '+' : ''}{pitchSemi} st</span></div>
                     <input type="range" min="-12" max="12" step="1" value={pitchSemi} disabled={!hasBuf} onChange={(e) => applyPitch(Number(e.target.value))} style={{ width: '100%' }} />
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#aaa', marginTop: '6px' }}><span style={{ color: '#fca858' }}>TIME SHIFT (start)</span><span style={{ color: '#f4902c' }}>{offset.toFixed(3)}s</span></div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#aaa', marginTop: '6px' }}><span style={{ color: 'var(--accent-t15)' }}>TIME SHIFT (start)</span><span style={{ color: 'var(--accent)' }}>{offset.toFixed(3)}s</span></div>
                     <input type="range" min="0" max={dur ? Number((dur * 0.9).toFixed(3)) : 0} step="0.001" value={offset} disabled={!hasBuf} onChange={(e) => applyOffset(Number(e.target.value))} style={{ width: '100%' }} />
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#aaa', marginTop: '6px' }}><span style={{ color: '#e57373' }}>END / CUT-OFF</span><span style={{ color: '#f4902c' }}>{Number(end || 0).toFixed(3)}s{dur && Math.abs((end || 0) - dur) < 0.0005 ? ' (EOF)' : ''}</span></div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: '#aaa', marginTop: '6px' }}><span style={{ color: '#e57373' }}>END / CUT-OFF</span><span style={{ color: 'var(--accent)' }}>{Number(end || 0).toFixed(3)}s{dur && Math.abs((end || 0) - dur) < 0.0005 ? ' (EOF)' : ''}</span></div>
                     <input type="range" min="0.01" max={dur ? Number(dur.toFixed(3)) : 0} step="0.001" value={Math.min(end || 0, dur || 0)} disabled={!hasBuf} onChange={(e) => applyEnd(Math.max(offset + 0.01, Number(e.target.value)))} style={{ width: '100%' }} />
                 </div>
             </div>

@@ -17,6 +17,7 @@ const Mixer = () => {
     // so a channel that just got a sample loses its SYNTH button.
     const [synthPad, setSynthPad] = React.useState(null);
     const [drivePad, setDrivePad] = React.useState(null);
+    const [compPad, setCompPad] = React.useState(null);
     const [tapeUnit, setTapeUnit] = React.useState(null);
     const [chorusUnit, setChorusUnit] = React.useState(null);
     const [, forceSamples] = React.useReducer((n) => n + 1, 0);
@@ -24,7 +25,7 @@ const Mixer = () => {
         const onSample = () => forceSamples();
         // The Sequencer's track names open the same editor — the Mixer hosts it
         // because it is always mounted, and the panel portals to <body>.
-        const onOpen = (e) => { if (e.detail && e.detail.idx != null) { setDrivePad(null); setSynthPad(e.detail.idx); } };
+        const onOpen = (e) => { if (e.detail && e.detail.idx != null) { setDrivePad(null); setCompPad(null); setSynthPad(e.detail.idx); } };
         window.addEventListener('oa-sample-changed', onSample);
         window.addEventListener('oa-open-synth', onOpen);
         return () => {
@@ -63,10 +64,12 @@ const Mixer = () => {
         window.addEventListener('oa-reverb-changed', onFx);
         window.addEventListener('oa-delay-changed', onFx);
         window.addEventListener('oa-drive-changed', onFx);
+        window.addEventListener('oa-comp-changed', onFx);
         return () => {
             window.removeEventListener('oa-reverb-changed', onFx);
             window.removeEventListener('oa-delay-changed', onFx);
             window.removeEventListener('oa-drive-changed', onFx);
+            window.removeEventListener('oa-comp-changed', onFx);
         };
     }, []);
 
@@ -78,6 +81,8 @@ const Mixer = () => {
     // A tail and a tape repeat decay on their own schedule, so unlike the
     // per-hit track meters these are polled from each bus's analysers.
     const fxMeterRefs = React.useRef({});
+    // The gain-reduction readout on each channel's COMPRESS button.
+    const grRefs = React.useRef({});
     React.useEffect(() => {
         let raf = null;
         const buf = new Float32Array(1024);
@@ -85,6 +90,16 @@ const Mixer = () => {
         const tick = () => {
             const ctx = window.OA_AUDIO_CTX;
             if (ctx) {
+                // Only channels whose compressor has actually been built have a
+                // number to show; everything else is a wire and stays blank.
+                const comps = ctx.__oaComps || [];
+                Object.keys(grRefs.current).forEach((k) => {
+                    const el = grRefs.current[k];
+                    if (!el) return;
+                    const gr = comps[k] ? window.oaCompGR(k | 0) : 0;
+                    const text = gr > 0.15 ? '-' + gr.toFixed(1) : '';
+                    if (el.textContent !== text) el.textContent = text;
+                });
                 FX.forEach((fx) => {
                     const bus = busOf(ctx, fx)[fx.i];
                     const els = fxMeterRefs.current[fx.key];
@@ -290,7 +305,7 @@ const Mixer = () => {
                         {/* No sample loaded means this voice is synthesized — let them shape it. */}
                         {!hasSample(i) && (
                             <button
-                                onClick={() => { setDrivePad(null); setSynthPad(synthPad === i ? null : i); }}
+                                onClick={() => { setDrivePad(null); setCompPad(null); setSynthPad(synthPad === i ? null : i); }}
                                 title={`Edit the ${track.name || 'Track'} synth voice`}
                                 style={{
                                     width: '100%', padding: '3px 0', textAlign: 'center', borderRadius: '4px',
@@ -314,7 +329,7 @@ const Mixer = () => {
                             const dOpen = drivePad === i;
                             return (
                                 <button
-                                    onClick={() => { setSynthPad(null); setDrivePad(dOpen ? null : i); }}
+                                    onClick={() => { setSynthPad(null); setCompPad(null); setDrivePad(dOpen ? null : i); }}
                                     title={`${track.name || 'Track'} — distortion pedal${dOn ? ` (${window.oaDriveMode(dUnit.mode).label}, ${Math.round(dUnit.mix * 100)}% mix)` : ''}`}
                                     style={{
                                         width: '100%', padding: '3px 0', textAlign: 'center', borderRadius: '4px',
@@ -326,6 +341,40 @@ const Mixer = () => {
                                     }}
                                 >
                                     DRIVE{dOn ? ` ${Math.round(dUnit.mix * 100)}` : ''}
+                                </button>
+                            );
+                        })()}
+
+                        {/* The limiting amplifier on the end of this channel.
+                            When it is in, the button carries the live gain
+                            reduction — the number that says whether the setting
+                            is doing anything at all. */}
+                        {(() => {
+                            const cUnit = window.oaCompUnit(i);
+                            const cOn = window.oaCompActive(i);
+                            const cRatio = window.oaCompRatio(cUnit.ratio);
+                            const cOpen = compPad === i;
+                            const cColor = window.OA_COMP_COLOR;
+                            return (
+                                <button
+                                    onClick={() => { setSynthPad(null); setDrivePad(null); setCompPad(cOpen ? null : i); }}
+                                    title={`${track.name || 'Track'} — limiting amplifier${cOn ? ` (${cRatio.label}${cRatio.key === 'all' ? '' : ':1'})` : ''}`}
+                                    style={{
+                                        width: '100%', padding: '3px 0', textAlign: 'center', borderRadius: '4px',
+                                        border: `1px solid ${cOpen || cOn ? cColor : '#444b57'}`,
+                                        background: cOpen ? '#4a3218' : (cOn ? '#33280f' : '#2a2f38'),
+                                        color: cOpen || cOn ? cColor : '#9aa3ae',
+                                        cursor: 'pointer', fontSize: '9px', fontWeight: '700', letterSpacing: '.3px',
+                                        marginBottom: '4px', display: 'flex', alignItems: 'center',
+                                        justifyContent: 'center', gap: '3px', overflow: 'hidden'
+                                    }}
+                                >
+                                    <span>COMPRESS</span>
+                                    {/* Written straight into the DOM by the meter
+                                        loop above — a number that moves at 60fps
+                                        must not re-render sixteen strips to do it. */}
+                                    <i ref={(el) => { grRefs.current[i] = el; }}
+                                       style={{ fontStyle: 'normal', fontVariantNumeric: 'tabular-nums', opacity: 0.85 }}></i>
                                 </button>
                             );
                         })()}
@@ -570,6 +619,15 @@ const Mixer = () => {
                     idx={drivePad}
                     name={(tracks[drivePad] && tracks[drivePad].name) || `Track ${drivePad + 1}`}
                     onClose={() => setDrivePad(null)}
+                />,
+                document.body
+            )}
+
+            {compPad != null && window.CompressorEditor && ReactDOM.createPortal(
+                <window.CompressorEditor
+                    idx={compPad}
+                    name={(tracks[compPad] && tracks[compPad].name) || `Track ${compPad + 1}`}
+                    onClose={() => setCompPad(null)}
                 />,
                 document.body
             )}

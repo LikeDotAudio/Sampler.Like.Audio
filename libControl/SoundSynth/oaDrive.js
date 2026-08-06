@@ -71,20 +71,24 @@ const OA_CLIPS = {
  * `bias` is how far off-centre the wave sits when it meets the ceiling, so the
  * top squashes before the bottom does. Lopsided clipping is what makes EVEN
  * harmonics — the second above all, which is an octave, and an octave reads as
- * warmth rather than as dirt. Symmetric clipping can only make ODD ones.
+ * warmth rather than as dirt. Symmetric clipping can only ever make ODD ones.
  *
- * The number is a fraction of the DRIVE, not a fixed offset, and that detail is
- * the whole difference between a tube setting and a decoration. Measured over a
- * 200 Hz sine, a fixed 0.30 offset gives a healthy second harmonic at 1.5x
- * drive and almost nothing by 40x: the wave is swinging ±40 by then and a
- * constant 0.30 barely tilts it, so the warmth evaporates exactly where you
- * reached for it. Tie the offset to the drive and the wave crosses the
- * threshold at the same lopsided place no matter how hard it is being pushed —
- * measured, the second harmonic holds at ~0.12 from 3x all the way to 40x.
+ * It is a FIXED offset, and it has to be, however tempting the alternative
+ * looks. Measured over a 200 Hz sine, the second harmonic here is strongest
+ * around 1.5x-4x drive and thins out by 40x, and the obvious fix is to scale
+ * the offset with the drive so the wave always crosses the rail at the same
+ * lopsided place. Do that and the numbers look wonderful — a rock-steady 0.12
+ * second harmonic all the way up — while the actual waveform quietly dies. Push
+ * the offset near the rail and clip(bias) approaches 1, so subtracting it takes
+ * the entire positive half of the wave down to nothing and what is left is a
+ * narrow pulse train. At bias × 40x drive with a hard clipper the curve
+ * collapses to literal silence: clip(s + 20) - clip(20) = 1 - 1 = 0.
  *
- * Physically that is a bias point that tracks the signal instead of sitting at
- * one voltage, which is a liberty; but a real tube stage that hot has other
- * people's problems, and this is the behaviour a player expects from the knob.
+ * The honest reading is that the fade is not a defect to engineer around. A
+ * memoryless clipper driven hard enough tends toward a square wave, and a
+ * square wave is odd harmonics by definition. Real gear does the same thing.
+ * Keep the offset small, take the warmth where it lives, and let FUZZ be the
+ * one that goes all the way.
  */
 window.OA_DRIVE_MODES = [
     {
@@ -92,11 +96,11 @@ window.OA_DRIVE_MODES = [
         hint: 'tanh, dead centre — peaks rounded, odd harmonics only. A pushed amp.',
     },
     {
-        key: 'tube', label: 'Tube', clip: 'soft', bias: 0.10, color: '#ffb300',
+        key: 'tube', label: 'Tube', clip: 'soft', bias: 0.35, color: '#ffb300',
         hint: 'tanh off-centre — the top squashes first, so the even harmonics come up. Warm.',
     },
     {
-        key: 'fuzz', label: 'Fuzz', clip: 'hard', bias: 0.05, color: '#e53935',
+        key: 'fuzz', label: 'Fuzz', clip: 'hard', bias: 0.15, color: '#e53935',
         hint: 'clamped flat at the rail — square wave, endless harmonics. Rips.',
     },
 ];
@@ -215,15 +219,23 @@ window.oaDriveSample = function (x, u, mode) {
         else s = 0;
     }
 
-    // 3. RECTIFICATION — fold the bottom half up. A full-wave rectifier makes
-    //    the wave repeat twice per cycle, which IS the octave above. Blended,
-    //    so the knob goes from the untouched wave to the full octave-up.
+    // 3. RECTIFICATION — fold the bottom half of the wave up. The wave then
+    //    repeats twice per cycle, and twice the rate IS the octave above.
+    //
+    //    The blend passes through both kinds of rectifier on its way. Below
+    //    zero the expression is s(1-r) + (-s)r = s(1 - 2r), so the negative
+    //    half shrinks to nothing at r = 0.5 — HALF-WAVE rectification, the
+    //    fundamental still there with the octave sat on top of it — and then
+    //    turns positive beyond, reaching FULL-WAVE at r = 1 where the original
+    //    pitch has gone entirely. Measured on a sine: at 50% the fundamental
+    //    still leads, by 75% the octave has overtaken it.
     if (u.rect > 0) s = s * (1 - u.rect) + Math.abs(s) * u.rect;
 
     // 4. ASYMMETRY — push the wave off-centre so it reaches the top rail before
-    //    the bottom one. Scaled by drive; see OA_DRIVE_MODES for why.
+    //    the bottom one. Small and fixed; see OA_DRIVE_MODES for why it must
+    //    not be scaled up with the drive, however good the idea sounds.
     const clip = OA_CLIPS[mode.clip];
-    const bias = mode.bias * u.drive;
+    const bias = mode.bias;
 
     // 5. THE CEILING, and then the offset taken back off.
     //

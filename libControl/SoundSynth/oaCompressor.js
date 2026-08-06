@@ -128,21 +128,25 @@ window.OA_COMP_PARAMS = [
 ];
 
 /**
- * The ratio buttons. Each one carries its own threshold and knee, because on
- * the real unit those are not independent — pushing a harder ratio also changes
- * how sharply the curve bends into it. `lag` multiplies the attack constant and
- * is 1 everywhere except ALL.
+ * The ratio buttons. The threshold is the same for all four numbered settings —
+ * it has to be, or the buttons stop meaning what they say: give 8:1 a higher
+ * threshold than 20:1 and there are input levels where pressing the HARDER
+ * ratio compresses LESS, which is indefensible on a panel with no threshold
+ * knob to explain it with. What does change with the ratio is the KNEE: a
+ * gentle setting eases in over a wide bend, a limiter snaps to its ceiling.
+ *
+ * `lag` multiplies the attack constant and is 1 everywhere except ALL.
  */
 window.OA_COMP_RATIOS = [
     { key: '4',  label: '4',  ratio: 4,  thresh: -24, knee: 9,  lag: 1,
       hint: '4:1 — gentle. Levels a part without announcing itself.' },
-    { key: '8',  label: '8',  ratio: 8,  thresh: -23, knee: 7,  lag: 1,
+    { key: '8',  label: '8',  ratio: 8,  thresh: -24, knee: 7,  lag: 1,
       hint: '8:1 — firm. You can hear it working, and that is the point.' },
-    { key: '12', label: '12', ratio: 12, thresh: -22, knee: 5,  lag: 1,
+    { key: '12', label: '12', ratio: 12, thresh: -24, knee: 5,  lag: 1,
       hint: '12:1 — heavy. Peaks are held down hard.' },
-    { key: '20', label: '20', ratio: 20, thresh: -21, knee: 3,  lag: 1,
+    { key: '20', label: '20', ratio: 20, thresh: -24, knee: 3,  lag: 1,
       hint: '20:1 — a limiter. Effectively a ceiling the signal cannot cross.' },
-    { key: 'all', label: 'ALL', ratio: 20, thresh: -34, knee: 16, lag: 3.5,
+    { key: 'all', label: 'ALL', ratio: 20, thresh: -36, knee: 16, lag: 3.5,
       hint: 'Every button in at once. Threshold collapses, the knee smears and the attack lags — it pumps, it distorts, it is enormous.' },
 ];
 

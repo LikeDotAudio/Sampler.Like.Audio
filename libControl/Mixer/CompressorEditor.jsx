@@ -1,0 +1,544 @@
+// The COMPRESS panel for one channel: a 1U limiting amplifier in orange, with
+// the two knobs that decide how hard it works (INPUT and OUTPUT), the two that
+// decide what it sounds like while it does (ATTACK and RELEASE), the ratio
+// buttons, and the meter that shows you the gain being taken away in real time.
+//
+// The needle is the reason this panel exists. Every other control here is a
+// number you could have typed; the meter is the only way to see that a 4:1 at
+// this input setting is pulling 6dB off the peaks and nothing off the tails.
+
+// Where each engraved dB mark sits along the meter's travel. A real VU scale is
+// squashed at the quiet end and stretched around 0, and the needle has to land
+// on the marks, so one table drives both the drawing and the pointing.
+const VU_MARKS = [
+    { db: -20, p: 0.00 }, { db: -10, p: 0.20 }, { db: -7, p: 0.30 },
+    { db: -5,  p: 0.38 }, { db: -3,  p: 0.47 }, { db: -1, p: 0.57 },
+    { db: 0,   p: 0.63 }, { db: 1,   p: 0.75 }, { db: 2,  p: 0.86 },
+    { db: 3,   p: 1.00 },
+];
+const VU_ZERO = 0.63;                       // where the "0" mark falls
+
+const vuPos = (db) => {
+    if (db <= VU_MARKS[0].db) return 0;
+    for (let i = 1; i < VU_MARKS.length; i++) {
+        const a = VU_MARKS[i - 1], b = VU_MARKS[i];
+        if (db <= b.db) return a.p + (db - a.db) / (b.db - a.db) * (b.p - a.p);
+    }
+    return 1;
+};
+
+// ---------------------------------------------------------------------------
+// A panel knob: a black skirted knob with the scale engraved on the faceplate
+// around it, which is what makes a rack unit look like a rack unit. The numbers
+// are spread evenly across the 270° of travel, low end first.
+// ---------------------------------------------------------------------------
+const RackKnob = ({ value, min, max, defaultVal, ticks, size = 62, onChange }) => {
+    const S = size + 26;                     // room outside the knob for the collar
+    const cx = S / 2, cy = S / 2;
+    const bodyR = size / 2;
+    const [uid] = React.useState(() => 'ck' + Math.random().toString(36).slice(2, 8));
+
+    const rad = (d) => d * Math.PI / 180;
+    const pt = (r, a) => [cx + r * Math.sin(rad(a)), cy - r * Math.cos(rad(a))];
+
+    const clampV = (v) => Math.max(min, Math.min(max, v));
+    const cur = clampV(value);
+    const angle = (((cur - min) / ((max - min) || 1)) * 2 - 1) * 135;
+
+    // Drag vertically, wheel to nudge, alt-click to reset — the same gesture
+    // set as every other control in the mixer, so the hands do not relearn.
+    const onPointerDown = (e) => {
+        if (e.altKey) { onChange(defaultVal); return; }
+        const startY = e.clientY;
+        const startV = cur;
+        e.target.setPointerCapture(e.pointerId);
+        const move = (em) => onChange(clampV(startV + ((startY - em.clientY) / 150) * (max - min)));
+        const up = (eu) => {
+            e.target.removeEventListener('pointermove', move);
+            e.target.removeEventListener('pointerup', up);
+            e.target.removeEventListener('pointercancel', up);
+            try { e.target.releasePointerCapture(eu.pointerId); } catch (x) {}
+        };
+        e.target.addEventListener('pointermove', move);
+        e.target.addEventListener('pointerup', up);
+        e.target.addEventListener('pointercancel', up);
+        e.preventDefault();
+    };
+    const onWheel = (e) => {
+        e.preventDefault();
+        onChange(clampV(cur + (e.deltaY < 0 ? 1 : -1) * (max - min) / 50));
+    };
+
+    const marks = [];
+    (ticks || []).forEach((label, i) => {
+        const a = -135 + (i / Math.max(1, ticks.length - 1)) * 270;
+        const [x1, y1] = pt(bodyR + 3, a);
+        const [x2, y2] = pt(bodyR + 6, a);
+        const [lx, ly] = pt(bodyR + 12, a);
+        marks.push(
+            <React.Fragment key={i}>
+                <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#2e1503" strokeWidth={1.2} strokeLinecap="round" />
+                <text x={lx} y={ly + 2.6} fill="#301604" fontSize="7" fontWeight="700"
+                      textAnchor="middle" style={{ userSelect: 'none' }}>{label}</text>
+            </React.Fragment>
+        );
+    });
+
+    // The knurled skirt. Fine radial nicks around the rim, exactly the detail
+    // that stops a filled circle from reading as a sticker.
+    const knurl = [];
+    for (let i = 0; i < 36; i++) {
+        const [x1, y1] = pt(bodyR - 0.5, i * 10);
+        const [x2, y2] = pt(bodyR - 4, i * 10);
+        knurl.push(<line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#050505" strokeWidth={1} opacity={0.55} />);
+    }
+
+    const [px1, py1] = pt(bodyR * 0.42, angle);
+    const [px2, py2] = pt(bodyR * 0.93, angle);
+
+    return (
+        <svg width={S} height={S} viewBox={`0 0 ${S} ${S}`}
+             style={{ display: 'block', touchAction: 'none', cursor: 'ns-resize' }}
+             onPointerDown={onPointerDown} onWheel={onWheel}>
+            <defs>
+                <radialGradient id={uid} cx="36%" cy="26%" r="80%">
+                    <stop offset="0%" stopColor="#4a4a4e" />
+                    <stop offset="45%" stopColor="#232326" />
+                    <stop offset="100%" stopColor="#08080a" />
+                </radialGradient>
+                <radialGradient id={uid + 'c'} cx="34%" cy="24%" r="78%">
+                    <stop offset="0%" stopColor="#f2f4f7" />
+                    <stop offset="52%" stopColor="#b9bec7" />
+                    <stop offset="100%" stopColor="#767c86" />
+                </radialGradient>
+            </defs>
+            {marks}
+            <circle cx={cx} cy={cy + 1.5} r={bodyR} fill="#00000055" />
+            <circle cx={cx} cy={cy} r={bodyR} fill={`url(#${uid})`} stroke="#000" strokeWidth={1} />
+            {knurl}
+            {/* The brushed aluminium cap on top of the skirt. */}
+            <circle cx={cx} cy={cy} r={bodyR * 0.62} fill={`url(#${uid}c)`} stroke="#0a0a0a" strokeWidth={0.8} />
+            <line x1={px1} y1={py1} x2={px2} y2={py2} stroke="#fff" strokeWidth={2.2} strokeLinecap="round" />
+        </svg>
+    );
+};
+
+// One latching push button — the interlocking kind, which is why pressing one
+// releases the last. Sits down in its well when it is in.
+const PushButton = ({ label, active, onPress, title, width = 20, height = 22 }) => (
+    <button
+        onClick={onPress}
+        title={title}
+        style={{
+            width: `${width}px`, height: `${height}px`, borderRadius: '2px', cursor: 'pointer',
+            background: active
+                ? 'linear-gradient(to bottom, #d8d2c4 0%, #b7b0a0 70%, #8a8478 100%)'
+                : 'linear-gradient(to bottom, #f4f1e8 0%, #d6d1c4 60%, #b3ada0 100%)',
+            border: '1px solid #1a1209',
+            boxShadow: active
+                ? 'inset 0 3px 5px rgba(0,0,0,0.55)'
+                : '0 2px 0 #1a1209, 0 3px 4px rgba(0,0,0,0.5)',
+            transform: active ? 'translateY(2px)' : 'none',
+            padding: 0, fontSize: '8px', fontWeight: '700', color: '#2a1a08',
+            transition: 'transform .06s, box-shadow .06s',
+        }}
+    >
+        {label}
+    </button>
+);
+
+// A word engraved into the faceplate: dark ink with a hairline highlight under
+// it, which is how a cut letter catches the light on a painted panel.
+const Engraved = ({ children, size = 8, style }) => (
+    <div style={{
+        fontSize: `${size}px`, fontWeight: '700', letterSpacing: '1.4px', color: '#331704',
+        textShadow: '0 1px 0 rgba(255,220,180,0.35)', ...style
+    }}>
+        {children}
+    </div>
+);
+
+/**
+ * The meter. `pos` is 0..1 across the engraved scale and arrives already
+ * smoothed by the caller — a needle that follows the samples is a blur, and a
+ * real moving-coil movement takes about a third of a second to settle anyway.
+ */
+const VuMeter = ({ posRef, mode }) => {
+    const W = 196, H = 92;
+    const pivotX = W / 2, pivotY = H * 1.72;
+    const needleR = H * 1.44;
+    const scaleR = H * 1.30;
+    const A0 = -33, A1 = 33;
+
+    const rad = (d) => d * Math.PI / 180;
+    const pt = (r, a) => [pivotX + r * Math.sin(rad(a)), pivotY - r * Math.cos(rad(a))];
+
+    const marks = VU_MARKS.map((m) => {
+        const a = A0 + m.p * (A1 - A0);
+        const [x1, y1] = pt(scaleR, a);
+        const [x2, y2] = pt(scaleR - 5, a);
+        const [lx, ly] = pt(scaleR - 13, a);
+        const hot = m.db >= 0;
+        return (
+            <React.Fragment key={m.db}>
+                <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={hot ? '#c22a10' : '#3a2205'} strokeWidth={m.db % 5 === 0 ? 1.4 : 1} />
+                <text x={lx} y={ly + 3} fill={hot ? '#c22a10' : '#3a2205'} fontSize="7.5" fontWeight="700" textAnchor="middle">
+                    {m.db > 0 ? '+' + m.db : m.db}
+                </text>
+            </React.Fragment>
+        );
+    });
+
+    // The arc itself, drawn once — black below 0, red from 0 up, as on every
+    // moving-coil meter ever fitted to a limiter.
+    const arcPath = (a0, a1) => {
+        const [x0, y0] = pt(scaleR, a0), [x1, y1] = pt(scaleR, a1);
+        return `M ${x0} ${y0} A ${scaleR} ${scaleR} 0 0 1 ${x1} ${y1}`;
+    };
+    const zeroAngle = A0 + VU_ZERO * (A1 - A0);
+
+    // The percentage row under the dB row, like the original's lower scale.
+    const pctMarks = [0, 20, 40, 60, 80, 100].map((v) => {
+        const a = A0 + (v / 100) * VU_ZERO * (A1 - A0);
+        const [lx, ly] = pt(scaleR - 24, a);
+        return <text key={v} x={lx} y={ly + 3} fill="#6b4410" fontSize="5.5" fontWeight="700" textAnchor="middle">{v}</text>;
+    });
+
+    return (
+        <div style={{
+            padding: '5px', borderRadius: '3px',
+            background: 'linear-gradient(to bottom, #141416 0%, #26262a 50%, #101012 100%)',
+            border: '1px solid #000', boxShadow: 'inset 0 1px 0 #ffffff18, 0 2px 5px rgba(0,0,0,0.6)'
+        }}>
+            <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ display: 'block', borderRadius: '2px' }}>
+                <defs>
+                    <linearGradient id="vuface" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="#ffd98a" />
+                        <stop offset="45%" stopColor="#f7bf5c" />
+                        <stop offset="100%" stopColor="#e09a2c" />
+                    </linearGradient>
+                    <radialGradient id="vuglow" cx="50%" cy="18%" r="80%">
+                        <stop offset="0%" stopColor="#fff2cc" stopOpacity="0.85" />
+                        <stop offset="100%" stopColor="#fff2cc" stopOpacity="0" />
+                    </radialGradient>
+                </defs>
+                <rect x={0} y={0} width={W} height={H} fill="url(#vuface)" />
+                {/* The lamp behind the face — the reason these meters glow. */}
+                <rect x={0} y={0} width={W} height={H} fill="url(#vuglow)" />
+
+                <path d={arcPath(A0, zeroAngle)} fill="none" stroke="#3a2205" strokeWidth={1.4} />
+                <path d={arcPath(zeroAngle, A1)} fill="none" stroke="#c22a10" strokeWidth={1.8} />
+                {marks}
+                {pctMarks}
+
+                <text x={12} y={20} fill="#3a2205" fontSize="8" fontWeight="700" letterSpacing="1">VU</text>
+                <text x={W - 20} y={20} fill="#c22a10" fontSize="8" fontWeight="700" letterSpacing="1">VU</text>
+                <text x={W / 2} y={H - 6} fill="#6b4410" fontSize="6.5" fontWeight="700" letterSpacing="1.2" textAnchor="middle">
+                    {mode === 'off' ? 'METER OFF' : (mode === 'gr' ? 'GAIN REDUCTION' : 'OUTPUT LEVEL ' + mode)}
+                </text>
+
+                {/* The needle. Driven straight through a ref by the animation
+                    loop — routing 60 frames a second of needle angle through
+                    React state would re-render the whole panel for each one. */}
+                <g ref={posRef} style={{ transformOrigin: `${pivotX}px ${pivotY}px` }}>
+                    <line x1={pivotX} y1={pivotY} x2={pivotX} y2={pivotY - needleR}
+                          stroke="#d42a10" strokeWidth={2} strokeLinecap="round" />
+                </g>
+                <circle cx={pivotX} cy={pivotY} r={9} fill="#1a1a1c" />
+                {/* Glass: a diagonal sheen across the face. */}
+                <path d={`M 0 ${H} L ${W * 0.55} 0 L ${W * 0.78} 0 L ${W * 0.2} ${H} Z`} fill="#ffffff" opacity="0.07" />
+            </svg>
+        </div>
+    );
+};
+
+const screw = (
+    <div style={{
+        width: '9px', height: '9px', borderRadius: '50%',
+        background: 'radial-gradient(circle at 35% 30%, #cfd3d8, #6d727a 60%, #33363b)',
+        boxShadow: 'inset 0 -1px 1px rgba(0,0,0,0.6), 0 1px 1px rgba(0,0,0,0.5)',
+        position: 'relative'
+    }}>
+        <i style={{
+            position: 'absolute', left: '1px', right: '1px', top: '4px', height: '1px',
+            background: '#2a2d31', display: 'block'
+        }}></i>
+    </div>
+);
+
+/**
+ * The compressor panel for one channel. Writes straight to the live unit, and
+ * because the strip is shared by every voice on the channel, a knob move lands
+ * on the sound that is already ringing rather than waiting for the next hit.
+ */
+window.CompressorEditor = ({ idx, name, onClose }) => {
+    const [, force] = React.useReducer((n) => n + 1, 0);
+    React.useEffect(() => {
+        const onChange = (e) => { if (e.detail && e.detail.idx === idx) force(); };
+        window.addEventListener('oa-comp-changed', onChange);
+        return () => window.removeEventListener('oa-comp-changed', onChange);
+    }, [idx]);
+
+    // Taken once per channel, so ABORT goes back to how this channel sounded
+    // when the panel was opened rather than to a factory setting.
+    const opened = React.useRef(null);
+    React.useEffect(() => {
+        const u = window.oaCompUnit(idx);
+        opened.current = { on: u.on, ratio: u.ratio };
+        window.OA_COMP_PARAMS.forEach((p) => { opened.current[p.key] = u[p.key]; });
+    }, [idx]);
+
+    const unit = window.oaCompUnit(idx);
+    const params = window.OA_COMP_PARAMS;
+    const P = (k) => params.find((p) => p.key === k);
+    const ratio = window.oaCompRatio(unit.ratio);
+    const on = unit.on && unit.mix > 0.0005;
+    const set = (k, v) => window.oaSetComp(idx, k, v);
+
+    const dirty = !!opened.current && (opened.current.on !== unit.on || opened.current.ratio !== unit.ratio
+        || params.some((p) => opened.current[p.key] !== unit[p.key]));
+    const abort = () => {
+        if (!opened.current) return;
+        set('on', opened.current.on);
+        set('ratio', opened.current.ratio);
+        params.forEach((p) => set(p.key, opened.current[p.key]));
+    };
+
+    // ---- the needle ------------------------------------------------------
+    const needleRef = React.useRef(null);
+    const grRef = React.useRef(null);
+    const meterMode = unit.meter || 'gr';
+    React.useEffect(() => {
+        const A0 = -33, A1 = 33;
+        const buf = new Float32Array(1024);
+        let shown = 0;                       // smoothed needle position, 0..1
+        let raf = null;
+        const tick = () => {
+            const ctx = window.OA_AUDIO_CTX;
+            const bus = ctx && ctx.__oaComps && ctx.__oaComps[idx];
+            const gr = window.oaCompGR(idx);
+
+            let target = VU_ZERO;
+            const meta = window.OA_COMP_METERS.find((m) => m.key === meterMode);
+            if (meterMode === 'off') {
+                target = 0;
+            } else if (meterMode === 'gr') {
+                // The same engraved scale, read backwards: no reduction parks
+                // the needle on 0 and every dB taken off swings it left.
+                target = VU_ZERO * (1 - Math.min(1, gr / 20));
+            } else if (bus && bus.analyser) {
+                bus.analyser.getFloatTimeDomainData(buf);
+                let peak = 0;
+                for (let i = 0; i < buf.length; i++) {
+                    const a = Math.abs(buf[i]);
+                    if (a > peak) peak = a;
+                }
+                const db = peak > 1e-6 ? 20 * Math.log10(peak) : -80;
+                target = vuPos(db - (meta ? meta.ref : -18));
+            } else {
+                target = 0;
+            }
+
+            // A moving-coil movement has mass. Rising fast and falling slow is
+            // both what the real one does and what makes the reading legible.
+            shown += (target - shown) * (target > shown ? 0.35 : 0.12);
+            if (needleRef.current) {
+                needleRef.current.setAttribute('transform',
+                    `rotate(${(A0 + shown * (A1 - A0)).toFixed(2)} 98 158.24)`);
+            }
+            if (grRef.current) grRef.current.textContent = gr > 0.05 ? '-' + gr.toFixed(1) + ' dB' : '0.0 dB';
+            raf = requestAnimationFrame(tick);
+        };
+        raf = requestAnimationFrame(tick);
+        return () => cancelAnimationFrame(raf);
+    }, [idx, meterMode]);
+
+    const knobCol = (key, size) => {
+        const p = P(key);
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px' }}>
+                <RackKnob
+                    value={unit[key]} min={p.min} max={p.max} defaultVal={p.def}
+                    ticks={p.ticks} size={size} onChange={(v) => set(key, v)}
+                />
+                <Engraved size={7.5} style={{ letterSpacing: '2px' }}>{p.label.toUpperCase()}</Engraved>
+                <div style={{
+                    fontSize: '8.5px', color: '#2a1204', fontWeight: '700',
+                    fontVariantNumeric: 'tabular-nums', opacity: 0.85
+                }}>
+                    {p.fmt(unit[key])}
+                </div>
+            </div>
+        );
+    };
+
+    return (
+        <div style={{
+            position: 'fixed', bottom: '46px', left: '50%', transform: 'translateX(-50%)',
+            background: 'var(--panel)', border: '1px solid #444', borderRadius: '8px',
+            boxShadow: '0 -4px 24px rgba(0,0,0,0.7)', zIndex: 1200,
+            padding: '14px 16px', width: 'min(760px, 96vw)', maxHeight: '82vh', overflowY: 'auto'
+        }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                <span style={{ fontSize: '12px', color: window.OA_COMP_COLOR, fontWeight: 'bold', letterSpacing: '1px' }}>
+                    {name} — COMPRESS
+                </span>
+                <span style={{ fontSize: '9px', color: '#666' }}>after the pan, sends tapped ahead of it</span>
+                <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
+                    <window.SeqButton label="⟲ Abort" onClick={abort} disabled={!dirty}
+                        color={dirty ? '#b71c1c' : undefined} textColor={dirty ? '#fff' : undefined}
+                        title="Back to how this channel sounded when the panel was opened"
+                        style={{ padding: '4px 10px', border: 'none' }} />
+                    <window.SeqButton label="✖ Close" onClick={onClose} style={{ padding: '4px 10px' }} />
+                </div>
+            </div>
+
+            {/* ---- the faceplate: brushed orange, 1U, rack ears at both ends ---- */}
+            <div style={{
+                display: 'flex', alignItems: 'stretch', borderRadius: '4px', overflow: 'hidden',
+                border: '1px solid #000', boxShadow: '0 3px 10px rgba(0,0,0,0.55)',
+                background: 'linear-gradient(to bottom, #e08a２0 0%, #c96a12 18%, #b25a0d 55%, #8f4408 100%)'
+            }}>
+                {/* Rack ear */}
+                <div style={{
+                    width: '26px', flex: '0 0 auto', display: 'flex', flexDirection: 'column',
+                    justifyContent: 'space-between', alignItems: 'center', padding: '8px 0',
+                    background: 'linear-gradient(to bottom, #b3560c 0%, #8a3f06 100%)',
+                    borderRight: '1px solid #00000055'
+                }}>
+                    {screw}{screw}
+                </div>
+
+                <div style={{
+                    flex: 1, minWidth: 0, padding: '10px 12px',
+                    background: 'linear-gradient(to bottom, #e2892a 0%, #cd7016 16%, #b85c0e 60%, #9a4a09 100%)',
+                    // Brushed metal: a fine vertical grain over the paint.
+                    backgroundImage: 'repeating-linear-gradient(90deg, rgba(255,255,255,0.045) 0 1px, rgba(0,0,0,0.035) 1px 2px), linear-gradient(to bottom, #e2892a 0%, #cd7016 16%, #b85c0e 60%, #9a4a09 100%)',
+                    display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', justifyContent: 'center'
+                }}>
+                    {/* IN — the only control the original does not have. Something
+                        has to be able to take the strip out of circuit. */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                        <button
+                            onClick={() => set('on', !unit.on)}
+                            title={on ? 'Compressor in circuit' : 'Compressor out of circuit — the channel passes through untouched'}
+                            style={{
+                                width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer',
+                                border: '2px solid #2a1405',
+                                background: on
+                                    ? 'radial-gradient(circle at 38% 30%, #fff0c8, #ff9a2e 45%, #c85a05 100%)'
+                                    : 'radial-gradient(circle at 38% 30%, #6b6357, #3a3128 60%, #241d16 100%)',
+                                boxShadow: on
+                                    ? '0 0 12px rgba(255,150,40,0.75), inset 0 1px 2px rgba(255,255,255,0.5)'
+                                    : 'inset 0 2px 4px rgba(0,0,0,0.6)',
+                                padding: 0
+                            }}
+                        />
+                        <Engraved size={7} style={{ letterSpacing: '2px' }}>IN</Engraved>
+                        {knobCol('mix', 40)}
+                    </div>
+
+                    {knobCol('input', 62)}
+                    {knobCol('output', 62)}
+
+                    {/* ATTACK over RELEASE, stacked, as on the front panel. */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                        {knobCol('attack', 42)}
+                        {knobCol('release', 42)}
+                    </div>
+
+                    {/* RATIO — interlocking buttons, one circuit at a time. */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                        <Engraved size={7} style={{ letterSpacing: '1.6px', marginBottom: '1px' }}>RATIO</Engraved>
+                        {window.OA_COMP_RATIOS.map((r) => (
+                            <div key={r.key} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <span style={{
+                                    fontSize: '7.5px', fontWeight: '700', color: '#331704', width: '18px',
+                                    textAlign: 'right', textShadow: '0 1px 0 rgba(255,220,180,0.35)'
+                                }}>{r.label}</span>
+                                <PushButton label="" active={unit.ratio === r.key} title={r.hint}
+                                    onPress={() => set('ratio', r.key)} width={16} height={17} />
+                            </div>
+                        ))}
+                    </div>
+
+                    <VuMeter posRef={needleRef} mode={meterMode} />
+
+                    {/* METER — where the needle is pointing. Panel only; it
+                        changes nothing about what the channel sounds like. */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                        <Engraved size={7} style={{ letterSpacing: '1.6px', marginBottom: '1px' }}>METER</Engraved>
+                        {window.OA_COMP_METERS.map((m) => (
+                            <div key={m.key} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <PushButton label="" active={meterMode === m.key} title={m.hint}
+                                    onPress={() => set('meter', m.key)} width={16} height={17} />
+                                <span style={{
+                                    fontSize: '7.5px', fontWeight: '700', color: '#331704', width: '20px',
+                                    textShadow: '0 1px 0 rgba(255,220,180,0.35)'
+                                }}>{m.label}</span>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* The badge, across the bottom of the plate. */}
+                    <div style={{
+                        width: '100%', display: 'flex', alignItems: 'baseline', justifyContent: 'center',
+                        gap: '10px', marginTop: '2px'
+                    }}>
+                        <Engraved size={9} style={{ letterSpacing: '3px' }}>OA-76</Engraved>
+                        <Engraved size={7} style={{ letterSpacing: '2px', opacity: 0.85 }}>LIMITING AMPLIFIER</Engraved>
+                        <span style={{
+                            fontSize: '7px', fontWeight: '700', letterSpacing: '1px', color: '#2a1204',
+                            fontVariantNumeric: 'tabular-nums', opacity: 0.8
+                        }}>
+                            GR <i ref={grRef} style={{ fontStyle: 'normal' }}>0.0 dB</i>
+                        </span>
+                    </div>
+                </div>
+
+                <div style={{
+                    width: '26px', flex: '0 0 auto', display: 'flex', flexDirection: 'column',
+                    justifyContent: 'space-between', alignItems: 'center', padding: '8px 0',
+                    background: 'linear-gradient(to bottom, #b3560c 0%, #8a3f06 100%)',
+                    borderLeft: '1px solid #00000055'
+                }}>
+                    {screw}{screw}
+                </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '10px', color: '#aaa' }}>Setting</span>
+                <select
+                    value=""
+                    onChange={(e) => { if (e.target.value) window.oaApplyCompPreset(idx, e.target.value); }}
+                    style={{ background: '#222', color: window.OA_COMP_COLOR, border: '1px solid #444', borderRadius: '3px', fontSize: '11px', padding: '3px 6px' }}
+                >
+                    <option value="">Load a setting…</option>
+                    {Object.keys(window.OA_COMP_PRESETS).map((k) => (
+                        <option key={k} value={k}>{window.OA_COMP_PRESETS[k].label}</option>
+                    ))}
+                </select>
+                <span style={{
+                    width: '7px', height: '7px', borderRadius: '50%', display: 'inline-block',
+                    background: on ? window.OA_COMP_COLOR : '#3a2a16',
+                    boxShadow: on ? `0 0 6px ${window.OA_COMP_COLOR}` : 'inset 0 1px 2px #000'
+                }}></span>
+                <span style={{ fontSize: '9px', color: '#8f9299', letterSpacing: '1.5px' }}>
+                    {on ? `IN — ${ratio.label}${ratio.key === 'all' ? '' : ':1'}` : 'OUT OF CIRCUIT'}
+                </span>
+                <span style={{ fontSize: '10px', color: '#777', fontStyle: 'italic' }}>{ratio.hint}</span>
+            </div>
+
+            <div style={{ fontSize: '9px', color: '#666', marginTop: '10px', lineHeight: 1.5 }}>
+                There is no threshold knob: the threshold is fixed inside the box and INPUT
+                drives the signal into it, so turning input up is turning compression up. Take
+                the level back with OUTPUT. Both time knobs run backwards — fully clockwise is
+                the FASTEST setting. A slow ATTACK lets the front of a hit through before the
+                gain clamps, which is how a compressor makes a drum hit harder rather than
+                duller; RELEASE too fast and you hear the channel breathe between hits. BLEND
+                below 100% is parallel compression: peaks held down, transients intact
+                underneath. Watch the needle, not the numbers.
+            </div>
+        </div>
+    );
+};

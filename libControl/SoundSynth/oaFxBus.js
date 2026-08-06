@@ -10,6 +10,14 @@
  *   The channel's DRIVE pedal (oaDrive.js) goes in FRONT of all of that, so the
  *   reverbs and tapes are fed the distorted signal — a pedal sits on the floor
  *   before the desk, not in the aux rack. On a clean channel it builds nothing.
+ *
+ *   The channel's COMPRESSOR (oaCompressor.js) goes on the END of the dry path,
+ *   after the pan. Unlike everything else here it is built ONCE per channel and
+ *   shared by every voice, because a compressor with no memory of the last hit
+ *   is not a compressor. That placement also means the sends are tapped ahead of
+ *   it: the reverbs and tapes hear the channel's natural dynamics while the
+ *   direct sound is squashed, which is the more useful of the two orders — a
+ *   compressed send makes the tail swell up behind every hit.
  */
 
 window.OA_FX_SEND_EPSILON = 0.001;
@@ -27,7 +35,10 @@ window.oaVoiceOut = function (ctx, idx, pan) {
     } else {
         node = ctx.createGain();
     }
-    node.connect(ctx.destination);
+    // Null on a channel that has never been compressed, and the pan goes
+    // straight out the way it always did.
+    const comp = window.oaCompStrip ? window.oaCompStrip(ctx, idx) : null;
+    node.connect(comp ? comp.input : ctx.destination);
 
     const tap = function (amount, target) {
         if (!(amount > window.OA_FX_SEND_EPSILON)) return;
@@ -63,6 +74,12 @@ window.oaVoiceOut = function (ctx, idx, pan) {
  */
 window.oaWarmFx = async function (ctx) {
     await window.oaPrepareFx(ctx);
+    // Every compressed channel, built now that the answer about worklets is in.
+    // Left until the first voice, a strip would be built while the module was
+    // still registering and would take the native fallback for the whole session.
+    if (window.oaCompStrip) {
+        for (let i = 0; i < window.OA_PAD_MAX; i++) window.oaCompStrip(ctx, i);
+    }
     const used = function (units, idx) {
         const u = units[idx];
         return !!(u && u.sends && u.sends.some((v) => v > window.OA_FX_SEND_EPSILON));

@@ -11,19 +11,25 @@
 // what MACH does on the real unit — it happens to map exactly onto the two
 // reverb buses this app has.
 
-const LARC_RED = '#ff3a1e';
-const LARC_RED_DIM = '#7a1c0a';
+// The display runs in the app's own orange rather than the LED red the real
+// 480L used. Every other lit thing in this app is --accent, and one panel
+// glowing a different colour read as a bug rather than as period detail.
+const LARC_LED = '#f4902c';             // === --accent
+const LARC_LED_DIM = '#7a4a12';
+const LARC_LED_HOT = '#ffc46a';         // the ovld pair, hotter but still orange
+const LARC_LED_OFF = '#2a1706';         // an unlit segment behind the filter
 const LARC_CREAM = '#e9e3d1';
 const LARC_MONO = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+const LARC_METER_GAIN = 2;              // display-only lift on the metered signal
 
-// The display glass. Properly black — these are red LED segments behind a dark
+// The display glass. Properly black — these are LED segments behind a dark
 // filter, not a backlit LCD, so everything that is not lit is unlit, and the
 // only colour on the panel comes from the segments themselves.
 const LARC_GLASS = {
     background: 'radial-gradient(ellipse at 50% 0%, #14100e 0%, #060505 55%, #000 100%)',
     border: '1px solid #6f6857',
     borderRadius: '3px',
-    boxShadow: 'inset 0 2px 7px rgba(0,0,0,0.95), inset 0 0 14px rgba(255,60,25,0.05)',
+    boxShadow: 'inset 0 2px 7px rgba(0,0,0,0.95), inset 0 0 14px rgba(244,144,44,0.06)',
 };
 
 /**
@@ -36,14 +42,14 @@ const LARC_GLASS = {
 const Led = ({ children, size = 11, dim = false, glow = true, style }) => (
     <span style={{
         fontFamily: LARC_MONO, fontSize: `${size}px`, fontWeight: '700',
-        color: dim ? LARC_RED_DIM : LARC_RED,
+        color: dim ? LARC_LED_DIM : LARC_LED,
         textShadow: !glow ? 'none'
             : dim
                 // An unloaded/browsing line still emits — just faintly, the way
                 // a half-driven segment does. Killing its glow entirely made it
                 // read as printed ink rather than as a dimmer light.
-                ? '0 0 4px rgba(255,58,30,0.30)'
-                : '0 0 5px rgba(255,72,40,0.95), 0 0 13px rgba(255,40,10,0.55), 0 0 26px rgba(255,30,0,0.28)',
+                ? '0 0 4px rgba(244,144,44,0.32)'
+                : '0 0 5px rgba(255,176,90,0.95), 0 0 13px rgba(244,144,44,0.55), 0 0 26px rgba(230,120,20,0.28)',
         letterSpacing: '.5px', whiteSpace: 'pre', ...style
     }}>{children}</span>
 );
@@ -145,30 +151,41 @@ const LarcSlider = ({ value, onChange, height = 224 }) => {
  * The output meter. Dot columns rather than a bar, because that is what the
  * original's plasma display does, and because discrete steps are far easier to
  * read at a glance than a smoothly sliding bar.
+ *
+ * It takes the right half of the glass and its full height. Crammed into a
+ * corner at 3px a dot it was decoration; at this size the two rows are the
+ * second thing on the panel you can actually read from across the room.
  */
 const LarcMeter = ({ dotsRef }) => {
     const N = 14;
+    const LABEL_W = 12;                 // the L/R column, reserved on the legend too
     const row = (ch) => (
-        <div style={{ display: 'flex', gap: '1.5px' }}>
-            {Array.from({ length: N }, (_, i) => (
-                <i key={i}
-                   ref={(el) => { const s = dotsRef.current[ch] || (dotsRef.current[ch] = []); s[i] = el; }}
-                   style={{
-                       width: '3px', height: '3px', borderRadius: '50%',
-                       background: '#2a0a04', display: 'block'
-                   }} />
-            ))}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
+            {/* space-between rather than a fixed gap: the dots spread to whatever
+                width the display gives them instead of huddling at one end. */}
+            <div style={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'space-between' }}>
+                {Array.from({ length: N }, (_, i) => (
+                    <i key={i}
+                       ref={(el) => { const s = dotsRef.current[ch] || (dotsRef.current[ch] = []); s[i] = el; }}
+                       style={{
+                           width: '6px', height: '6px', borderRadius: '50%',
+                           background: LARC_LED_OFF, display: 'block', flexShrink: 0
+                       }} />
+                ))}
+            </div>
+            <Led size={7} dim style={{ width: `${LABEL_W - 3}px`, textAlign: 'right' }}>{ch === 0 ? 'L' : 'R'}</Led>
         </div>
     );
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                {row(0)}<Led size={6} dim>L</Led>
-            </div>
-            <Led size={5} dim glow={false} style={{ letterSpacing: '0' }}>-34 18 12 6  0  6 +12 ovld dB</Led>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                {row(1)}<Led size={6} dim>R</Led>
-            </div>
+        <div style={{
+            flex: '0 0 50%', minWidth: 0,
+            display: 'flex', flexDirection: 'column', justifyContent: 'space-between'
+        }}>
+            {row(0)}
+            <Led size={6} dim glow={false} style={{
+                letterSpacing: '0', textAlign: 'center', marginRight: `${LABEL_W}px`
+            }}>-34 18 12 6  0  6 +12 ovld dB</Led>
+            {row(1)}
         </div>
     );
 };
@@ -241,18 +258,22 @@ window.LarcRemote = ({ u, onClose }) => {
                 }
                 if (!dispHold) peak[ch] = Math.max(v, peak[ch] * 0.88);
                 // -34dB at the left end up to +12 at the right, which is the
-                // scale printed between the two rows.
-                const db = peak[ch] > 1e-5 ? 20 * Math.log10(peak[ch]) : -80;
+                // scale printed between the two rows. The return feeding this is
+                // a reverb tail — quiet by nature — so it is shown at twice the
+                // amplitude it arrives at, which puts a typical tail in the
+                // middle of the scale instead of flickering at the left end.
+                // Display only: nothing downstream of here hears the difference.
+                const db = peak[ch] > 1e-5 ? 20 * Math.log10(peak[ch] * LARC_METER_GAIN) : -80;
                 const lit = Math.round(((db + 34) / 46) * els.length);
                 els.forEach((el, i) => {
                     if (!el) return;
                     const on = i < lit;
                     const hot = i >= els.length - 2;      // the last two are the ovld pair
-                    el.style.background = on ? (hot ? '#ff8a3a' : LARC_RED) : '#2a0a04';
+                    el.style.background = on ? (hot ? LARC_LED_HOT : LARC_LED) : LARC_LED_OFF;
                     // A lit dot blooms into the filter exactly like the text
                     // does; an unlit one is a dark hole and casts nothing.
                     el.style.boxShadow = on
-                        ? `0 0 4px ${hot ? 'rgba(255,150,60,0.95)' : 'rgba(255,60,25,0.9)'}, 0 0 9px rgba(255,40,10,0.5)`
+                        ? `0 0 4px ${hot ? 'rgba(255,205,130,0.95)' : 'rgba(255,176,90,0.9)'}, 0 0 9px rgba(244,144,44,0.5)`
                         : 'none';
                 });
             }
@@ -378,15 +399,21 @@ window.LarcRemote = ({ u, onClose }) => {
                 <div style={{
                     ...LARC_GLASS,
                     padding: '7px 9px', marginBottom: '10px',
-                    display: 'flex', gap: '8px', alignItems: 'flex-start'
+                    // stretch, so the meter can take the full height of the glass
+                    // rather than sitting at the top of it.
+                    display: 'flex', gap: '8px', alignItems: 'stretch'
                 }}>
-                    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                        <Led size={11}>{line1}</Led>
+                    {/* The text now shares the glass with a meter that takes half
+                        of it, so the lines are set smaller and tighter: the
+                        longest program name in the banks is MEDIUM RAND HALL, and
+                        at 9px it still clears the meter without being clipped. */}
+                    <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: '5px', justifyContent: 'space-between' }}>
+                        <Led size={9} style={{ letterSpacing: '.2px' }}>{line1}</Led>
                         {/* The browsed bank flashes until a program is loaded from
                             it, which is the machine saying "nothing has changed
                             yet". Dimming is this display's version of flashing. */}
-                        <Led size={11} dim={browsing}>{line2}</Led>
-                        <Led size={10}>{line3}</Led>
+                        <Led size={9} dim={browsing} style={{ letterSpacing: '.2px' }}>{line2}</Led>
+                        <Led size={8.5} style={{ letterSpacing: '.2px' }}>{line3}</Led>
                     </div>
                     <LarcMeter dotsRef={dotsRef} />
                 </div>

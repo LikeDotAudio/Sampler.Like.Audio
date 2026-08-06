@@ -18,6 +18,7 @@ const Mixer = () => {
     const [synthPad, setSynthPad] = React.useState(null);
     const [drivePad, setDrivePad] = React.useState(null);
     const [compPad, setCompPad] = React.useState(null);
+    const [larcUnit, setLarcUnit] = React.useState(null);
     const [tapeUnit, setTapeUnit] = React.useState(null);
     const [chorusUnit, setChorusUnit] = React.useState(null);
     const [, forceSamples] = React.useReducer((n) => n + 1, 0);
@@ -450,27 +451,43 @@ const Mixer = () => {
                     }}>
                         <div style={{ fontSize: '10px', color: meta.color, letterSpacing: '1px', textTransform: 'uppercase' }}>{meta.name}</div>
 
-                        <select
-                            value={unit.tone}
-                            onChange={(e) => window.oaSetReverb(u, 'tone', e.target.value)}
-                            title="Tone of the tail"
-                            style={{ ...selStyle, color: meta.color }}
-                        >
-                            {Object.keys(window.OA_REVERB_TONES).map((k) => (
-                                <option key={k} value={k}>{window.OA_REVERB_TONES[k].label}</option>
-                            ))}
-                        </select>
+                        {/* The two dropdowns that used to sit here — a tone and a
+                            size, four choices each — are now the LARC. The strip
+                            just reports which program is loaded and opens the
+                            remote; everything else about the room is edited there. */}
+                        {(() => {
+                            const open = larcUnit === u;
+                            return (
+                                <button
+                                    onClick={() => setLarcUnit(open ? null : u)}
+                                    title={`${meta.name} — open the LARC (${window.oaReverbBank(unit.bank).name}: ${window.oaReverbProgramName(u)})`}
+                                    style={{
+                                        width: '100%', padding: '3px 0', textAlign: 'center', borderRadius: '4px',
+                                        border: `1px solid ${open ? meta.color : '#444b57'}`,
+                                        background: open ? '#1e3a3c' : '#2a2f38',
+                                        color: open ? meta.color : '#9aa3ae',
+                                        cursor: 'pointer', fontSize: '9px', fontWeight: '700', letterSpacing: '.5px'
+                                    }}
+                                >
+                                    LARC
+                                </button>
+                            );
+                        })()}
 
-                        <select
-                            value={unit.size}
-                            onChange={(e) => window.oaSetReverb(u, 'size', e.target.value)}
-                            title="How long the tail rings"
-                            style={{ ...selStyle, color: meta.color }}
-                        >
-                            {Object.keys(window.OA_REVERB_SIZES).map((k) => (
-                                <option key={k} value={k}>{window.OA_REVERB_SIZES[k].label}</option>
-                            ))}
-                        </select>
+                        {/* Program number and name, the way the machine's own
+                            display carries it. A dot means it has been edited
+                            away from the stored program. */}
+                        <div style={{ width: '100%', textAlign: 'center', lineHeight: 1.25, minHeight: '26px' }}>
+                            <div style={{
+                                fontSize: '8px', color: meta.color, fontWeight: '700',
+                                fontVariantNumeric: 'tabular-nums'
+                            }}>
+                                {unit.prog + 1}·{window.oaReverbProgramName(u)}{unit.edited ? ' *' : ''}
+                            </div>
+                            <div style={{ fontSize: '7px', color: 'var(--muted)', letterSpacing: '.3px' }}>
+                                {window.oaReverbBank(unit.bank).name}
+                            </div>
+                        </div>
 
                         <div style={{ display: 'flex', gap: '3px', alignItems: 'stretch', height: '140px', justifyContent: 'center' }}>
                             {fxMeters(fx)}
@@ -620,6 +637,11 @@ const Mixer = () => {
                     name={(tracks[drivePad] && tracks[drivePad].name) || `Track ${drivePad + 1}`}
                     onClose={() => setDrivePad(null)}
                 />,
+                document.body
+            )}
+
+            {larcUnit != null && window.LarcRemote && ReactDOM.createPortal(
+                <window.LarcRemote u={larcUnit} onClose={() => setLarcUnit(null)} />,
                 document.body
             )}
 

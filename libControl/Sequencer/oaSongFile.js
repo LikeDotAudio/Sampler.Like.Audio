@@ -112,7 +112,19 @@ window.oaApplySongState = async function (parsed) {
         units.slice(0, window.OA_REVERB_COUNT).forEach((rv, u) => {
             if (!rv) return;
             if (Array.isArray(rv.sends)) rv.sends.forEach((v, i) => window.oaSetReverbSend(u, i, v));
-            ['tone', 'size', 'ret'].forEach((k) => { if (rv[k] !== undefined) window.oaSetReverb(u, k, rv[k]); });
+            // Program first, then the individual parameters on top of it — an
+            // edited machine has to restore its edits, not the program it
+            // started from. A pre-LARC song carries `tone`/`size` as strings
+            // instead; oaSetReverb maps that pair onto the nearest program.
+            if (typeof rv.bank === 'number' && typeof rv.prog === 'number') {
+                window.oaLoadReverbProgram(u, rv.bank, rv.prog);
+            }
+            window.OA_REVERB_PARAMS.forEach((p) => {
+                if (rv[p.key] !== undefined) window.oaSetReverb(u, p.key, rv[p.key]);
+            });
+            if (typeof rv.size === 'string') window.oaSetReverb(u, 'size', rv.size);
+            if (typeof rv.tone === 'string') window.oaSetReverb(u, 'tone', rv.tone);
+            if (rv.ret !== undefined) window.oaSetReverb(u, 'ret', rv.ret);
         });
         report.reverb = true;
     }

@@ -17,6 +17,10 @@
  *   These are send effects: the node outputs WET ONLY. Dry comes from each
  *   channel's own path in oaFxBus.js. Each unit can also feed the reverb buses,
  *   so a repeat can be thrown into a room.
+ *
+ *   Downstream of the tape and ahead of the return fader sits a Dimension-D
+ *   style chorus (oaChorus.js) — an insert, silent until one of its buttons is
+ *   pressed, so the repeats can be spread across the stereo field.
  */
 
 // The tape parameters, and the ranges the panel draws its faders from. `key`
@@ -76,6 +80,8 @@ const dlUnit = function (saved, i) {
         // 16ths each head is locked to; 0 means it is set free in milliseconds.
         syncL: Math.max(0, Math.min(64, Number(s.syncL) || 0)),
         syncR: Math.max(0, Math.min(64, Number(s.syncR) || 0)),
+        // Dimension-mode button, 0 = OFF. See oaChorus.js.
+        chorus: Math.max(0, Math.min(window.OA_CHORUS_COUNT - 1, Number(s.chorus) || 0)),
     };
     window.OA_DELAY_PARAMS.forEach((p) => {
         const v = Number(s[p.key]);
@@ -407,7 +413,11 @@ const attachEngine = function (ctx, bus, u) {
         bus.engine = nativeEngine(ctx, unit);
     }
     bus.input.connect(bus.engine.input);
-    bus.engine.output.connect(bus.ret);
+    // The chain is tape → chorus → return fader. The chorus is an insert that
+    // passes the dry through, so at OFF this is the same signal it always was.
+    bus.chorus = window.oaChorusNode(ctx, unit.chorus);
+    bus.engine.output.connect(bus.chorus.input);
+    bus.chorus.output.connect(bus.ret);
 };
 
 // One set of buses per AudioContext, built on first use.
@@ -491,6 +501,18 @@ window.oaSetDelaySend = function (u, idx, value) {
     unit.sends = sends;
     window.oaSaveDelay();
     window.dispatchEvent(new CustomEvent('oa-delay-changed', { detail: { unit: u, idx: idx } }));
+};
+
+// Punch a Dimension-mode button. The buttons interlock — one mode at a time,
+// and pressing the lit one drops back to OFF.
+window.oaSetDelayChorus = function (u, mode) {
+    const unit = window.oaDelayUnit(u);
+    unit.chorus = Math.max(0, Math.min(window.OA_CHORUS_COUNT - 1, mode | 0));
+    window.oaSaveDelay();
+    const ctx = window.OA_AUDIO_CTX;
+    const bus = ctx && ctx.__oaDelays && ctx.__oaDelays[u];
+    if (bus && bus.chorus) bus.chorus.setMode(unit.chorus);
+    window.dispatchEvent(new CustomEvent('oa-delay-changed', { detail: { unit: u, chorus: unit.chorus } }));
 };
 
 // How much of delay `u` is thrown into reverb `r`.

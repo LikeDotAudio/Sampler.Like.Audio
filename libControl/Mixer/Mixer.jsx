@@ -17,6 +17,7 @@ const Mixer = () => {
     // so a channel that just got a sample loses its SYNTH button.
     const [synthPad, setSynthPad] = React.useState(null);
     const [tapeUnit, setTapeUnit] = React.useState(null);
+    const [chorusUnit, setChorusUnit] = React.useState(null);
     const [, forceSamples] = React.useReducer((n) => n + 1, 0);
     React.useEffect(() => {
         const onSample = () => forceSamples();
@@ -243,7 +244,9 @@ const Mixer = () => {
                                 onClick={() => toggleMute(i)}
                                 title={`${track.name || 'Track'} — click to ${isMuted ? 'unmute' : 'mute'}`}
                                 style={{
-                                    width: '100%', minWidth: 0, padding: '3px 2px', textAlign: 'center', borderRadius: '4px',
+                                    // Twice the height of an ordinary strip button — this one
+                                    // is the channel's on/off, and it is hit constantly.
+                                    width: '100%', minWidth: 0, padding: '12px 2px', textAlign: 'center', borderRadius: '4px',
                                     border: `1px solid ${!isMuted ? 'var(--on)' : '#444b57'}`,
                                     background: !isMuted ? '#6b3f14' : '#353b45',
                                     cursor: 'pointer', fontSize: '9px', fontWeight: '700',
@@ -413,6 +416,8 @@ const Mixer = () => {
                 const fx = FX[window.OA_REVERB_COUNT + u];
                 const unit = window.oaDelayUnit(u);
                 const open = tapeUnit === u;
+                const chOpen = chorusUnit === u;
+                const chMode = unit.chorus || 0;
                 const thrown = unit.toRv
                     .map((v, r) => (v > 0.005 ? `${window.OA_REVERB_UNITS[r].name.replace('RV ', 'R')} ${Math.round(v * 100)}` : null))
                     .filter(Boolean);
@@ -425,7 +430,7 @@ const Mixer = () => {
                         <div style={{ fontSize: '10px', color: meta.color, letterSpacing: '1px', textTransform: 'uppercase' }}>{meta.name}</div>
 
                         <button
-                            onClick={() => setTapeUnit(open ? null : u)}
+                            onClick={() => { setChorusUnit(null); setTapeUnit(open ? null : u); }}
                             title={`${meta.name} — heads, wow, flutter and tape drive`}
                             style={{
                                 width: '100%', padding: '3px 0', textAlign: 'center', borderRadius: '4px',
@@ -436,6 +441,22 @@ const Mixer = () => {
                             }}
                         >
                             TAPE
+                        </button>
+
+                        {/* Next box in the chain. Lit means a Dimension mode is
+                            in — the number says which. */}
+                        <button
+                            onClick={() => { setTapeUnit(null); setChorusUnit(chOpen ? null : u); }}
+                            title={`${meta.name} — Dimension chorus after the tape${chMode ? `, mode ${chMode}` : ''}`}
+                            style={{
+                                width: '100%', padding: '3px 0', textAlign: 'center', borderRadius: '4px',
+                                border: `1px solid ${chOpen || chMode ? meta.color : '#444b57'}`,
+                                background: chOpen ? '#332c55' : (chMode ? '#26223d' : '#2a2f38'),
+                                color: chOpen || chMode ? meta.color : '#9aa3ae',
+                                cursor: 'pointer', fontSize: '9px', fontWeight: '700', letterSpacing: '.5px'
+                            }}
+                        >
+                            CHORUS{chMode ? ` ${chMode}` : ''}
                         </button>
 
                         <div style={{ fontSize: '8px', color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>
@@ -518,6 +539,11 @@ const Mixer = () => {
 
             {tapeUnit != null && window.TapeDelayEditor && ReactDOM.createPortal(
                 <window.TapeDelayEditor u={tapeUnit} bpm={bpm} onClose={() => setTapeUnit(null)} />,
+                document.body
+            )}
+
+            {chorusUnit != null && window.ChorusEditor && ReactDOM.createPortal(
+                <window.ChorusEditor u={chorusUnit} onClose={() => setChorusUnit(null)} />,
                 document.body
             )}
         </div>

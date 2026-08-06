@@ -383,7 +383,7 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
             position: 'fixed', bottom: '46px', left: '50%', transform: 'translateX(-50%)',
             background: 'var(--panel)', border: '1px solid #444', borderRadius: '8px',
             boxShadow: '0 -4px 24px rgba(0,0,0,0.7)', zIndex: 1200,
-            padding: '14px 16px', width: 'min(920px, 97vw)', maxHeight: '82vh', overflowY: 'auto'
+            padding: '10px 12px', width: 'min(870px, 97vw)', maxHeight: '82vh', overflowY: 'auto'
         }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
                 <span style={{ fontSize: '12px', color: window.OA_COMP_COLOR, fontWeight: 'bold', letterSpacing: '1px' }}>
@@ -416,11 +416,15 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
                 </div>
 
                 <div style={{
-                    flex: 1, minWidth: 0, padding: '10px 12px',
+                    flex: 1, minWidth: 0, padding: '6px 8px',
                     background: 'linear-gradient(to bottom, #e2892a 0%, #cd7016 16%, #b85c0e 60%, #9a4a09 100%)',
                     // Brushed metal: a fine vertical grain over the paint.
                     backgroundImage: 'repeating-linear-gradient(90deg, rgba(255,255,255,0.045) 0 1px, rgba(0,0,0,0.035) 1px 2px), linear-gradient(to bottom, #e2892a 0%, #cd7016 16%, #b85c0e 60%, #9a4a09 100%)',
-                    display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', justifyContent: 'center'
+                    // space-around rather than centre: the groups are different
+                    // heights and widths, and clustering them in the middle left
+                    // a band of bare paint down each side of the plate.
+                    display: 'flex', alignItems: 'center', gap: '4px',
+                    flexWrap: 'wrap', justifyContent: 'space-around'
                 }}>
                     {/* IN — the only control the original does not have. Something
                         has to be able to take the strip out of circuit. */}
@@ -442,6 +446,15 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
                         />
                         <Engraved size={7} style={{ letterSpacing: '2px' }}>IN</Engraved>
                         {knobCol('mix', 40)}
+                        {/* The badge. It used to be a full-width row across the
+                            bottom of the plate, which cost a whole extra flex
+                            line of height while this column sat half empty. */}
+                        <div style={{ textAlign: 'center', marginTop: '2px' }}>
+                            <Engraved size={10} style={{ letterSpacing: '3px' }}>OA-76</Engraved>
+                            <Engraved size={6} style={{ letterSpacing: '1.4px', opacity: 0.8, marginTop: '1px' }}>
+                                LIMITING AMPLIFIER
+                            </Engraved>
+                        </div>
                     </div>
 
                     {knobCol('input', 62)}
@@ -468,7 +481,19 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
                         ))}
                     </div>
 
-                    <VuMeter posRef={needleRef} mode={meterMode} />
+                    {/* The meter, with the live reduction figure tucked into the
+                        space under it — the needle tells you the shape, the
+                        number tells you how much. */}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                        <VuMeter posRef={needleRef} mode={meterMode} />
+                        <span style={{
+                            fontSize: '7px', fontWeight: '700', letterSpacing: '1.2px', color: '#2a1204',
+                            fontVariantNumeric: 'tabular-nums', opacity: 0.8,
+                            textShadow: '0 1px 0 rgba(255,220,180,0.3)'
+                        }}>
+                            GR <i ref={grRef} style={{ fontStyle: 'normal' }}>0.0 dB</i>
+                        </span>
+                    </div>
 
                     {/* METER — where the needle is pointing. Panel only; it
                         changes nothing about what the channel sounds like. */}
@@ -486,20 +511,6 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
                         ))}
                     </div>
 
-                    {/* The badge, across the bottom of the plate. */}
-                    <div style={{
-                        width: '100%', display: 'flex', alignItems: 'baseline', justifyContent: 'center',
-                        gap: '10px', marginTop: '2px'
-                    }}>
-                        <Engraved size={9} style={{ letterSpacing: '3px' }}>OA-76</Engraved>
-                        <Engraved size={7} style={{ letterSpacing: '2px', opacity: 0.85 }}>LIMITING AMPLIFIER</Engraved>
-                        <span style={{
-                            fontSize: '7px', fontWeight: '700', letterSpacing: '1px', color: '#2a1204',
-                            fontVariantNumeric: 'tabular-nums', opacity: 0.8
-                        }}>
-                            GR <i ref={grRef} style={{ fontStyle: 'normal' }}>0.0 dB</i>
-                        </span>
-                    </div>
                 </div>
 
                 <div style={{

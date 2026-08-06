@@ -254,7 +254,7 @@ export async function createWorld(opts = {}) {
                 'AudioWorkletNode', 'AudioContext', 'OfflineAudioContext',
                 'requestAnimationFrame', 'cancelAnimationFrame',
                 'setTimeout', 'clearTimeout', 'setInterval', 'clearInterval',
-                'console', 'performance',
+                'console', 'performance', 'React',
                 `"use strict";\n${code}\n//# sourceURL=${rel}`,
             );
         } catch (e) {
@@ -266,7 +266,7 @@ export async function createWorld(opts = {}) {
                 FakeWorkletNode, TestAudioContext, TestOfflineAudioContext,
                 window.requestAnimationFrame, window.cancelAnimationFrame,
                 setTimeoutShim, clearTimeoutShim, setInterval, clearInterval,
-                console, window.performance,
+                console, window.performance, opts.React || null,
             );
         } catch (e) {
             throw new Error(`${rel}: threw while loading — ${e.stack}`);

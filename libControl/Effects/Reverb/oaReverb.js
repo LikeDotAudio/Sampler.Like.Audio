@@ -214,6 +214,45 @@ const irSeconds = function (unit) {
     return Math.min(14, unit.preDelay / 1000 + build + tail + 0.05);
 };
 
+// ---------------------------------------------------------------------------
+// Every room that has been drawn, kept under the settings that drew it.
+//
+// Drawing a response is a couple of million random numbers and an exp() every
+// 256 of them, on the main thread, and it happens on the trailing edge of every
+// slider move and every program recall. That is milliseconds of arithmetic in
+// the same thread that has to hand the audio device its next block — which is
+// exactly what a dropout is made of.
+//
+// So a room, once drawn, stays. Recalling a program you have used before, or
+// walking a slider back to where it was, is now a map lookup. It also means a
+// recalled program comes back as the SAME room: the build is full of
+// Math.random(), so rebuilding it gave a different set of reflections every
+// time, and A/B-ing two settings was never quite comparing like with like.
+//
+// The key carries the sample rate because the response is drawn for a rate, and
+// nothing else about the context: an AudioBuffer is PCM data, not a node, so
+// the offline renderer at the same rate can and should share these.
+// ---------------------------------------------------------------------------
+window.OA_IR_CACHE_BUDGET = window.OA_IR_CACHE_BUDGET || 96 * 1024 * 1024;
+const irCache = window.oaBufferCache
+    ? window.oaBufferCache('rooms', function () { return window.OA_IR_CACHE_BUDGET; })
+    : null;
+
+const irKey = function (rate, unit) {
+    // Every declared parameter except the return fader, which is a gain on the
+    // way out and changes nothing about the room. Taken from the table rather
+    // than listed by hand so a parameter added later cannot quietly start
+    // sharing another room's response.
+    const parts = [rate];
+    window.OA_REVERB_PARAMS.forEach(function (p) {
+        if (p.key !== 'ret') parts.push(unit[p.key]);
+    });
+    return parts.join('|');
+};
+
+/** Drop every drawn room. For the leak tests and a hard reset. */
+window.oaClearImpulseCache = function () { if (irCache) irCache.clear(); };
+
 /**
  * Draw the impulse response for one machine.
  *
@@ -222,7 +261,7 @@ const irSeconds = function (unit) {
  * as distinct slaps (early reflections), and those slaps multiply into a wash
  * that swells and then dies (the late tail).
  */
-window.oaBuildImpulse = function (ctx, unit) {
+const drawImpulse = function (ctx, unit) {
     // Through oaSampleRate() rather than ctx.sampleRate: the response is built
     // for whichever context asked, but a missing context must not turn every
     // coefficient below into NaN and hand the convolver a buffer of silence.
@@ -321,6 +360,16 @@ window.oaBuildImpulse = function (ctx, unit) {
         }
     }
     return buf;
+};
+
+/**
+ * The room for these settings — drawn if it is new, handed back if it is not.
+ * Same name and signature it always had; every caller gets the cache for free.
+ */
+window.oaBuildImpulse = function (ctx, unit) {
+    if (!irCache) return drawImpulse(ctx, unit);
+    const key = irKey(window.oaSampleRate(ctx), unit);
+    return irCache.get(key) || irCache.put(key, drawImpulse(ctx, unit));
 };
 
 // Kept under its old name and signature: the offline renderer and anything else

@@ -239,6 +239,11 @@ window.oaSetDrumSample = function (idx, buffer, opts) {
 
     window.OA_DRUM_SAMPLES[idx] = entry;
     if (window.oaPrecachePad) window.oaPrecachePad(entry);
+    // Kept in the browser so the next session opens with this kit already in
+    // memory — no folder prompt, no decode. This is the one choke point every
+    // loader passes through, which is why it is here and not in each of them.
+    // A pad that just came OUT of that store is not written back into it.
+    if (!opts.fromStore && window.oaKeepSample) window.oaKeepSample(idx, entry);
     // A loaded sample takes over from the synth voice — the Mixer hides SYNTH.
     window.dispatchEvent(new CustomEvent('oa-sample-changed', { detail: { idx: idx } }));
 };
@@ -283,6 +288,9 @@ window.oaUpdateDrumSample = function (idx, patch) {
             if (e.pitch !== oldPitch && window.oaEvictToneCache) window.oaEvictToneCache(idx);
             if (window.oaPrecachePad) window.oaPrecachePad(e);
         }
+        // A chop or a tuning is part of the pad, so the kept copy follows it —
+        // otherwise a reload brings the sound back untrimmed and at 1x.
+        if (window.oaKeepSample) window.oaKeepSample(idx, e);
     }
 };
 

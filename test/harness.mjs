@@ -51,6 +51,9 @@ const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
  */
 export const BACKEND_SOURCES = [
     'libControl/SoundSynth/oaAudioRate.js',
+    // Before the reverb: the room cache is built at load time from
+    // window.oaBufferCache, and without this it would quietly go uncached.
+    'libControl/SoundSynth/oaResident.js',
     'libControl/SoundSynth/oaPadGrid.js',
     'libControl/Effects/PluginHost/oaPlugin.js',
     'libControl/Effects/DrumSynth/oaDrumSynthEngines.js',

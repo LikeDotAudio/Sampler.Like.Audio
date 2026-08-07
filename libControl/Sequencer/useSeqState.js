@@ -129,15 +129,39 @@ window.useSeqState = (label, DEFAULT_STEPS, TRACKS) => {
     const setMasterVol = (val) => setMasterVolState({ value: val });
     const masterVolRef = React.useRef(masterVol); masterVolRef.current = masterVol;
 
-    const [recording, setRecording] = React.useState(false);
+    // RECORD ARM IS ONE FACT ABOUT THE DESK, NOT ONE PER PANEL.
+    //
+    // It used to be `React.useState(false)` right here, while every other piece
+    // of transport state in this hook — the pattern, the tempo, the faders, the
+    // mutes, the master — goes through the shared store above. Nobody noticed,
+    // because for a long time the only component that read `recording` was the
+    // one with the button in it.
+    //
+    // The moment a second component needed it, it broke exactly as you would
+    // expect: the Sequencer armed its own copy, the Mixer's copy stayed false,
+    // and the Mixer is where the rack was told to come out of circuit. So the
+    // button lit, the take recorded, and every effect went on processing.
+    //
+    // The flag lives in the audio layer now (OA_FX_BYPASS, oaFxBus.js) because
+    // that is where its CONSEQUENCE lives, and this reads it back. One flag, one
+    // event, and the button cannot disagree with the signal path.
+    const recording = window.useOaFxBypass ? window.useOaFxBypass() : false;
     const recordingRef = React.useRef(recording); recordingRef.current = recording;
     const playingRef = React.useRef(isPlaying); playingRef.current = isPlaying;
     const setSeqRef = React.useRef(setSeq); setSeqRef.current = setSeq;
     const [recordedNotes, setRecordedNotes] = React.useState(new Set());
     const recordedNotesRef = React.useRef(recordedNotes); recordedNotesRef.current = recordedNotes;
     
+    /**
+     * Arm or disarm. Arming is what takes the whole rack out of circuit, so this
+     * is the one place that decision is made — not a display component reacting
+     * to it afterwards, which is how it came to be made in a panel that the
+     * person pressing the button was not necessarily looking at.
+     */
     const toggleRecording = () => {
-        setRecording(r => { if (r) setRecordedNotes(new Set()); return !r; });
+        const next = !(window.oaFxBypassed ? window.oaFxBypassed() : recording);
+        if (!next) setRecordedNotes(new Set());
+        if (window.oaSetFxBypass) window.oaSetFxBypass(next);
     };
     const writeStepVel = (trkIdx, step, vel) => {
         const v = Math.max(0, Math.min(100, Math.round(vel)));

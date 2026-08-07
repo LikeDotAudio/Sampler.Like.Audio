@@ -193,6 +193,52 @@ window.useOaPadGrid = function () {
 };
 
 /**
+ * Is the rack out of circuit right now? Re-renders when that changes.
+ *
+ * Arming RECORD takes every effect out of the path (see OA_FX_BYPASS in
+ * oaFxBus.js for what comes out and why). A panel whose controls are doing
+ * nothing has to SAY SO — a knob that turns and is not heard reads as a broken
+ * effect, and the fault is invisible because the panel looks exactly as it did
+ * when it worked.
+ *
+ * THIS IS THE ONE FACT, NOT A COPY OF IT. The bypass used to be mirrored into a
+ * React state of its own in the one component that set it, and every other
+ * panel had a copy that was never updated — so the audio came out of circuit
+ * and the whole desk went on drawing itself as though it had not. A flag that
+ * two places both believe they own is a flag that will disagree with itself.
+ */
+window.useOaFxBypass = function () {
+    const [on, setOn] = React.useState(() => (window.oaFxBypassed ? window.oaFxBypassed() : false));
+    React.useEffect(() => {
+        const onChange = () => setOn(window.oaFxBypassed ? window.oaFxBypassed() : false);
+        window.addEventListener('oa-fx-bypass', onChange);
+        // The flag can move between the first render and this effect attaching.
+        onChange();
+        return () => window.removeEventListener('oa-fx-bypass', onChange);
+    }, []);
+    return on;
+};
+
+/**
+ * How a control that is currently out of circuit should look, and behave.
+ *
+ * Greyed AND inert, deliberately. Greying alone leaves a knob that still turns
+ * and still changes a number that nothing is reading, which is a worse lie than
+ * no indication at all; making it inert without greying it is a dead control
+ * with no explanation. Both, or neither.
+ */
+window.oaBypassVeil = function (bypassed) {
+    if (!bypassed) return null;
+    return {
+        filter: 'grayscale(1) brightness(0.55) contrast(0.85)',
+        opacity: 0.75,
+        pointerEvents: 'none',
+        userSelect: 'none',
+        transition: 'filter .18s ease, opacity .18s ease',
+    };
+};
+
+/**
  * Plot a curve into an SVG path's `d` attribute. Every panel here draws its
  * curve the same way, and doing it in one place means a display never has to
  * touch the array's contents at all — it hands over a Float32Array and a box to

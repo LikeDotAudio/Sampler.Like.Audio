@@ -102,17 +102,13 @@ const Mixer = () => {
     // mounted and it already reads the transport.
     React.useEffect(() => { window.oaResyncDelays(bpm); }, [bpm]);
 
-    // RECORD ARMS THE BYPASS. Every effect comes out of the path while a take is
-    // being recorded, so the distance from the pad to the speaker is a pan gain
-    // and nothing else — see OA_FX_BYPASS in oaFxBus.js for what comes out and
-    // why each one costs time.
-    //
-    // The Mixer is where this belongs for the same reason the tempo resync is
-    // here: it is always mounted, and it already reads the transport. The audio
-    // layer owns the flag; this only reports the button.
-    React.useEffect(() => {
-        if (window.oaSetFxBypass) window.oaSetFxBypass(!!recording);
-    }, [recording]);
+    // RECORD ARMS THE BYPASS — but not from here. Setting it in this component
+    // meant the signal path depended on the Mixer being mounted AND on its own
+    // copy of `recording` being the one that moved, and neither was true. It is
+    // set where the button is now, in useSeqState's toggleRecording(); this only
+    // READS it, so the desk greys itself whether or not anyone is looking at it.
+    const bypassed = window.useOaFxBypass ? window.useOaFxBypass() : false;
+    const veil = window.oaBypassVeil ? window.oaBypassVeil(bypassed) : null;
 
     // A tail and a tape repeat decay on their own schedule, so unlike the
     // per-hit track meters these come off each plugin's telemetry frame.

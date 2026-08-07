@@ -72,6 +72,7 @@
   "libControl/Mixer/Mixer.jsx",
   "libControl/SoundBrowser/drawWave.js",
   "libControl/SoundBrowser/WaveThumb.jsx",
+  "libControl/SoundBrowser/WaveTrim.jsx",
   "libControl/SoundBrowser/SoundCloudView.jsx",
   "libControl/SoundBrowser/gatherAll.js",
   "libControl/SoundBrowser/gatherMatching.js",

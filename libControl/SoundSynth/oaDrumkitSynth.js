@@ -76,7 +76,24 @@ window.oaPlayDrumSample = function (ctx, entry, time, volume, pan) {
     gain.connect(out);
 
     const v = Math.max(0.0001, volume);
-    if (entry.fade) {
+    if (entry.fadeIn || entry.fadeOut) {
+        // Fades chopped in the browser are lengths of the SOURCE, so they play
+        // back shorter or longer with the pitch, exactly like the region does.
+        const fi = Math.max(0, Math.min((entry.fadeIn || 0) / pitch, playDur));
+        const fo = Math.max(0, Math.min((entry.fadeOut || 0) / pitch, playDur - fi));
+        if (fi > 0) {
+            gain.gain.setValueAtTime(0.0001, time);
+            gain.gain.exponentialRampToValueAtTime(v, time + fi);
+        } else {
+            gain.gain.setValueAtTime(v, time);
+        }
+        // A looping voice has no end to fade at; its tail would be a hole in
+        // the middle of the loop.
+        if (fo > 0 && !src.loop) {
+            gain.gain.setValueAtTime(v, time + playDur - fo);
+            gain.gain.exponentialRampToValueAtTime(0.0001, time + playDur);
+        }
+    } else if (entry.fade) {
         const f = Math.min(0.05, playDur * 0.2);
         gain.gain.setValueAtTime(0.0001, time);
         gain.gain.exponentialRampToValueAtTime(v, time + f);

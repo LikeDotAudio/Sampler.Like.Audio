@@ -172,7 +172,11 @@ const RackKnob = ({ value, min, max, defaultVal, ticks, size = 62, label, displa
 
 // One latching push button — the interlocking kind, which is why pressing one
 // releases the last. Sits down in its well when it is in.
-const PushButton = ({ label, active, onPress, title, width = 20, height = 22 }) => (
+//
+// Taller than it is wide, as the originals are: these are square-topped
+// mechanical keys standing proud of the plate, and at anything near square they
+// read as indicator lamps instead.
+const PushButton = ({ label, active, onPress, title, width = 20, height = 28 }) => (
     <button
         onClick={onPress}
         title={title}
@@ -511,7 +515,9 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
                             bottom of the plate, which cost a whole extra flex
                             line of height while this column sat half empty. */}
                         <div style={{ textAlign: 'center', marginTop: '2px' }}>
-                            <Engraved size={10} style={{ letterSpacing: '3px' }}>APK 4476</Engraved>
+                            {/* The badge carries the name, so it is cut deeper
+                                than the control legends around it. */}
+                            <Engraved size={10} style={{ letterSpacing: '3px', fontWeight: '900', WebkitTextStroke: `0.3px ${INK}` }}>APK 4476</Engraved>
                             <Engraved size={6} style={{ letterSpacing: '1.4px', opacity: 0.8, marginTop: '1px' }}>
                                 LIMITING AMPLIFIER
                             </Engraved>
@@ -551,7 +557,7 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
                                         textAlign: 'right', textShadow: `0 1px 0 ${INK_LIT}`
                                     }}>{r.label}</span>
                                     <PushButton label="" active={unit.ratio === r.key} title={r.hint}
-                                        onPress={() => set('ratio', r.key)} width={16} height={17} />
+                                        onPress={() => set('ratio', r.key)} width={16} height={26} />
                                 </div>
                             ))}
                         </div>
@@ -577,7 +583,7 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
                             {window.OA_COMP_METERS.map((m) => (
                                 <div key={m.key} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                     <PushButton label="" active={meterMode === m.key} title={m.hint}
-                                        onPress={() => set('meter', m.key)} width={16} height={17} />
+                                        onPress={() => set('meter', m.key)} width={16} height={26} />
                                     <span style={{
                                         fontSize: '7.5px', fontWeight: '700', color: INK, width: '20px',
                                         textShadow: `0 1px 0 ${INK_LIT}`

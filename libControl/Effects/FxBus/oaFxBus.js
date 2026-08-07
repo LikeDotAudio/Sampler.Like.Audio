@@ -58,6 +58,65 @@ window.OA_FX_SEND_EPSILON = 0.001;
 // is dry. The alternative is a click on every arm.
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// PRE-FADER AND POST-FADER SENDS
+//
+// A send is POST-fader when the channel fader is upstream of the tap: pull the
+// fader down and the effect goes with it, which is what you want when the
+// effect is part of that channel's sound. It is PRE-fader when the tap is
+// upstream of the fader: the send holds its level whatever the fader does, and
+// at fader zero the channel is silent in the mix while STILL feeding the
+// effect. That is how a headphone feed works, and how you get a reverb with no
+// dry signal at all.
+//
+// Every send used to be post-fader, and not by decision: the channel fader was
+// multiplied into each voice's own gain BEFORE the voice reached this file, so
+// there was nowhere upstream of it to tap. The fader is a node in the chain
+// now, which is what makes the distinction possible at all.
+//
+// WHICH IS WHICH is a property of the send, declared here, so the mixer's
+// labels and the node graph cannot disagree — the panel reads this table to
+// draw its PRE / POST headings. It is the LEFT COLUMN of the send grid that is
+// pre-fader, which is why the flags alternate.
+// ---------------------------------------------------------------------------
+
+window.OA_FX_PRE = {
+    rv: [true, false],                    // RV A pre, RV B post
+    dl: [true, false, true, false],       // DLY 1 and 3 pre, DLY 2 and 4 post
+};
+
+/** Is this send tapped ahead of the channel fader? */
+window.oaSendIsPre = function (kind, i) {
+    const list = window.OA_FX_PRE[kind] || [];
+    return !!list[i];
+};
+
+// ---------------------------------------------------------------------------
+// The channel faders, as the audio layer sees them.
+//
+// They live in React state (and travel over MQTT), so this is a mirror the
+// Mixer keeps current. It exists because a voice is built here, not there: the
+// fader has to be a gain node between the pre-fader taps and the post-fader
+// ones, and nothing on the audio side knew what the fader was set to.
+//
+// A side effect worth having: pad hits never applied the channel fader at all —
+// only sequenced hits did, because only the sequencer multiplied it in — and an
+// offline bounce ignored it too. One fader node in one place fixes all three.
+// ---------------------------------------------------------------------------
+
+window.OA_TRACK_FADER = [];
+
+/** The Mixer hands over the whole row whenever it changes. */
+window.oaSetTrackFader = function (list) {
+    window.OA_TRACK_FADER = Array.isArray(list) ? list.slice() : [];
+};
+
+/** This channel's fader, 0..1+. Unity when nothing has said otherwise. */
+window.oaTrackFader = function (idx) {
+    const v = window.OA_TRACK_FADER[idx];
+    return (typeof v === 'number' && isFinite(v)) ? Math.max(0, v) : 1;
+};
+
 window.OA_FX_BYPASS = false;
 
 /** Is the rack out of the path right now? */
@@ -154,19 +213,52 @@ window.oaVoiceOut = function (ctx, idx, pan) {
     sweep(ctx);
 
     const chain = [];
-    let node;
-    if (pan && ctx.createStereoPanner) {
-        const p = ctx.createStereoPanner();
-        p.pan.value = Math.max(-1, Math.min(1, pan));
-        node = p;
-    } else {
-        node = ctx.createGain();
-    }
-    chain.push(node);
 
     // Read ONCE, here, so a voice is built entirely in or entirely out of the
     // rack — never half of each because the flag moved mid-construction.
     const bypass = !!window.OA_FX_BYPASS;
+
+
+    // THE FADER, as a node. Everything tapped before it is pre-fader and
+    // everything after it is post-fader — that is the whole mechanism.
+    //
+    // It doubles as the pan-less output node, so a channel that is not panned
+    // costs exactly what it always did: one gain. Read once at build time, like
+    // the sends, so moving a fader lands on the next hit rather than re-levelling
+    // notes that are already ringing.
+    const fader = ctx.createGain();
+    fader.gain.value = bypass ? 1 : window.oaTrackFader(idx);
+    chain.push(fader);
+
+    let node = fader;
+    if (pan && ctx.createStereoPanner) {
+        const p = ctx.createStereoPanner();
+        p.pan.value = Math.max(-1, Math.min(1, pan));
+        fader.connect(p);
+        node = p;
+        chain.push(p);
+    }
+
+    // Only a channel that actually has a pre-fader send open pays for the extra
+    // node in front of the fader. Everything else plays straight into it.
+    const wantsPre = !bypass && (
+        window.OA_REVERB_COUNT > 0 || window.OA_DELAY_COUNT > 0
+    ) && (function () {
+        for (let r = 0; r < window.OA_REVERB_COUNT; r++) {
+            if (window.oaSendIsPre('rv', r) && window.oaReverbSend(r, idx) > window.OA_FX_SEND_EPSILON) return true;
+        }
+        for (let d = 0; d < window.OA_DELAY_COUNT; d++) {
+            if (window.oaSendIsPre('dl', d) && window.oaDelaySend(d, idx) > window.OA_FX_SEND_EPSILON) return true;
+        }
+        return false;
+    })();
+
+    let preTap = fader;
+    if (wantsPre) {
+        preTap = ctx.createGain();
+        preTap.connect(fader);
+        chain.push(preTap);
+    }
 
     // Null on a channel that has never been compressed, and the pan goes
     // straight on to the master bus. An INPUT PORT, not a strip object: this
@@ -177,11 +269,11 @@ window.oaVoiceOut = function (ctx, idx, pan) {
     // still has to be able to make a sound.
     node.connect(compIn || (window.oaMasterInput ? window.oaMasterInput(ctx) : ctx.destination));
 
-    const tap = function (amount, target) {
+    const tap = function (amount, target, from) {
         if (!(amount > window.OA_FX_SEND_EPSILON)) return;
         const sg = ctx.createGain();
         sg.gain.value = amount;
-        node.connect(sg);
+        (from || node).connect(sg);
         sg.connect(target);
         chain.push(sg);
     };
@@ -191,21 +283,31 @@ window.oaVoiceOut = function (ctx, idx, pan) {
     // the returned bus object for `.input` — so the router knew the shape of
     // another module's settings AND the shape of its node graph.
     if (!bypass) {
+        // A pre-fader send hangs off `preTap`, which is upstream of the fader;
+        // a post-fader one off `node`, which is downstream of it (and of the
+        // pan). oaSendIsPre() is the single source of that decision — the
+        // Mixer's PRE/POST headings read the same table.
         for (let r = 0; r < window.OA_REVERB_COUNT; r++) {
             const amount = window.oaReverbSend(r, idx);
-            if (amount > window.OA_FX_SEND_EPSILON) tap(amount, window.oaReverbInput(ctx, r));
+            if (amount > window.OA_FX_SEND_EPSILON) {
+                tap(amount, window.oaReverbInput(ctx, r),
+                    window.oaSendIsPre('rv', r) ? preTap : node);
+            }
         }
 
         for (let d = 0; d < window.OA_DELAY_COUNT; d++) {
             const amount = window.oaDelaySend(d, idx);
-            if (amount > window.OA_FX_SEND_EPSILON) tap(amount, window.oaDelayInput(ctx, d));
+            if (amount > window.OA_FX_SEND_EPSILON) {
+                tap(amount, window.oaDelayInput(ctx, d),
+                    window.oaSendIsPre('dl', d) ? preTap : node);
+            }
         }
     }
 
     // Returns null on a clean channel, and the voice connects straight to the
     // pan the way it always did — bit for bit, not "distortion turned down".
-    const drive = (!bypass && window.oaDriveNode) ? window.oaDriveNode(ctx, idx, node, chain) : null;
-    const head = drive || node;
+    const drive = (!bypass && window.oaDriveNode) ? window.oaDriveNode(ctx, idx, preTap, chain) : null;
+    const head = drive || preTap;
     head.__oaChain = chain;
     return head;
 };

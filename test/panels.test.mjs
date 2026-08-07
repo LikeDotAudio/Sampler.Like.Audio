@@ -97,6 +97,83 @@ describe('effect panels', () => {
         });
     }
 
+    test('every panel opens and greys while the rack is bypassed', async () => {
+        // A panel that throws only when record is armed is a panel that throws
+        // exactly when someone is trying to capture a take.
+        const { w, r } = await openWorld();
+        w.window.oaSetFxBypass(true);
+
+        for (const panel of PANELS) {
+            let first, second;
+            assert.doesNotThrow(() => { first = r.render(w.window[panel.name], panel.props); },
+                `${panel.name} threw while opening with the rack bypassed`);
+            const cleanups = r.runEffects(first);
+            assert.doesNotThrow(() => { second = r.render(w.window[panel.name], panel.props, first); },
+                `${panel.name} threw on its second bypassed render`);
+            // The bypass adds a hook. It must add the SAME one every pass, or
+            // React hands the wrong state to the wrong variable.
+            assert.equal(second.hookCount, first.hookCount,
+                `${panel.name} called a different number of hooks on redraw while bypassed`);
+            cleanups.forEach((c) => c());
+        }
+
+        w.window.oaSetFxBypass(false);
+        w.cleanup();
+    });
+
+    test('arming record is ONE fact the whole desk agrees on', async () => {
+        // THE REGRESSION THIS EXISTS FOR.
+        //
+        // `recording` was React.useState INSIDE useSeqState, while every other
+        // piece of transport state in that hook goes through the shared store.
+        // So every component calling it got its OWN copy: the Sequencer armed
+        // one, the Mixer read another that never moved, and the Mixer was where
+        // the rack was told to come out of circuit. The button lit, the take
+        // recorded, and every effect went on processing — audible, and invisible
+        // to every test, because each half worked perfectly on its own.
+        //
+        // Two probes, standing in for the two panels that disagreed.
+        const { w, r } = await openWorld();
+        const { window } = w;
+
+        const seen = {};
+        const makeProbe = (who) => function Probe() {
+            seen[who] = window.useSeqState('Pattern Sequencer', 16, window.OA_DRUM_KIT || []);
+            return null;
+        };
+
+        const a = r.render(makeProbe('a'), {});
+        r.runEffects(a);
+        const b = r.render(makeProbe('b'), {});
+        r.runEffects(b);
+
+        assert.equal(seen.a.recording, false, 'a fresh desk came up armed');
+        assert.equal(seen.b.recording, false);
+
+        // Arm from the FIRST probe — the one with the button, in the real app.
+        seen.a.toggleRecording();
+
+        assert.equal(
+            window.oaFxBypassed(), true,
+            'arming record did not take the rack out of the signal path',
+        );
+
+        // …and the SECOND probe, which never touched the button, has to agree.
+        r.render(makeProbe('a'), {}, a);
+        r.render(makeProbe('b'), {}, b);
+        assert.equal(seen.b.recording, true,
+            'one panel armed record and another still believes it is disarmed');
+
+        // And it comes back. A bypass that latched would be worse than one that
+        // never engaged: every take after it would be dry with nothing saying why.
+        seen.b.toggleRecording();
+        assert.equal(window.oaFxBypassed(), false, 'disarming did not put the rack back');
+        r.render(makeProbe('a'), {}, a);
+        assert.equal(seen.a.recording, false, 'the other panel is still armed');
+
+        w.cleanup();
+    });
+
     test('closing every panel leaves the meter pump stopped', async () => {
         const { w, r } = await openWorld();
         const { window } = w;

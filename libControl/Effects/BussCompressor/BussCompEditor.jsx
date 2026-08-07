@@ -307,8 +307,13 @@ const GrMeter = ({ posRef }) => {
  * ignored so the panel can be opened the same way as its neighbours.
  */
 window.BussCompEditor = ({ onClose }) => {
+    const [showHelp, setShowHelp] = React.useState(false);
     const unit = window.useOaState('buss', 0);
     const params = window.useOaParams('buss', 0);
+    // Armed for a take: the bus is routed around the compressor entirely, so
+    // the plate greys and stops taking knob moves that nothing would hear.
+    const bypassed = window.useOaFxBypass();
+    const veil = window.oaBypassVeil(bypassed);
 
     // Taken once, so ABORT goes back to how the mix sounded when the panel was
     // opened rather than to a factory setting.
@@ -420,15 +425,23 @@ window.BussCompEditor = ({ onClose }) => {
                     across the whole mix: channels, strips, reverbs and tapes
                 </span>
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
+                    {/* Help is a BUTTON rather than a standing paragraph: it is
+                        read once and then in the way for ever, and the panel is
+                        already tall enough to scroll. */}
+                    <window.SeqButton label="? Help" onClick={() => setShowHelp((v) => !v)}
+                        active={showHelp}
+                        title="How to set this thing"
+                        style={{ padding: '4px 10px' }} />
                     <window.SeqButton label="⟲ Abort" onClick={abort} disabled={!dirty}
                         color={dirty ? '#b71c1c' : undefined} textColor={dirty ? '#fff' : undefined}
                         title="Back to how the mix sounded when the panel was opened"
                         style={{ padding: '4px 10px', border: 'none' }} />
+                    {bypassed && <window.OaOutOfCircuit />}
                     <window.SeqButton label="✖ Close" onClick={onClose} style={{ padding: '4px 10px' }} />
                 </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start', flexWrap: 'wrap', ...veil }}>
 
                 {/* ---- the faceplate: dark brushed steel, portrait, rack ears ---- */}
                 <div style={{
@@ -504,7 +517,7 @@ window.BussCompEditor = ({ onClose }) => {
                     // and captions, and every pixel it takes past that comes off
                     // the meter and the knobs, which are what anyone is actually
                     // looking at.
-                    flex: '0 1 186px', minWidth: '168px', maxWidth: '200px',
+                    flex: '0 1 156px', minWidth: '140px', maxWidth: '168px',
                     display: 'flex', flexDirection: 'column', gap: '8px'
                 }}>
                     <div style={{
@@ -560,7 +573,7 @@ window.BussCompEditor = ({ onClose }) => {
                             bottom the way every other level in the rack does. It
                             also costs a column 26px wide instead of the width of
                             the whole panel. */}
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                        <div style={{ display: 'flex', gap: '7px', alignItems: 'flex-start' }}>
                             <div style={{ display: 'flex', flexDirection: 'column-reverse', gap: '2px', flex: '0 0 auto' }}>
                                 {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
                                     <button
@@ -618,7 +631,11 @@ window.BussCompEditor = ({ onClose }) => {
                 )}
             </div>
 
-            <div style={{ fontSize: '9px', color: '#666', marginTop: '10px', lineHeight: 1.5 }}>
+            {showHelp && (
+            <div style={{
+                fontSize: '9px', color: '#8f9299', marginTop: '10px', lineHeight: 1.6,
+                border: '1px solid #333840', borderRadius: '5px', background: '#1b1e23', padding: '8px 10px'
+            }}>
                 This one sits across the whole mix, so a little goes a long way: two or three dB
                 on the meter is what "glue" costs, and a needle that never comes back up is a
                 threshold set too low rather than a compressor working hard. Start at 4:1 with
@@ -628,6 +645,7 @@ window.BussCompEditor = ({ onClose }) => {
                 hearing the bottom end while the mix keeps it. MIX below 100% holds the peaks
                 without flattening the transients underneath.
             </div>
+            )}
         </div>
     );
 };

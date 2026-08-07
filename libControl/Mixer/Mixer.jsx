@@ -102,6 +102,15 @@ const Mixer = () => {
     // mounted and it already reads the transport.
     React.useEffect(() => { window.oaResyncDelays(bpm); }, [bpm]);
 
+    // The audio layer's copy of the channel faders. A voice's fader is a NODE
+    // now — it has to be, or a pre-fader send has nothing to tap ahead of — and
+    // the value lives in React state, so it has to be handed over. Also the
+    // reason a pad hit and an offline bounce finally honour the fader at all:
+    // only the sequencer used to multiply it in.
+    React.useEffect(() => {
+        if (window.oaSetTrackFader) window.oaSetTrackFader(trackVol);
+    }, [trackVol]);
+
     // RECORD ARMS THE BYPASS — but not from here. Setting it in this component
     // meant the signal path depended on the Mixer being mounted AND on its own
     // copy of `recording` being the one that moved, and neither was true. It is
@@ -439,12 +448,34 @@ const Mixer = () => {
                         </div>
 
                         {/* Sends — how much of this channel feeds each shared effect.
-                            Two reverbs on the top row, then the four tape delays. */}
+                            Two reverbs on the top row, then the four tape delays.
+
+                            The LEFT column is tapped ahead of the channel fader
+                            and the RIGHT column after it, which is what the two
+                            headings and the rule between them say. Which side a
+                            send is on is not decided here: oaSendIsPre() in
+                            oaFxBus.js owns it, so the label and the node graph
+                            cannot drift apart. */}
                         <div style={{
                             width: '100%', marginTop: '6px', paddingTop: '5px', borderTop: '1px solid #3a3f49',
+                            display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 2px',
+                            fontSize: '6.5px', letterSpacing: '.6px', color: 'var(--muted)',
+                            justifyItems: 'center', ...veil
+                        }}>
+                            <span title="Tapped BEFORE the channel fader — the send holds its level however far the fader comes down, and still feeds the effect at zero.">PRE</span>
+                            <span title="Tapped AFTER the channel fader — pull the fader down and the effect comes down with it.">POST</span>
+                        </div>
+                        <div style={{
+                            position: 'relative',
+                            width: '100%', paddingTop: '3px',
                             display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px 2px', justifyItems: 'center',
                             ...veil
                         }}>
+                            {/* The rule that ties each column to its heading. */}
+                            <i style={{
+                                position: 'absolute', left: '50%', top: 0, bottom: '2px', width: '1px',
+                                background: '#3a3f49', pointerEvents: 'none'
+                            }} />
                             {FX.map((fx) => {
                                 const amount = sendOf(fx, i);
                                 return (

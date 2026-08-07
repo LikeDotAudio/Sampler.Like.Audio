@@ -257,9 +257,44 @@ the compressor connected to the fade with nothing feeding it. Its `process()`
 then sees no input, reports zero reduction, and the meter falls to zero on its
 own — no special case, and no click, because no gain in the audio path changed.
 
-The Mixer arms it from the transport (`recording`) and shows an **FX BYPASS**
-chip on the master strip while it is on, because a rack that has silently stopped
-working is a support question.
+**Arming record is what sets it, and the arm IS this flag.** That is worth being
+precise about, because getting it wrong shipped once.
+
+The bypass was originally set from the Mixer, in a `useEffect` on `recording`.
+That looked reasonable and was wrong twice over. `recording` was
+`React.useState` inside `useSeqState` — the one piece of transport state in that
+hook that never moved to the shared store — so **every component calling the hook
+had its own copy**. The Sequencer armed one; the Mixer read another that never
+moved; and the Mixer was where the rack was told to stand aside. The button lit,
+the take recorded, and every effect went on processing. Each half worked
+perfectly on its own, which is why nothing caught it.
+
+So the flag lives here, in the audio layer, next to the consequence it causes,
+and `useSeqState` reads it back through `window.useOaFxBypass()`:
+
+```
+toggleRecording()  ──▶  oaSetFxBypass(on)  ──▶  OA_FX_BYPASS
+                                                     │
+                    useOaFxBypass() ◀── 'oa-fx-bypass' event
+                           │
+                    every panel, the Mixer, and `recording` itself
+```
+
+One flag, one event. The button cannot disagree with the signal path, because
+they are the same fact. `test/panels.test.mjs` renders two independent consumers
+of the transport, arms from one and asserts the other agrees.
+
+### Saying so on screen
+
+A rack that has silently stopped working is a support question, so it says so
+three ways: every effect control on the console greys out and stops responding,
+each open panel wears an **OUT OF CIRCUIT** badge
+(`../PluginHost/OaOutOfCircuit.jsx`), and a red banner sits across the top of the
+app while the arm is up.
+
+Greyed **and** inert, deliberately — `window.oaBypassVeil()` does both. A knob
+that still turns while nothing is listening is a worse lie than no indication at
+all; one that is dead with no explanation is just as bad. Both, or neither.
 
 ## 8. The ports this file uses
 

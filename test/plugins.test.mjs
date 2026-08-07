@@ -1048,6 +1048,82 @@ describe('fx bus', () => {
         assert.equal(w.ctx.__oaBuss.bypassed, false);
     });
 
+    test('a master bus built while already armed comes up routed around', async () => {
+        // Arm record, THEN make the first sound of the session. That gesture
+        // creates the context and the master bus with it, long after the flag
+        // was set — so the bus has to read the flag as it is built rather than
+        // wait to be told again. Every other module is optional and simply
+        // never gets fed; this one is always in the path.
+        const w = await createWorld();
+        const { window } = w;
+
+        window.oaSetFxBypass(true);
+        assert.ok(!w.ctx.__oaBuss, 'this test needs a context with no master bus yet');
+
+        window.oaMasterInput(w.ctx);
+        assert.equal(
+            w.ctx.__oaBuss.bypassed, true,
+            'the master bus was built in circuit while record was armed',
+        );
+
+        window.oaSetFxBypass(false);
+        assert.equal(w.ctx.__oaBuss.bypassed, false, 'it did not come back afterwards');
+    });
+
+    test('a pre-fader send still feeds its effect with the fader all the way down', async () => {
+        const w = await createWarmWorld();
+        const { window } = w;
+
+        // RV A is the left column: pre-fader. RV B is the right: post.
+        assert.equal(window.oaSendIsPre('rv', 0), true, 'RV A is not pre-fader');
+        assert.equal(window.oaSendIsPre('rv', 1), false, 'RV B is not post-fader');
+
+        window.oaSetTrackFader([0]);            // channel 0 fully down
+        window.oaSetReverbSend(0, 0, 0.8);      // pre-fader send, wide open
+
+        const before = w.ctx.createdCount();
+        const head = window.oaVoiceOut(w.ctx, 0, 0);
+        assert.ok(w.ctx.createdCount() - before >= 2,
+            'a pre-fader send built no path — the channel is silent AND sending nothing');
+
+        // The send has to hang off something UPSTREAM of the fader. Walk out of
+        // the head: the tap is a direct output of it, not of the fader.
+        const outs = head.__out.map((e) => e.dest);
+        const sends = outs.filter((n) => n.gain && Math.abs(n.gain.value - 0.8) < 1e-6);
+        assert.equal(sends.length, 1, 'the pre-fader tap is not on the head node');
+
+        // And the fader really is at zero, so the dry path is silent.
+        const fader = outs.find((n) => n.gain && n.gain.value === 0);
+        assert.ok(fader, 'the fader node is not at zero');
+    });
+
+    test('a post-fader send hangs off the fader, not in front of it', async () => {
+        const w = await createWarmWorld();
+        const { window } = w;
+
+        window.oaSetTrackFader([0.5]);
+        window.oaSetReverbSend(0, 0, 0);        // nothing pre
+        window.oaSetReverbSend(1, 0, 0.7);      // RV B — post-fader
+
+        const head = window.oaVoiceOut(w.ctx, 0, 0);
+        // With no pre-fader send open there is no extra node: the head IS the
+        // fader, and the send comes off it.
+        assert.equal(head.gain.value, 0.5, 'the head is not the fader');
+        const sends = head.__out.map((e) => e.dest)
+            .filter((n) => n.gain && Math.abs(n.gain.value - 0.7) < 1e-6);
+        assert.equal(sends.length, 1, 'the post-fader tap is not downstream of the fader');
+    });
+
+    test('the fader is applied once, not twice', async () => {
+        const w = await createWarmWorld();
+        const { window } = w;
+        window.oaSetTrackFader([0.25]);
+        const head = window.oaVoiceOut(w.ctx, 0, 0);
+        // The caller passes velocity only; if it also multiplied the fader in,
+        // this node would be the square of it.
+        assert.equal(head.gain.value, 0.25);
+    });
+
     test('the voice counter reports what is actually sounding', async () => {
         const w = await createWarmWorld();
         const { window } = w;

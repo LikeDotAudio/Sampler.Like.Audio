@@ -21,6 +21,26 @@
 
 window.OA_SONG_FILE_VERSION = 3;
 
+/**
+ * YYYYMMDDHHMM in LOCAL time — the stamp that goes on the front of anything
+ * this app names for you: a saved pattern, a rendered take.
+ *
+ * Local rather than UTC on purpose: it has to agree with the clock on the wall
+ * of the room the work was done in, which is the only thing anyone reads it
+ * against. Minutes is the finest it goes; two saves inside one minute are the
+ * same thought, and the name that follows separates them.
+ *
+ * Sorting is the whole point. A folder or a library list ordered by name is
+ * then ordered by when things happened, which is the order anyone looks for
+ * them in — "Pattern 4, Pattern 4 (2), Pattern 4 (3)" sorts by nothing.
+ */
+window.oaStamp = function () {
+    const d = new Date();
+    const p2 = (v) => String(v).padStart(2, '0');
+    return `${d.getFullYear()}${p2(d.getMonth() + 1)}${p2(d.getDate())}`
+         + `${p2(d.getHours())}${p2(d.getMinutes())}`;
+};
+
 // The per-track sample fields worth carrying. Deliberately excludes `buffer` and
 // `cachedBuffer` (decoded audio — not JSON) and `idx` (implied by position).
 const SAMPLE_FIELDS = ['name', 'folder', 'pitch', 'sampleRoot', 'offset', 'end', 'loop', 'fade'];

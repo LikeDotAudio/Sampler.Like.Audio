@@ -18,9 +18,25 @@ window.useSeqLibrary = (
 ) => {
     const clonePattern = (p) => p.map((row) => [...row]);
 
+    /**
+     * Save the pattern under a stamped name, WITHOUT a dialog.
+     *
+     * It used to ask through window.prompt(), and a prompt is a blocking modal:
+     * while it is open the browser runs no timers and no animation frames, so
+     * the sequencer's look-ahead scheduler stops scheduling. The audio already
+     * queued plays out — about a tenth of a second — and then the track simply
+     * stops, mid-take, every time anyone saves. Nothing about that reads as a
+     * dialog's fault, which is what made it worth removing rather than working
+     * around.
+     *
+     * So there is no question to answer: the name is the timestamp plus the
+     * next number, both of which this already knew. Saving is now something
+     * that happens WHILE the music plays, which is when anyone actually wants
+     * to save — you keep the take you just heard.
+     */
     const savePattern = () => {
-        const name = (window.prompt('Save pattern as:', `Pattern ${library.length + 1}`) || '').trim();
-        if (!name) return;
+        const stamp = window.oaStamp ? window.oaStamp() : '';
+        const name = `${stamp}_Pattern ${library.length + 1}`;
         const entry = { name, bpm, steps, data: clonePattern(pattern), toneTrack, toneRoot };
         const idx = library.findIndex((p) => p.name === name);
         let next;

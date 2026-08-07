@@ -59,6 +59,10 @@ window.ChorusEditor = ({ u, onClose }) => {
     // to know that: it asks the 'chorus' plugin for unit u. Which delay it lives
     // in, and how the two are wired, is the back end's business.
     const state = window.useOaState('chorus', u);
+    // Armed for a take: the tape this sits inside is not being fed, so the
+    // plate greys and stops taking buttons that nothing would hear.
+    const bypassed = window.useOaFxBypass();
+    const veil = window.oaBypassVeil(bypassed);
 
     const meta = window.OA_DELAY_UNITS[u];
     const mode = (state && state.chorus) || 0;
@@ -83,6 +87,7 @@ window.ChorusEditor = ({ u, onClose }) => {
                 </span>
                 <span style={{ fontSize: '9px', color: '#666' }}>after the tape</span>
                 <div style={{ marginLeft: 'auto' }}>
+                    {bypassed && <window.OaOutOfCircuit />}
                     <window.SeqButton label="✖ Close" onClick={onClose} style={{ padding: '4px 10px' }} />
                 </div>
             </div>
@@ -92,7 +97,7 @@ window.ChorusEditor = ({ u, onClose }) => {
                 background: 'linear-gradient(to bottom, #24262a 0%, #17181b 100%)',
                 border: '1px solid #000', borderRadius: '4px',
                 boxShadow: 'inset 0 1px 0 #ffffff12',
-                padding: '12px 14px 10px'
+                padding: '12px 14px 10px', ...veil
             }}>
                 <div style={{
                     fontSize: '8px', color: '#8f9299', letterSpacing: '2px',

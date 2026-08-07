@@ -214,6 +214,11 @@ window.VarcRemote = ({ u, onClose }) => {
         };
     }, []);
 
+    // Armed for a take: nothing is being sent to either machine, so the remote
+    // greys and stops taking keys that nothing would hear.
+    const bypassed = window.useOaFxBypass();
+    const veil = window.oaBypassVeil(bypassed);
+
     const unit = window.oaReverbUnit(active);
     const meta = window.OA_REVERB_UNITS[active];
     const page = unit.page || 0;
@@ -371,6 +376,7 @@ window.VarcRemote = ({ u, onClose }) => {
                         active={showHelp}
                         title="How the banks, programs and pages work"
                         style={{ padding: '4px 10px' }} />
+                    {bypassed && <window.OaOutOfCircuit />}
                     <window.SeqButton label="✖ Close" onClick={onClose} style={{ padding: '4px 10px' }} />
                 </div>
             </div>
@@ -398,7 +404,7 @@ window.VarcRemote = ({ u, onClose }) => {
                 background: 'linear-gradient(to bottom, #f2ecda 0%, #ded7c1 40%, #c9c2ab 100%)',
                 border: '1px solid #8d8672', borderRadius: '12px',
                 boxShadow: '0 3px 10px rgba(0,0,0,0.5), inset 0 1px 0 #fffdf4',
-                padding: '10px 10px 12px'
+                padding: '10px 10px 12px', ...veil
             }}>
 
                 {/* Top display: program, bank, page — and the output meter. */}

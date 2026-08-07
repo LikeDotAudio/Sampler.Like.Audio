@@ -131,6 +131,10 @@ window.TapeDelayEditor = ({ u, bpm, onClose }) => {
     // shape for the sake of symmetry.
     const unit = window.useOaState('delay', u);
     const params = window.useOaParams('delay', u);
+    // Armed for a take: nothing is being sent to this tape, so the box greys
+    // and stops taking moves that nothing would hear.
+    const bypassed = window.useOaFxBypass();
+    const veil = window.oaBypassVeil(bypassed);
 
     // Taken once per unit, so ABORT goes back to however the tape sounded when
     // the panel was opened — not to the factory preset.
@@ -180,12 +184,13 @@ window.TapeDelayEditor = ({ u, bpm, onClose }) => {
                         color={dirty ? '#b71c1c' : undefined} textColor={dirty ? '#fff' : undefined}
                         title="Back to how this tape sounded when the panel was opened"
                         style={{ padding: '4px 10px', border: 'none' }} />
+                    {bypassed && <window.OaOutOfCircuit />}
                     <window.SeqButton label="✖ Close" onClick={onClose} style={{ padding: '4px 10px' }} />
                 </div>
             </div>
 
             {/* ---- the box itself ---- */}
-            <div style={TOLEX}>
+            <div style={{ ...TOLEX, ...veil }}>
 
                 {/* Top trim: the badge strip across the front of the machine. */}
                 <div style={{ ...BRUSHED, display: 'flex', alignItems: 'baseline', gap: '8px', padding: '5px 10px' }}>

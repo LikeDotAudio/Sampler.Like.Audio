@@ -92,7 +92,11 @@ window.useSeqScheduler = (
             const justRecorded = window.OA_SEQ_SKIP.delete(skipKey);
 
             if (vel > 0 && !isMuted && !justRecorded) {
-                const vol = (vel / 100) * (trackVolRef.current[trkIdx] == null ? 1 : trackVolRef.current[trkIdx]) * (masterVolRef && masterVolRef.current != null ? masterVolRef.current : 1);
+                // Velocity and the MASTER fader. The channel fader is applied
+                // by a node inside the voice's chain (oaVoiceOut), so that a
+                // pre-fader send can be tapped ahead of it; multiplying it in
+                // here too would apply it twice.
+                const vol = (vel / 100) * (masterVolRef && masterVolRef.current != null ? masterVolRef.current : 1);
                 const pan = trackPanRef.current[trkIdx] || 0;
                 setTimeout(() => window.dispatchEvent(new CustomEvent('oa-drum-play', { detail: { idx: trkIdx, velocity: vel } })), visualDelay(ctx, time));
 

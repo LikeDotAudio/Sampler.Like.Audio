@@ -59,6 +59,7 @@
   "libControl/Mixer/SvgKnob.jsx",
   "libControl/Mixer/SvgFader.jsx",
   "libControl/Mixer/GalaxyKnob.jsx",
+  "libControl/Effects/PluginHost/OaOutOfCircuit.jsx",
   "libControl/Effects/DrumSynth/DrumSynthEditor.jsx",
   "libControl/Effects/TapeDelay/TapeDelayEditor.jsx",
   "libControl/Effects/Chorus/ChorusEditor.jsx",

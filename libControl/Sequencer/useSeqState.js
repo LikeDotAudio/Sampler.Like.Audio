@@ -171,7 +171,10 @@ window.useSeqState = (label, DEFAULT_STEPS, TRACKS) => {
     };
     const previewVoice = (trkIdx, vel) => {
         const ctx = window.oaAudioCtx();
-        const vol = (vel / 100) * (trackVolRef.current[trkIdx] == null ? 1 : trackVolRef.current[trkIdx]);
+        // Velocity only. The CHANNEL FADER is a node inside the voice's own
+        // chain now (see oaVoiceOut), because a send has to be able to tap
+        // ahead of it — multiplying it in here as well would apply it twice.
+        const vol = vel / 100;
         const pan = trackPanRef.current[trkIdx] || 0;
         const entry = window.OA_DRUM_SAMPLES && window.OA_DRUM_SAMPLES[trkIdx];
         if (entry && entry.buffer && window.oaPlayDrumSample) window.oaPlayDrumSample(ctx, Object.assign({}, entry, { loop: false }), ctx.currentTime, vol, pan);

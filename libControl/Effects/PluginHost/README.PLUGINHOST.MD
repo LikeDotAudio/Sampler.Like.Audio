@@ -5,7 +5,8 @@
 | File | Layer | What it is |
 |---|---|---|
 | `oaPlugin.js` | audio | The registry, the binary frame, the pump, teardown. No React. |
-| `useOaPlugin.js` | display | The four hooks a panel is allowed to use. The only React in this folder. |
+| `useOaPlugin.js` | display | The hooks a panel is allowed to use. |
+| `OaOutOfCircuit.jsx` | display | The badge a panel wears while the rack is bypassed for a take. |
 
 Read this one first. Every other folder under `Effects/` is a back end that calls
 `oaRegisterPlugin(...)` and a panel that reads it back through these hooks, so once
@@ -211,8 +212,24 @@ useOaState(id, idx)            // settings           → real React state
 useOaParams(id, idx)           // faceplate schema   → real React state
 useOaCurve(id, idx)            // shapes to plot     → new reference only on change
 useOaPadGrid()                 // re-render when the pad count changes
+useOaFxBypass()                // is the rack out of circuit? (record armed)
+oaBypassVeil(on)               // how a control that is out of circuit looks
 oaCurvePath(curve, w, h, mode) // Float32Array → an SVG path `d` string
 ```
+
+### Why the bypass is a hook and not a prop
+
+Arming RECORD takes every effect out of the signal path (see
+[../FxBus/README.FXBUS.MD](../FxBus/README.FXBUS.MD)). Every panel needs to know,
+and the one thing that must not happen is a panel holding its own copy of the
+answer — that is precisely the bug that shipped: the state was mirrored into React
+inside the single component that set it, every other panel had a stale copy, and
+the audio went out of circuit while the whole desk went on drawing itself as
+though it had not.
+
+`useOaFxBypass()` subscribes to the one flag. `oaBypassVeil()` returns the style
+that greys a control **and** makes it inert, together, because a knob that turns
+while nothing is listening is a worse lie than no indication at all.
 
 ### Why the metering is deliberately not React
 

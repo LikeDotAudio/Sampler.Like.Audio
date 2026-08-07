@@ -319,6 +319,7 @@ const screw = (
  * on the sound that is already ringing rather than waiting for the next hit.
  */
 window.CompressorEditor = ({ idx, name, onClose }) => {
+    const [showHelp, setShowHelp] = React.useState(false);
     // On a phone the plate cannot hold one row, so it wraps. Left to itself the
     // wrap breaks the panel in the wrong places — the meter separated from the
     // buttons that aim it, and the two time knobs standing in a tall column that
@@ -335,6 +336,10 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
     // component tree alive behind it.
     const unit = window.useOaState('comp', idx);
     const params = window.useOaParams('comp', idx);
+    // Armed for a take: the strip is out of the path, so the plate greys and
+    // stops taking knob moves that nothing would hear.
+    const bypassed = window.useOaFxBypass();
+    const veil = window.oaBypassVeil(bypassed);
 
     // Taken once per channel, so ABORT goes back to how this channel sounded
     // when the panel was opened rather than to a factory setting.
@@ -432,10 +437,17 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
                 </span>
                 <span style={{ fontSize: '9px', color: '#666' }}>after the pan, sends tapped ahead of it</span>
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
+                    {/* Help is a BUTTON rather than a standing paragraph: it is
+                        read once and then in the way for ever. */}
+                    <window.SeqButton label="? Help" onClick={() => setShowHelp((v) => !v)}
+                        active={showHelp}
+                        title="How to set this thing"
+                        style={{ padding: '4px 10px' }} />
                     <window.SeqButton label="⟲ Abort" onClick={abort} disabled={!dirty}
                         color={dirty ? '#b71c1c' : undefined} textColor={dirty ? '#fff' : undefined}
                         title="Back to how this channel sounded when the panel was opened"
                         style={{ padding: '4px 10px', border: 'none' }} />
+                    {bypassed && <window.OaOutOfCircuit />}
                     <window.SeqButton label="✖ Close" onClick={onClose} style={{ padding: '4px 10px' }} />
                 </div>
             </div>
@@ -444,7 +456,7 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
             <div style={{
                 display: 'flex', alignItems: 'stretch', borderRadius: '4px', overflow: 'hidden',
                 border: '1px solid #000', boxShadow: '0 3px 10px rgba(0,0,0,0.55)',
-                background: PLATE
+                background: PLATE, ...veil
             }}>
                 {/* Rack ear */}
                 <div style={{
@@ -602,7 +614,11 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
                 <span style={{ fontSize: '10px', color: '#777', fontStyle: 'italic' }}>{ratio.hint}</span>
             </div>
 
-            <div style={{ fontSize: '9px', color: '#666', marginTop: '10px', lineHeight: 1.5 }}>
+            {showHelp && (
+            <div style={{
+                fontSize: '9px', color: '#8f9299', marginTop: '10px', lineHeight: 1.6,
+                border: '1px solid #333840', borderRadius: '5px', background: '#1b1e23', padding: '8px 10px'
+            }}>
                 There is no threshold knob: the threshold is fixed inside the box and INPUT
                 drives the signal into it, so turning input up is turning compression up. Take
                 the level back with OUTPUT. Both time knobs run backwards — fully clockwise is
@@ -612,6 +628,7 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
                 below 100% is parallel compression: peaks held down, transients intact
                 underneath. Watch the needle, not the numbers.
             </div>
+            )}
         </div>
     );
 };

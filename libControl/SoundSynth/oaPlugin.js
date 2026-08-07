@@ -119,7 +119,7 @@ window.oaWritePeak = function (frame, slot, peak) {
  */
 /**
  * A plugin keeps its own vocabulary — the reverb's schema calls a slider's name
- * `name` because that is what the LARC engraves next to it, and the compressor
+ * `name` because that is what the VARC engraves next to it, and the compressor
  * calls it `label`. The contract promises a front panel a `label`, so fill one
  * in rather than making every plugin rename a field it has good reason to keep.
  * Anything else the plugin declares is passed through untouched.

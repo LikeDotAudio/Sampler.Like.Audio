@@ -114,7 +114,7 @@ window.oaApplySongState = async function (parsed) {
             if (Array.isArray(rv.sends)) rv.sends.forEach((v, i) => window.oaSetReverbSend(u, i, v));
             // Program first, then the individual parameters on top of it — an
             // edited machine has to restore its edits, not the program it
-            // started from. A pre-LARC song carries `tone`/`size` as strings
+            // started from. A pre-VARC song carries `tone`/`size` as strings
             // instead; oaSetReverb maps that pair onto the nearest program.
             if (typeof rv.bank === 'number' && typeof rv.prog === 'number') {
                 window.oaLoadReverbProgram(u, rv.bank, rv.prog);

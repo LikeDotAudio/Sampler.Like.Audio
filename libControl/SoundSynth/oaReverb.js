@@ -1,22 +1,22 @@
 /**
  * Header: oaReverb.js
- * Purpose: Two shared reverb machines for the whole kit, driven from a LARC.
+ * Purpose: Two shared reverb machines for the whole kit, driven from a VARC.
  * Description: Every voice splits into a dry path straight to the output and a
  *   per-channel send into one of two reverbs. The tape delays (oaTapeDelay.js)
  *   feed them too — see `toRv` there.
  *
  *   The two units used to be a pair of dropdowns: pick a "tone" and a "size"
  *   from four fixed choices. They are now a parameter set modelled on the
- *   Lexicon 480L, addressed the way that machine is addressed — banks of
+ *   VARC 444V, addressed the way that machine is addressed — banks of
  *   programs loaded by number, and six sliders per page editing whatever the
- *   program loaded. See LarcRemote.jsx for the front panel.
+ *   program loaded. See VarcRemote.jsx for the front panel.
  *
- *   WHY THE PARAMETERS LIVE IN THE IMPULSE RESPONSE. A 480L is a feedback delay
+ *   WHY THE PARAMETERS LIVE IN THE IMPULSE RESPONSE. A 444V is a feedback delay
  *   network: a tank of delay lines with the output folded back into the input,
  *   processed sample by sample. This is a CONVOLUTION reverb — the room is
  *   precomputed as an impulse response and the browser convolves the audio
  *   against it. That sounds like a compromise, and for some parameters it is,
- *   but for the two that make a 480L sound like a 480L it is arguably the more
+ *   but for the two that make a 444V sound like a 444V it is arguably the more
  *   direct route:
  *
  *     SHAPE and SPREAD are envelope controls. On the real machine they shape
@@ -38,7 +38,7 @@
  *   then the diffuse late tail with its own two-band decay.
  */
 
-// Every parameter the machine has, in LARC page order — six to a page, because
+// Every parameter the machine has, in VARC page order — six to a page, because
 // there are six sliders. `fmt` renders the value the way the red LED readout
 // does: 2.065, 120, 30M, 3.40K, 0MS.
 const kHz = function (v) {
@@ -210,7 +210,7 @@ const rvUnit = function (saved, i) {
     const s = saved || {};
     let bank = d.bank, prog = d.prog;
 
-    // A pre-LARC unit stored size/tone as strings. Nothing else did.
+    // A pre-VARC unit stored size/tone as strings. Nothing else did.
     if (typeof s.size === 'string') {
         const hit = LEGACY[s.size + '|' + s.tone] || [d.bank, d.prog];
         bank = hit[0];
@@ -225,7 +225,7 @@ const rvUnit = function (saved, i) {
     const unit = {
         sends: window.oaFxSendArray(s.sends),
         bank: bank, prog: prog,
-        // Which page the LARC was left on, and whether the program has been
+        // Which page the VARC was left on, and whether the program has been
         // edited away from its stored values (the machine shows a dot for this).
         page: Math.max(0, Math.min(window.OA_REVERB_PAGES - 1, Number(s.page) || 0)),
         edited: !!s.edited,
@@ -261,7 +261,7 @@ window.oaSaveReverb = function () {
     try { window.localStorage.setItem('oaReverb', JSON.stringify(window.OA_REVERB)); } catch (e) {}
 };
 
-/** The name the LARC shows on its top line, with the edit dot. */
+/** The name the VARC shows on its top line, with the edit dot. */
 window.oaReverbProgramName = function (u) {
     const unit = window.oaReverbUnit(u);
     return window.oaReverbProgram(unit.bank, unit.prog).name;
@@ -408,7 +408,7 @@ window.oaReverbBus = function (ctx, u) {
         convolver.connect(ret);
         ret.connect(ctx.destination);
 
-        // Tap the wet output per side so the return strip and the LARC's own
+        // Tap the wet output per side so the return strip and the VARC's own
         // meter can show what is actually ringing, rather than guessing from
         // the send levels.
         let analysers = null;
@@ -459,7 +459,7 @@ window.oaSetReverb = function (u, key, value) {
         // page, and the legacy 'tone'/'size' a very old song file still carries.
         if (key === 'page') unit.page = Math.max(0, Math.min(window.OA_REVERB_PAGES - 1, value | 0));
         else if (key === 'tone' || key === 'size') {
-            // A pre-LARC song file sets these two separately, as strings. Note
+            // A pre-VARC song file sets these two separately, as strings. Note
             // whichever arrived under its own name — `size` is a number now and
             // writing 'medium' over it would break the room — and map the pair
             // onto the nearest program as soon as one lands.
@@ -508,7 +508,7 @@ const rvGain = function (u, bus) {
 };
 window.oaReverbGain = rvGain;
 
-/** MUTE on the LARC: drops the return for exactly as long as it is held. */
+/** MUTE on the VARC: drops the return for exactly as long as it is held. */
 window.oaMuteReverb = function (u, on) {
     const ctx = window.OA_AUDIO_CTX;
     const bus = ctx && ctx.__oaReverbs && ctx.__oaReverbs[u];
@@ -518,7 +518,7 @@ window.oaMuteReverb = function (u, on) {
     window.dispatchEvent(new CustomEvent('oa-reverb-changed', { detail: { unit: u, mute: !!on } }));
 };
 
-/** POWER on the LARC: takes the machine out of circuit until it is pressed again. */
+/** POWER on the VARC: takes the machine out of circuit until it is pressed again. */
 window.oaSetReverbStandby = function (u, on) {
     const unit = window.oaReverbUnit(u);
     unit.standby = !!on;
@@ -561,7 +561,7 @@ window.oaDisposeReverb = function (ctx) {
 };
 
 // ---------------------------------------------------------------------------
-// The back end, as the LARC sees it.
+// The back end, as the VARC sees it.
 // ---------------------------------------------------------------------------
 
 // The tail, downsampled to something a panel can plot. Rebuilt only when the
@@ -578,7 +578,7 @@ window.oaRegisterPlugin({
     params: window.OA_REVERB_PARAMS,
 
     // Every stored program, flattened to one map so a generic panel can load
-    // one by name. The LARC still addresses them by bank and number, which is
+    // one by name. The VARC still addresses them by bank and number, which is
     // how the machine it copies works — oaLoadReverbProgram is unchanged.
     presets: (function () {
         const out = {};

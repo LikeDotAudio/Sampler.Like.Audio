@@ -454,7 +454,7 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
                             bottom of the plate, which cost a whole extra flex
                             line of height while this column sat half empty. */}
                         <div style={{ textAlign: 'center', marginTop: '2px' }}>
-                            <Engraved size={10} style={{ letterSpacing: '3px' }}>OA-76</Engraved>
+                            <Engraved size={10} style={{ letterSpacing: '3px' }}>APK 4476</Engraved>
                             <Engraved size={6} style={{ letterSpacing: '1.4px', opacity: 0.8, marginTop: '1px' }}>
                                 LIMITING AMPLIFIER
                             </Engraved>

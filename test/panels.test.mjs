@@ -44,7 +44,7 @@ const PANELS = [
     { name: 'TapeDelayEditor', props: { u: 0, bpm: 120, onClose() {} } },
     { name: 'ChorusEditor', props: { u: 0, onClose() {} } },
     { name: 'DrumSynthEditor', props: { idx: 0, name: 'Kick', onClose() {} } },
-    { name: 'LarcRemote', props: { onClose() {} } },
+    { name: 'VarcRemote', props: { onClose() {} } },
 ];
 
 const openWorld = async () => {

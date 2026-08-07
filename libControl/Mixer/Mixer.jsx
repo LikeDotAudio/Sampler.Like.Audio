@@ -23,7 +23,7 @@ const Mixer = () => {
     const [synthPad, setSynthPad] = React.useState(null);
     const [drivePad, setDrivePad] = React.useState(null);
     const [compPad, setCompPad] = React.useState(null);
-    const [larcUnit, setLarcUnit] = React.useState(null);
+    const [varcUnit, setVarcUnit] = React.useState(null);
     const [tapeUnit, setTapeUnit] = React.useState(null);
     const [chorusUnit, setChorusUnit] = React.useState(null);
     const [, forceSamples] = React.useReducer((n) => n + 1, 0);
@@ -92,7 +92,7 @@ const Mixer = () => {
     // The Mixer used to do this by hand: reach into ctx.__oaReverbs, find the
     // bus, pull 1024 floats out of its analyser into a scratch array, reduce
     // them to a peak, and do the same again for every delay — sixty times a
-    // second, in parallel with CompressorEditor and LarcRemote doing the same
+    // second, in parallel with CompressorEditor and VarcRemote doing the same
     // work on the same analysers. Now the back end measures once and every
     // display reads the answer.
     //
@@ -462,15 +462,15 @@ const Mixer = () => {
                         <div style={{ fontSize: '10px', color: meta.color, letterSpacing: '1px', textTransform: 'uppercase' }}>{meta.name}</div>
 
                         {/* The two dropdowns that used to sit here — a tone and a
-                            size, four choices each — are now the LARC. The strip
+                            size, four choices each — are now the VARC. The strip
                             just reports which program is loaded and opens the
                             remote; everything else about the room is edited there. */}
                         {(() => {
-                            const open = larcUnit === u;
+                            const open = varcUnit === u;
                             return (
                                 <button
-                                    onClick={() => setLarcUnit(open ? null : u)}
-                                    title={`${meta.name} — open the LARC (${window.oaReverbBank(unit.bank).name}: ${window.oaReverbProgramName(u)})`}
+                                    onClick={() => setVarcUnit(open ? null : u)}
+                                    title={`${meta.name} — open the VARC 444 (${window.oaReverbBank(unit.bank).name}: ${window.oaReverbProgramName(u)})`}
                                     style={{
                                         width: '100%', padding: '3px 0', textAlign: 'center', borderRadius: '4px',
                                         border: `1px solid ${open ? meta.color : '#444b57'}`,
@@ -479,7 +479,7 @@ const Mixer = () => {
                                         cursor: 'pointer', fontSize: '9px', fontWeight: '700', letterSpacing: '.5px'
                                     }}
                                 >
-                                    LARC
+                                    VARC 444
                                 </button>
                             );
                         })()}
@@ -650,8 +650,8 @@ const Mixer = () => {
                 document.body
             )}
 
-            {larcUnit != null && window.LarcRemote && ReactDOM.createPortal(
-                <window.LarcRemote u={larcUnit} onClose={() => setLarcUnit(null)} />,
+            {varcUnit != null && window.VarcRemote && ReactDOM.createPortal(
+                <window.VarcRemote u={varcUnit} onClose={() => setVarcUnit(null)} />,
                 document.body
             )}
 

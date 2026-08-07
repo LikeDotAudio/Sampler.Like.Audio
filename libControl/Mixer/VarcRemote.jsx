@@ -1,4 +1,4 @@
-// The LARC — the alphanumeric remote that drives both reverb machines. It
+// The VARC — the alphanumeric remote that drives both reverb machines. It
 // replaces the two dropdowns the reverb strips used to carry, and it is the
 // only place the machines are edited.
 //
@@ -12,20 +12,20 @@
 // reverb buses this app has.
 
 // The display runs in the app's own orange rather than the LED red the real
-// 480L used. Every other lit thing in this app is --accent, and one panel
+// 444V used. Every other lit thing in this app is --accent, and one panel
 // glowing a different colour read as a bug rather than as period detail.
-const LARC_LED = 'var(--accent)';             // === --accent
-const LARC_LED_DIM = 'var(--accent-s55)';
-const LARC_LED_HOT = 'var(--accent-t40)';   // the ovld pair, a brighter cast of the same
-const LARC_LED_OFF = 'var(--accent-s85)';   // an unlit segment behind the filter
-const LARC_CREAM = '#e9e3d1';
-const LARC_MONO = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
-const LARC_METER_GAIN = 2;              // display-only lift on the metered signal
+const VARC_LED = 'var(--accent)';             // === --accent
+const VARC_LED_DIM = 'var(--accent-s55)';
+const VARC_LED_HOT = 'var(--accent-t40)';   // the ovld pair, a brighter cast of the same
+const VARC_LED_OFF = 'var(--accent-s85)';   // an unlit segment behind the filter
+const VARC_CREAM = '#e9e3d1';
+const VARC_MONO = 'ui-monospace, SFMono-Regular, Menlo, Consolas, monospace';
+const VARC_METER_GAIN = 2;              // display-only lift on the metered signal
 
 // The display glass. Properly black — these are LED segments behind a dark
 // filter, not a backlit LCD, so everything that is not lit is unlit, and the
 // only colour on the panel comes from the segments themselves.
-const LARC_GLASS = {
+const VARC_GLASS = {
     background: 'radial-gradient(ellipse at 50% 0%, #14100e 0%, #060505 55%, #000 100%)',
     border: '1px solid #6f6857',
     borderRadius: '3px',
@@ -41,8 +41,8 @@ const LARC_GLASS = {
  */
 const Led = ({ children, size = 11, dim = false, glow = true, style }) => (
     <span style={{
-        fontFamily: LARC_MONO, fontSize: `${size}px`, fontWeight: '700',
-        color: dim ? LARC_LED_DIM : LARC_LED,
+        fontFamily: VARC_MONO, fontSize: `${size}px`, fontWeight: '700',
+        color: dim ? VARC_LED_DIM : VARC_LED,
         textShadow: !glow ? 'none'
             : dim
                 // An unloaded/browsing line still emits — just faintly, the way
@@ -59,7 +59,7 @@ const Led = ({ children, size = 11, dim = false, glow = true, style }) => (
 const Key = ({ label, onClick, onDown, onUp, lit, title, wide, tone = 'cream', size = 7.5 }) => {
     const face = tone === 'blue'
         ? (lit ? '#5b7fa8' : '#8fb0d0')
-        : (lit ? '#c9c2ac' : LARC_CREAM);
+        : (lit ? '#c9c2ac' : VARC_CREAM);
     return (
         <button
             onClick={onClick}
@@ -93,7 +93,7 @@ const Key = ({ label, onClick, onDown, onUp, lit, title, wide, tone = 'cream', s
  * is a fader with a real position on a real scale, so grabbing halfway up the
  * slot should put it halfway up, exactly as your hand expects from the picture.
  */
-const LarcSlider = ({ value, onChange, height = 224 }) => {
+const VarcSlider = ({ value, onChange, height = 224 }) => {
     const trackRef = React.useRef(null);
     const CAP_H = 13;
 
@@ -156,7 +156,7 @@ const LarcSlider = ({ value, onChange, height = 224 }) => {
  * corner at 3px a dot it was decoration; at this size the two rows are the
  * second thing on the panel you can actually read from across the room.
  */
-const LarcMeter = ({ dotsRef }) => {
+const VarcMeter = ({ dotsRef }) => {
     const N = 14;
     const LABEL_W = 12;                 // the L/R column, reserved on the legend too
     const row = (ch) => (
@@ -169,7 +169,7 @@ const LarcMeter = ({ dotsRef }) => {
                        ref={(el) => { const s = dotsRef.current[ch] || (dotsRef.current[ch] = []); s[i] = el; }}
                        style={{
                            width: '6px', height: '6px', borderRadius: '50%',
-                           background: LARC_LED_OFF, display: 'block', flexShrink: 0
+                           background: VARC_LED_OFF, display: 'block', flexShrink: 0
                        }} />
                 ))}
             </div>
@@ -190,7 +190,7 @@ const LarcMeter = ({ dotsRef }) => {
     );
 };
 
-window.LarcRemote = ({ u, onClose }) => {
+window.VarcRemote = ({ u, onClose }) => {
     const [active, setActive] = React.useState(u || 0);
     const [, force] = React.useReducer((n) => n + 1, 0);
     React.useEffect(() => {
@@ -237,7 +237,7 @@ window.LarcRemote = ({ u, onClose }) => {
     const runningBank = window.oaReverbBank(unit.bank);
 
     // ---- the meter ---------------------------------------------------------
-    // Both sides come off the reverb's telemetry frame. The LARC used to find
+    // Both sides come off the reverb's telemetry frame. The VARC used to find
     // the bus in ctx.__oaReverbs and read its two analysers itself — which meant
     // opening this panel doubled the metering work already being done for the
     // Mixer's return strip, on the very same nodes.
@@ -262,13 +262,13 @@ window.LarcRemote = ({ u, onClose }) => {
             // instead of flickering at the left end. Display only: nothing
             // downstream of here hears the difference.
             const p = heldPeak.current[ch];
-            const db = p > 1e-5 ? 20 * Math.log10(p * LARC_METER_GAIN) : -80;
+            const db = p > 1e-5 ? 20 * Math.log10(p * VARC_METER_GAIN) : -80;
             const lit = Math.round(((db + 34) / 46) * els.length);
             els.forEach((el, i) => {
                 if (!el) return;
                 const on = i < lit;
                 const hot = i >= els.length - 2;      // the last two are the ovld pair
-                el.style.background = on ? (hot ? LARC_LED_HOT : LARC_LED) : LARC_LED_OFF;
+                el.style.background = on ? (hot ? VARC_LED_HOT : VARC_LED) : VARC_LED_OFF;
                 // A lit dot blooms into the filter exactly like the text does;
                 // an unlit one is a dark hole and casts nothing.
                 el.style.boxShadow = on
@@ -348,7 +348,7 @@ window.LarcRemote = ({ u, onClose }) => {
         }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
                 <span style={{ fontSize: '12px', color: meta.color, fontWeight: 'bold', letterSpacing: '1px' }}>
-                    {meta.name} — LARC
+                    {meta.name} — VARC 444
                 </span>
                 {unit.standby && (
                     <span style={{ fontSize: '9px', color: '#e5533d', fontWeight: '700' }}>STANDBY</span>
@@ -392,7 +392,7 @@ window.LarcRemote = ({ u, onClose }) => {
 
                 {/* Top display: program, bank, page — and the output meter. */}
                 <div style={{
-                    ...LARC_GLASS,
+                    ...VARC_GLASS,
                     padding: '7px 9px', marginBottom: '10px',
                     // stretch, so the meter can take the full height of the glass
                     // rather than sitting at the top of it.
@@ -410,7 +410,7 @@ window.LarcRemote = ({ u, onClose }) => {
                         <Led size={9} dim={browsing} style={{ letterSpacing: '.2px' }}>{line2}</Led>
                         <Led size={8.5} style={{ letterSpacing: '.2px' }}>{line3}</Led>
                     </div>
-                    <LarcMeter dotsRef={dotsRef} />
+                    <VarcMeter dotsRef={dotsRef} />
                 </div>
 
                 {/* Wordmark, machine select, keypad */}
@@ -420,7 +420,7 @@ window.LarcRemote = ({ u, onClose }) => {
                             fontSize: '13px', fontWeight: '700', letterSpacing: '.5px',
                             color: '#2f2a1e', fontFamily: 'Georgia, serif'
                         }}>
-                            lexicon
+                            VARC 444
                         </div>
                         <div style={swatch}>
                             {window.OA_REVERB_UNITS.map((m, i) => (
@@ -479,7 +479,7 @@ window.LarcRemote = ({ u, onClose }) => {
                 {/* The parameter readout: six labels over six values, which is
                     the row of numbers on the front of the real remote. */}
                 <div style={{
-                    ...LARC_GLASS,
+                    ...VARC_GLASS,
                     padding: '6px 6px', marginBottom: '8px',
                     display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '2px', textAlign: 'center'
                 }}>
@@ -502,7 +502,7 @@ window.LarcRemote = ({ u, onClose }) => {
                     boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.25)'
                 }}>
                     {params.map((p) => (
-                        <LarcSlider key={p.key} value={normOf(p)} onChange={(n) => setParam(p, n)} />
+                        <VarcSlider key={p.key} value={normOf(p)} onChange={(n) => setParam(p, n)} />
                     ))}
                 </div>
 

@@ -189,6 +189,34 @@ window.oaSetDrumSample = function (idx, buffer, opts) {
     window.dispatchEvent(new CustomEvent('oa-sample-changed', { detail: { idx: idx } }));
 };
 
+/**
+ * Decode a picked File onto a pad, chop and all.
+ *
+ * The one road from "a file somebody chose" to "a sound on a pad": the Sampler's
+ * own pads, the SAMPLER panel on the mixer and the browser's Load button all
+ * arrive here, so a sound loaded from any of them lands the same way — same
+ * decode, same in/out marks, same fades. `meta` is what the browser hands back
+ * ({ folder, offset, end, fadeIn, fadeOut }); anything it leaves out means "the
+ * whole file", which is what a plain file input gives.
+ */
+window.oaLoadSampleToPad = async function (idx, file, meta) {
+    if (!file) return null;
+    const ctx = window.oaAudioCtx();
+    const buffer = await window.oaDecodeAudio(ctx, await file.arrayBuffer());
+    const m = meta || {};
+    window.oaSetDrumSample(idx, buffer, {
+        name: file.name,
+        folder: m.folder || '',
+        offset: m.offset || 0,
+        // An OUT sitting at the end of the file is not a cut — storing it as one
+        // would freeze the length against a sample that gets replaced later.
+        end: (m.end != null && m.end < buffer.duration - 0.0005) ? m.end : null,
+        fadeIn: m.fadeIn || 0,
+        fadeOut: m.fadeOut || 0,
+    });
+    return buffer;
+};
+
 // Patch an existing pad's options (pitch/loop/fade) without re-decoding.
 window.oaUpdateDrumSample = function (idx, patch) {
     const e = window.OA_DRUM_SAMPLES[idx];

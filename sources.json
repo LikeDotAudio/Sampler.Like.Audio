@@ -5,6 +5,7 @@
   "libControl/Header/Header.jsx",
   "libControl/Footer/Footer.jsx",
   "libControl/Ui/OaReadout.jsx",
+  "libControl/Ui/OaPanelFrame.jsx",
   "libControl/SoundSynth/oaAudioRate.js",
   "libControl/SoundSynth/oaPadGrid.js",
   "libControl/Effects/PluginHost/oaPlugin.js",

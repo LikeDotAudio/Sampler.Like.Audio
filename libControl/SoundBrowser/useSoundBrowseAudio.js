@@ -45,32 +45,11 @@ window.useSoundBrowseAudio = (buffer, autoPreview) => {
     }
     const trim = trimRef.current;
 
-    // Fades live inside the kept region and cannot overlap each other. The point
-    // just moved wins the argument; the other one gives up the room.
-    const fitFades = (t, moved) => {
-        const span = Math.max(0, t.out - t.in);
-        const first = moved === 'fadeOut' ? 'fadeOut' : 'fadeIn';
-        const second = first === 'fadeIn' ? 'fadeOut' : 'fadeIn';
-        t[first] = Math.max(0, Math.min(t[first], span));
-        t[second] = Math.max(0, Math.min(t[second], span - t[first]));
-    };
-
     /** Move one of 'in' | 'out' | 'fadeIn' | 'fadeOut' to `sec` (a time in the file). */
     const setTrimPoint = (which, sec) => {
         const d = bufRef.current ? bufRef.current.duration : 0;
         if (!d) return;
-        const MIN = 0.005;                       // the kept region always has something in it
-        const t = { ...trimRef.current };
-        const v = Math.max(0, Math.min(d, sec));
-        if (which === 'in') t.in = Math.min(v, t.out - MIN);
-        else if (which === 'out') t.out = Math.max(v, t.in + MIN);
-        // A fade is dragged by its far end: the handle is where the fade-in
-        // finishes / the fade-out begins, so the length is the gap to the mark.
-        else if (which === 'fadeIn') t.fadeIn = Math.max(0, v - t.in);
-        else if (which === 'fadeOut') t.fadeOut = Math.max(0, t.out - v);
-        else return;
-        fitFades(t, which);
-        trimRef.current = t;
+        trimRef.current = window.oaTrimMove(trimRef.current, which, sec, d);
         setTrimVer((n) => n + 1);
     };
 
@@ -80,7 +59,7 @@ window.useSoundBrowseAudio = (buffer, autoPreview) => {
         setTrimVer((n) => n + 1);
     };
 
-    const trimmed = duration > 0 && (trim.in > 0 || trim.out < duration - 0.0005 || trim.fadeIn > 0 || trim.fadeOut > 0);
+    const trimmed = window.oaTrimmed(trim, duration);
 
     const stopSrc = () => {
         if (srcRef.current) { try { srcRef.current.stop(); } catch (e) {} srcRef.current = null; }

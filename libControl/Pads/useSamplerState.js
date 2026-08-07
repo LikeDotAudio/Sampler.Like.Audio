@@ -54,21 +54,9 @@ window.useSamplerState = (setSampleNames) => {
     const handleFile = async (index, file, meta) => {
         if (!file) return;
         try {
-            const arrayBuf = await file.arrayBuffer();
-            const ctx = window.oaAudioCtx();
-            const audioBuf = await window.oaDecodeAudio(ctx, arrayBuf);
-            // The browser hands over whatever chop was made on the waveform —
-            // in, out and the two fades. A sound picked anywhere else arrives
-            // without them and plays whole, as it always did.
-            const m = meta || {};
-            window.oaSetDrumSample(index, audioBuf, {
-                name: file.name,
-                folder: m.folder || '',
-                offset: m.offset || 0,
-                end: (m.end != null && m.end < audioBuf.duration - 0.0005) ? m.end : null,
-                fadeIn: m.fadeIn || 0,
-                fadeOut: m.fadeOut || 0,
-            });
+            // Decode and chop happen in oaLoadSampleToPad, which every loader in
+            // the app shares; what is left here is the Sampler's own bookkeeping.
+            await window.oaLoadSampleToPad(index, file, meta);
             setSampleNames((prev) => { const n = [...prev]; n[index] = file.name; return n; });
             publishSample(index, file.name, meta && meta.folder);
         } catch (e) {

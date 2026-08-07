@@ -109,7 +109,11 @@ const TransferPlot = ({ idx, unit, color }) => {
  * The pedal panel for one channel. Writes straight to the live unit, and since
  * the pedal is built per voice the next hit carries whatever is set here.
  */
-window.DriveEditor = ({ idx, name, onClose }) => {
+window.DriveEditor = ({ idx, name, onClose, oaPopped }) => {
+    const panel = window.useOaPanel({
+        id: `drive-${idx}`, title: `${name} — DRIVE`, copy: oaPopped,
+        render: () => <window.DriveEditor idx={idx} name={name} onClose={onClose} oaPopped />,
+    });
     const unit = window.useOaState('drive', idx);
     const params = window.useOaParams('drive', idx);
     // Armed for a take: the pedal is not in the graph at all, so the faceplate
@@ -143,19 +147,22 @@ window.DriveEditor = ({ idx, name, onClose }) => {
         params.forEach((p) => window.oaPluginSet('drive', idx, p.key, opened.current[p.key]));
     };
 
-    return (
-        <div style={{
+    return panel.frame(
+        <div {...panel.frameProps({
             position: 'fixed', bottom: '46px', left: '50%', transform: 'translateX(-50%)',
             background: 'var(--panel)', border: '1px solid #444', borderRadius: '8px',
             boxShadow: '0 -4px 24px rgba(0,0,0,0.7)', zIndex: 1200,
             padding: '14px 16px', width: 'min(560px, 92vw)', maxHeight: '78vh', overflowY: 'auto'
-        }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+        })}>
+            <div {...panel.handle({ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' })}>
                 <span style={{ fontSize: '12px', color: color, fontWeight: 'bold', letterSpacing: '1px' }}>
                     {name} — DRIVE
                 </span>
                 <span style={{ fontSize: '9px', color: '#666' }}>before the pan and the sends</span>
                 <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <window.SeqButton label={panel.popLabel} onClick={panel.togglePop}
+                        title={panel.popTitle}
+                        style={{ padding: '4px 10px' }} />
                     {/* Help is a BUTTON rather than a standing paragraph: it is
                         read once and then in the way for ever. */}
                     <window.SeqButton label="? Help" onClick={() => setShowHelp((v) => !v)}

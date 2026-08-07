@@ -79,7 +79,11 @@ const NoteKnob = ({ spec, value, onChange, audition }) => {
 
 // The SYNTH panel for one mixer channel. Every control is generated from the
 // engine's parameter schema, so adding a knob to an engine adds it here too.
-window.DrumSynthEditor = ({ idx, name, onClose }) => {
+window.DrumSynthEditor = ({ idx, name, onClose, oaPopped }) => {
+    const panel = window.useOaPanel({
+        id: `synth-${idx}`, title: `${String(idx + 1).padStart(2, '0')} ${name} — SYNTH`, copy: oaPopped,
+        render: () => <window.DrumSynthEditor idx={idx} name={name} onClose={onClose} oaPopped />,
+    });
     // The patch and the faceplate both come through the plugin interface: this
     // panel no longer knows that a drum voice is stored in OA_DRUM_SYNTH or that
     // its knobs are declared on OA_SYNTH_ENGINES. It asks for unit `idx` of the
@@ -112,18 +116,21 @@ window.DrumSynthEditor = ({ idx, name, onClose }) => {
 
     const label = { fontSize: '10px', color: '#aaa', letterSpacing: '0.3px' };
 
-    return (
-        <div style={{
+    return panel.frame(
+        <div {...panel.frameProps({
             position: 'fixed', bottom: '46px', left: '50%', transform: 'translateX(-50%)',
             background: 'var(--panel)', border: '1px solid #444', borderRadius: '8px',
             boxShadow: '0 -4px 24px rgba(0,0,0,0.7)', zIndex: 1200,
             padding: '14px 16px', width: 'min(560px, 92vw)', maxHeight: '70vh', overflowY: 'auto'
-        }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+        })}>
+            <div {...panel.handle({ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' })}>
                 <span style={{ fontSize: '12px', color: 'var(--accent)', fontWeight: 'bold', letterSpacing: '1px' }}>
                     {String(idx + 1).padStart(2, '0')} {name} — SYNTH
                 </span>
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
+                    <window.SeqButton label={panel.popLabel} onClick={panel.togglePop}
+                        title={panel.popTitle}
+                        style={{ padding: '4px 10px' }} />
                     <window.SeqButton label="▶ Audition" onClick={audition} color="#388e3c" textColor="#fff"
                         style={{ padding: '4px 10px', border: 'none' }} />
                     <window.SeqButton label="⟲ Abort" onClick={abort} disabled={!dirty}

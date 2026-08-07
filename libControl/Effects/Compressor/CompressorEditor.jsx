@@ -329,8 +329,12 @@ const screw = (
  * because the strip is shared by every voice on the channel, a knob move lands
  * on the sound that is already ringing rather than waiting for the next hit.
  */
-window.CompressorEditor = ({ idx, name, onClose }) => {
+window.CompressorEditor = ({ idx, name, onClose, oaPopped }) => {
     const [showHelp, setShowHelp] = React.useState(false);
+    const panel = window.useOaPanel({
+        id: `comp-${idx}`, title: `${name} — COMPRESS`, copy: oaPopped,
+        render: () => <window.CompressorEditor idx={idx} name={name} onClose={onClose} oaPopped />,
+    });
     // On a phone the plate cannot hold one row, so it wraps. Left to itself the
     // wrap breaks the panel in the wrong places — the meter separated from the
     // buttons that aim it, and the two time knobs standing in a tall column that
@@ -436,19 +440,22 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
         );
     };
 
-    return (
-        <div style={{
+    return panel.frame(
+        <div {...panel.frameProps({
             position: 'fixed', bottom: '46px', left: '50%', transform: 'translateX(-50%)',
             background: 'var(--panel)', border: '1px solid #444', borderRadius: '8px',
             boxShadow: '0 -4px 24px rgba(0,0,0,0.7)', zIndex: 1200,
             padding: '10px 12px', width: 'min(870px, 97vw)', maxHeight: '82vh', overflowY: 'auto'
-        }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+        })}>
+            <div {...panel.handle({ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' })}>
                 <span style={{ fontSize: '12px', color: window.OA_COMP_COLOR, fontWeight: 'bold', letterSpacing: '1px' }}>
                     {name} — COMPRESS
                 </span>
                 <span style={{ fontSize: '9px', color: '#666' }}>after the pan, sends tapped ahead of it</span>
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
+                    <window.SeqButton label={panel.popLabel} onClick={panel.togglePop}
+                        title={panel.popTitle}
+                        style={{ padding: '4px 10px' }} />
                     {/* Help is a BUTTON rather than a standing paragraph: it is
                         read once and then in the way for ever. */}
                     <window.SeqButton label="? Help" onClick={() => setShowHelp((v) => !v)}

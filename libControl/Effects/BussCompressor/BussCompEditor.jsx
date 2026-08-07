@@ -350,8 +350,12 @@ const GrMeter = ({ posRef }) => {
  * other editor in the rack it takes no channel index — `idx` is accepted and
  * ignored so the panel can be opened the same way as its neighbours.
  */
-window.BussCompEditor = ({ onClose }) => {
+window.BussCompEditor = ({ onClose, oaPopped }) => {
     const [showHelp, setShowHelp] = React.useState(false);
+    const panel = window.useOaPanel({
+        id: 'buss', title: 'MASTER BUSS — COMPRESSOR', copy: oaPopped,
+        render: () => <window.BussCompEditor onClose={onClose} oaPopped />,
+    });
     const unit = window.useOaState('buss', 0);
     const params = window.useOaParams('buss', 0);
     // Armed for a take: the bus is routed around the compressor entirely, so
@@ -457,8 +461,8 @@ window.BussCompEditor = ({ onClose }) => {
 
     const sw = (key) => window.OA_BUSS_SWITCHES.find((s) => s.key === key);
 
-    return (
-        <div style={{
+    return panel.frame(
+        <div {...panel.frameProps({
             position: 'fixed', bottom: '46px', left: '50%', transform: 'translateX(-50%)',
             background: 'var(--panel)', border: '1px solid #444', borderRadius: '8px',
             boxShadow: '0 -4px 24px rgba(0,0,0,0.7)', zIndex: 1200,
@@ -469,8 +473,8 @@ window.BussCompEditor = ({ onClose }) => {
             // switches. A dialog that is bigger than what is in it reads as
             // something failing to load.
             padding: '10px 12px', width: 'min(552px, 97vw)', maxHeight: '86vh', overflowY: 'auto'
-        }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
+        })}>
+            <div {...panel.handle({ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' })}>
                 <span style={{ fontSize: '12px', color: window.OA_BUSS_COLOR, fontWeight: 'bold', letterSpacing: '1px' }}>
                     MASTER BUSS — COMPRESSOR
                 </span>
@@ -483,6 +487,9 @@ window.BussCompEditor = ({ onClose }) => {
                     across the whole mix
                 </span>
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
+                    <window.SeqButton label={panel.popLabel} onClick={panel.togglePop}
+                        title={panel.popTitle}
+                        style={{ padding: '4px 10px' }} />
                     {/* Help is a BUTTON rather than a standing paragraph: it is
                         read once and then in the way for ever, and the panel is
                         already tall enough to scroll. */}

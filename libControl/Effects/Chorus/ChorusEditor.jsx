@@ -54,7 +54,11 @@ const DimButton = ({ label, off, active, color, onPress }) => {
  * The CHORUS panel for one delay return. It writes straight to the live bus, so
  * a button lands on the repeats already circulating in the tape loop.
  */
-window.ChorusEditor = ({ u, onClose }) => {
+window.ChorusEditor = ({ u, onClose, oaPopped }) => {
+    const panel = window.useOaPanel({
+        id: `chorus-${u}`, title: `${window.OA_DELAY_UNITS[u].name} — CHORUS`, copy: oaPopped,
+        render: () => <window.ChorusEditor u={u} onClose={onClose} oaPopped />,
+    });
     // The chorus is an insert inside a tape delay, but this panel does not need
     // to know that: it asks the 'chorus' plugin for unit u. Which delay it lives
     // in, and how the two are wired, is the back end's business.
@@ -75,20 +79,23 @@ window.ChorusEditor = ({ u, onClose }) => {
     const press = (n) => window.oaPluginSet('chorus', u, 'chorus', window.oaChorusToggle(mode, n));
     const allOff = () => window.oaPluginSet('chorus', u, 'chorus', 0);
 
-    return (
-        <div style={{
+    return panel.frame(
+        <div {...panel.frameProps({
             position: 'fixed', bottom: '46px', left: '50%', transform: 'translateX(-50%)',
             background: 'var(--panel)', border: '1px solid #444', borderRadius: '8px',
             boxShadow: '0 -4px 24px rgba(0,0,0,0.7)', zIndex: 1200,
             padding: '14px 16px', width: 'min(420px, 92vw)'
-        }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+        })}>
+            <div {...panel.handle({ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' })}>
                 <span style={{ fontSize: '12px', color: meta.color, fontWeight: 'bold', letterSpacing: '1px' }}>
                     {meta.name} — CHORUS
                 </span>
                 <span style={{ fontSize: '9px', color: '#666' }}>after the tape</span>
                 <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     {bypassed && <window.OaOutOfCircuit />}
+                    <window.SeqButton label={panel.popLabel} onClick={panel.togglePop}
+                        title={panel.popTitle}
+                        style={{ padding: '4px 10px' }} />
                     {/* Help is a BUTTON rather than a standing paragraph: it is
                         read once and then in the way for ever. */}
                     <window.SeqButton label="? Help" onClick={() => setShowHelp((v) => !v)}

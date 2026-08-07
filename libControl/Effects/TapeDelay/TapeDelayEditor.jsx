@@ -123,7 +123,11 @@ const LedReadout = ({ label, text }) => (
     </div>
 );
 
-window.TapeDelayEditor = ({ u, bpm, onClose }) => {
+window.TapeDelayEditor = ({ u, bpm, onClose, oaPopped }) => {
+    const panel = window.useOaPanel({
+        id: `tape-${u}`, title: `${window.OA_DELAY_UNITS[u].name} — TAPE ECHO`, copy: oaPopped,
+        render: () => <window.TapeDelayEditor u={u} bpm={bpm} onClose={onClose} oaPopped />,
+    });
     // Settings and faceplate both through the interface. The one thing this
     // panel still reaches for by name is oaSetDelaySync — locking a head to the
     // grid is a tape-specific control with no equivalent on any other plugin,
@@ -166,14 +170,14 @@ window.TapeDelayEditor = ({ u, bpm, onClose }) => {
     ];
     const knobs = params.filter((p) => p.key !== 'timeL' && p.key !== 'timeR');
 
-    return (
-        <div style={{
+    return panel.frame(
+        <div {...panel.frameProps({
             position: 'fixed', bottom: '46px', left: '50%', transform: 'translateX(-50%)',
             background: 'var(--panel)', border: '1px solid #444', borderRadius: '8px',
             boxShadow: '0 -4px 24px rgba(0,0,0,0.7)', zIndex: 1200,
             padding: '12px 14px', width: 'min(600px, 94vw)', maxHeight: '78vh', overflowY: 'auto'
-        }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+        })}>
+            <div {...panel.handle({ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' })}>
                 <span style={{ fontSize: '12px', color: meta.color, fontWeight: 'bold', letterSpacing: '1px' }}>
                     {meta.name} — TAPE ECHO
                 </span>
@@ -181,6 +185,9 @@ window.TapeDelayEditor = ({ u, bpm, onClose }) => {
                     {bpm} BPM
                 </span>
                 <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <window.SeqButton label={panel.popLabel} onClick={panel.togglePop}
+                        title={panel.popTitle}
+                        style={{ padding: '4px 10px' }} />
                     {/* Help is a BUTTON rather than a standing paragraph: it is
                         read once and then in the way for ever. */}
                     <window.SeqButton label="? Help" onClick={() => setShowHelp((v) => !v)}

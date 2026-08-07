@@ -111,7 +111,9 @@ window.WaveTrim = ({ buffer, trim, setTrimPoint, pos, onScrub, active }) => {
                         <div style={{ position: 'absolute', top: '2px', left: '4px', width: '6px', height: '6px', background: '#e57373', transform: 'rotate(45deg)' }} />
                     </div>
 
-                    <div style={{ position: 'absolute', top: 0, bottom: 0, left: `${pos * 100}%`, width: '2px', background: '#fff', pointerEvents: 'none' }} />
+                    {/* No playhead where there is nothing playing to follow —
+                        the SAMPLER panel edits a pad that fires and is gone. */}
+                    {pos != null && <div style={{ position: 'absolute', top: 0, bottom: 0, left: `${pos * 100}%`, width: '2px', background: '#fff', pointerEvents: 'none' }} />}
                 </React.Fragment>
             )}
         </div>

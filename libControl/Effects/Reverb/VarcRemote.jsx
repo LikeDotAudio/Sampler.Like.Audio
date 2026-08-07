@@ -206,7 +206,7 @@ const VarcMeter = ({ dotsRef }) => {
     );
 };
 
-window.VarcRemote = ({ u, onClose }) => {
+window.VarcRemote = ({ u, onClose, oaPopped }) => {
     const [active, setActive] = React.useState(u || 0);
     const [, force] = React.useReducer((n) => n + 1, 0);
     React.useEffect(() => {
@@ -226,6 +226,14 @@ window.VarcRemote = ({ u, onClose }) => {
 
     const unit = window.oaReverbUnit(active);
     const meta = window.OA_REVERB_UNITS[active];
+
+    // The remote can be switched between machines from its own front, so the
+    // window is named after the one it is DRIVING, not the one it was opened on.
+    const panel = window.useOaPanel({
+        id: `varc-${u || 0}`, title: `${meta.name} — VARC 444`, copy: oaPopped,
+        render: () => <window.VarcRemote u={u} onClose={onClose} oaPopped />,
+    });
+
     const page = unit.page || 0;
     const params = window.oaReverbPageParams(page);
 
@@ -356,8 +364,8 @@ window.VarcRemote = ({ u, onClose }) => {
 
     const swatch = { display: 'flex', gap: '3px' };
 
-    return (
-        <div style={{
+    return panel.frame(
+        <div {...panel.frameProps({
             position: 'fixed', bottom: '46px', left: '50%', transform: 'translateX(-50%)',
             background: 'var(--panel)', border: '1px solid #444', borderRadius: '8px',
             boxShadow: '0 -4px 24px rgba(0,0,0,0.7)', zIndex: 1200,
@@ -366,8 +374,8 @@ window.VarcRemote = ({ u, onClose }) => {
             // have the height back is what makes it read as a remote — the
             // widest line in the display still clears the meter at this width.
             padding: '10px 12px', width: 'min(340px, 96vw)', maxHeight: '88vh', overflowY: 'auto'
-        }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+        })}>
+            <div {...panel.handle({ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' })}>
                 <span style={{ fontSize: '12px', color: meta.color, fontWeight: 'bold', letterSpacing: '1px' }}>
                     {meta.name} — VARC 444
                 </span>
@@ -375,6 +383,9 @@ window.VarcRemote = ({ u, onClose }) => {
                     <span style={{ fontSize: '9px', color: '#e5533d', fontWeight: '700' }}>STANDBY</span>
                 )}
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
+                    <window.SeqButton label={panel.popLabel} onClick={panel.togglePop}
+                        title={panel.popTitle}
+                        style={{ padding: '4px 10px' }} />
                     <window.SeqButton
                         label={showHelp ? '✖ Help' : '? Help'}
                         onClick={() => setShowHelp(!showHelp)}

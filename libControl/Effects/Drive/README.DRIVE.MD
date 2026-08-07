@@ -303,6 +303,22 @@ treble the size of the song file and is rebuilt on load anyway, so only the
 fields go. `mode` leads because it decides which clipper the drive figure is
 driving — setting it afterwards would bake the table twice for nothing.
 
+## 11. What it keeps resident
+
+**A drive node is built per hit** — it is in the per-voice chain, in front of the
+pan — so the one expensive thing here has to already exist by the time a pad is
+struck. That is the 4096-point WaveShaper table of §4, cached on the unit under
+its shape keys: baked on the first hit after a knob moves, and never again until
+one does. The nodes built for a hit are thrown away with the voice; the table they
+point at is not.
+
+Cached **on the unit** rather than in a shared budgeted store, because there is
+exactly one live setting per channel — the cache can never hold more than one
+table per pedal, so it has nothing to evict. Every store in the rack that *can*
+grow is budgeted instead; see
+[../README.EFFECTS.MD](../README.EFFECTS.MD#what-stays-in-memory) for what each
+unit holds, when it is built, and when it is let go.
+
 ---
 
 <sub>Part of **[Sampler.Like.Audio](https://Sampler.Like.audio)** · Written by Anthony P. Kuzub · i @ Like . audio ·

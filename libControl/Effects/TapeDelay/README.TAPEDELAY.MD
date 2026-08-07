@@ -413,6 +413,22 @@ Two orderings matter:
   it was — which is the whole point of storing a count of 16ths rather than a
   time. `test/plugins.test.mjs` asserts exactly that.
 
+## 13. What it keeps resident
+
+**The tape itself**, which is the largest thing this unit owns and the one it can
+never rebuild on demand: a `Float32Array` sized to 2.3 seconds and rounded **up to
+a power of two**, so wrapping the heads is a bitwise AND rather than a modulo,
+millions of times a second. One per delay line, allocated when the line is built
+and held for the life of the context — reallocating it would throw away the echoes
+already on it, which is exactly what a tape machine does not do.
+
+The native fallback path bakes a 1024-point `tanh` saturation table at the same
+moment, for the same reason: once per bus, never per hit.
+
+Both are built at warm-up (`oaDelayWarm`), and only for the tapes something
+actually sends to. See
+[../README.EFFECTS.MD](../README.EFFECTS.MD#what-stays-in-memory).
+
 ---
 
 <sub>Part of **[Sampler.Like.Audio](https://Sampler.Like.audio)** · Written by Anthony P. Kuzub · i @ Like . audio ·

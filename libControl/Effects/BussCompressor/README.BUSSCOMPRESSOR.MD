@@ -423,6 +423,19 @@ every effect at once.
   should move onto it when it lands, along with the other five that still carry
   their own copy of the pointer maths.
 
+## 16. What it keeps resident
+
+One strip, for the whole desk, built **first** at warm-up by `oaMasterWarm(ctx)`
+and held for the life of the context — everything else in the rack connects into
+it, so a master bus built lazily by the first sender would be a second summing
+point for anything already wired.
+
+Nothing per hit, and no allocation per block. The one-pole attack and release
+coefficients and the 4K shaper constants are computed once at the top of
+`process()` from the current parameter values and then reused across all 128
+samples — the `exp()` that defines a time constant is not a per-sample cost. See
+[../README.EFFECTS.MD](../README.EFFECTS.MD#what-stays-in-memory).
+
 ---
 
 <sub>Part of **[Sampler.Like.Audio](https://Sampler.Like.audio)** · Written by Anthony P. Kuzub · i @ Like . audio ·

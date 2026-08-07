@@ -266,6 +266,51 @@ arithmetic. The trailing edge (90 ms after the hand stops) is what keeps draggin
 smooth. The separate `oa-reverb-rebuilt` event exists because the settings event
 fires *before* the new buffer exists — `useOaCurve` listens for both.
 
+### The room cache
+
+The debounce stops a *drag* from redrawing the room thirty times. It does nothing
+about the other case, which is worse because it is silent: every program recall,
+every A/B between two settings, every reload of a song redrew a room this browser
+had already drawn. Measured, that is **11 ms** of `Math.random()` and `exp()` on
+the main thread — the same thread that owes the audio device its next block, which
+is what a dropout is made of.
+
+So a room, once drawn, stays:
+
+```
+irCache = oaBufferCache('rooms', () => OA_IR_CACHE_BUDGET)   # 96MB, LRU
+
+FUNCTION irKey(rate, unit):
+    RETURN rate + every OA_REVERB_PARAMS key except 'ret'
+
+FUNCTION oaBuildImpulse(ctx, unit):
+    key = irKey(oaSampleRate(ctx), unit)
+    RETURN irCache.get(key) OR irCache.put(key, drawImpulse(ctx, unit))
+```
+
+Measured on the same room: **11 ms to draw, 0.1 ms to recall.**
+
+Three things about that key are load-bearing:
+
+- **The rate is in it, and nothing else about the context is.** An `AudioBuffer`
+  is PCM data, not a node — so the offline renderer, running at the same rate, can
+  and should share the rooms the live context drew.
+- **`ret` is excluded.** The return fader is a gain on the way out; it changes not
+  one sample of the response, and including it would file the same room under a
+  new key every time the level moved.
+- **The key is read off `OA_REVERB_PARAMS`, not typed out by hand.** A parameter
+  added later cannot quietly start sharing another room's response.
+
+**It also fixed something nobody had called a bug.** `drawImpulse` is full of
+`Math.random()`, so before this, recalling a program gave a *different* set of
+reflections every time — A/B-ing two settings was never quite comparing like with
+like. A recalled room is now the same room.
+
+The cache is bounded rather than unlimited for the reason set out in
+[../README.EFFECTS.MD](../README.EFFECTS.MD#two-rules-every-store-here-obeys), and
+the 110 stored programs are deliberately **not** pre-built: half a gigabyte to
+hold 108 rooms nobody asked for. Warm the two machines, keep what gets used.
+
 ### Two ways to go quiet, which must not fight
 
 ```
@@ -291,6 +336,12 @@ FUNCTION oaDisposeReverb(ctx):
 
 Dropping the buffer matters as much as dropping the node: an IR is seconds of
 stereo float, the largest single allocation in the whole effects rack.
+
+Teardown drops the *bus's* reference, not the room. The cache outlives the
+context on purpose — a new context at the same rate is the same rooms — and it is
+the budget, not teardown, that decides when a response is finally let go.
+`oaClearImpulseCache()` empties it outright, which the leak tests use and nothing
+else should need.
 
 ---
 

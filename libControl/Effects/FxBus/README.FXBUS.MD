@@ -149,6 +149,14 @@ ASYNC FUNCTION oaWarmFx(ctx):
 The live context calls this on the first user gesture; the offline renderer awaits
 it so its buses exist synchronously while the pattern is being scheduled.
 
+**A third caller, earlier than either.** `oaWarmMemory()` in
+[`../../SoundSynth/oaResident.js`](../../SoundSynth/oaResident.js) awaits this on
+idle after page load, before any gesture has happened, and then goes on to warm
+the things that are not nodes — the rooms, the bounced synth voices, the pitched
+sample copies. The first-gesture path stays exactly where it was: this function is
+idempotent, so warming twice costs a few map lookups, and warming *only* on the
+gesture meant the first hit of a session paid for the whole rack.
+
 **Each module decides for itself what "in use" means and builds what it needs.**
 This function used to loop over `OA_REVERB.units` and `OA_DELAY.units` here,
 testing send arrays and wiring each delay's `toRv` throws by hand. All three of

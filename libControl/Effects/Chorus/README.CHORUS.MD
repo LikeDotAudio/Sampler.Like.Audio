@@ -222,6 +222,17 @@ duplicate is a few bytes, applying it twice is idempotent, and the alternative i
 a plugin that silently has no `save()` and an export whose completeness depends
 on load order.
 
+## 9. What it keeps resident
+
+Nothing but its nodes — the delays, the LFOs and the gains that make up the insert
+— built with the tape return that owns it and disposed with it. There is no table
+to bake and no buffer to hold: every voicing is a set of delay times and LFO
+rates, which are numbers on the nodes themselves.
+
+Worth stating rather than leaving implied, because "does this box build anything
+when a hit arrives?" is the question the rack was audited for, and the answer here
+is no. See [../README.EFFECTS.MD](../README.EFFECTS.MD#what-stays-in-memory).
+
 ---
 
 <sub>Part of **[Sampler.Like.Audio](https://Sampler.Like.audio)** · Written by Anthony P. Kuzub · i @ Like . audio ·

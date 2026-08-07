@@ -374,6 +374,22 @@ compressed by a mixture of the old settings and the new ones — audible if the
 import happens while the sequencer is running, which is exactly when someone
 would notice and have no idea why.
 
+## 12. What it keeps resident
+
+One worklet strip per switched-on channel, built at warm-up by `oaCompWarm(ctx)`
+and held for the life of the context. Nothing is allocated per hit: a voice
+connects to a strip that already exists, and the ballistics state lives inside the
+processor between blocks — which is the point of it being a worklet.
+
+**Building at warm-up is not just about speed here.** A strip left to be built by
+the first voice would be constructed while the worklet module was still
+registering, take the native `DynamicsCompressor` fallback, and keep it for the
+whole session — the app would work, sound slightly wrong, and never say why. See
+[../FxBus/README.FXBUS.MD](../FxBus/README.FXBUS.MD#4-warm-up) for the ordering
+that prevents it, and
+[../README.EFFECTS.MD](../README.EFFECTS.MD#what-stays-in-memory) for what the
+rest of the rack holds.
+
 ---
 
 <sub>Part of **[Sampler.Like.Audio](https://Sampler.Like.audio)** · Written by Anthony P. Kuzub · i @ Like . audio ·

@@ -57,7 +57,7 @@ boundary is **one node to connect to**.
 
 | Module | Way in | Also exported |
 |---|---|---|
-| Reverb | `oaReverbInput(ctx, u)` | `oaReverbSend`, `oaReverbIsFed`, `oaReverbWarm`, `oaReverbBusCount` |
+| Reverb | `oaReverbInput(ctx, u)` | `oaReverbSend`, `oaReverbIsFed`, `oaReverbWarm`, `oaReverbBusCount`, `oaClearImpulseCache` |
 | TapeDelay | `oaDelayInput(ctx, u)` | `oaDelaySend`, `oaDelayIsFed`, `oaDelayWarm`, `oaDelayBusCount` |
 | Compressor | `oaCompInput(ctx, idx)` → node or **null** | `oaCompWarm`, `oaCompStripCount`, `oaCompGR` |
 | BussCompressor | `oaMasterInput(ctx)` → node, **never null** | `oaMasterWarm`, `oaMasterBusCount`, `oaBussGR`, `oaBussFade`, `oaBussFullDsp` |
@@ -94,6 +94,85 @@ so a preview bounced at one rate could be drawn against a tail computed at
 another. The one deliberate exception is re-rendering an already decoded sample
 (`../SoundSynth/oaDrumkitSynth.js`), which runs at the source buffer's own rate so
 that trimming 20 ms off a 44.1k sample does not resample the whole thing.
+
+## What stays in memory
+
+A sampler is judged on the gap between the hit and the sound, so **nothing here is
+built at the moment it is played.** Every table, tape, strip and impulse response
+is computed ahead of the hit and then kept. The store, the budgets and the
+warm-up live in [`../SoundSynth/oaResident.js`](../SoundSynth/oaResident.js):
+
+```
+window.oaBufferCache(name, budgetOf)  a keyed AudioBuffer store, LRU, budgeted
+window.oaWarmMemory()                 build everything the next hit could need
+window.oaResidentReport()             what is held, by class, in bytes
+window.oaResidentLine()               the same thing as one line, for a readout
+```
+
+| Unit | What it keeps resident | Built when | Let go when |
+|---|---|---|---|
+| Reverb | the impulse response, keyed on the settings and the rate that drew it; one bus per context | first time those settings are asked for; both live machines at warm-up | LRU, past `OA_IR_CACHE_BUDGET` (96MB) |
+| TapeDelay | the tape — a power-of-two `Float32Array` per line, ~2.3 s, plus the saturation table | with the bus, if anything sends to it | with the context |
+| Chorus | its insert nodes, inside the tape return | with that return | with it |
+| Drive | the baked WaveShaper table (4096 floats), cached **on the unit** | first use after a shape change | when the shape changes |
+| Compressor | one worklet strip per switched-on channel | warm-up | with the context |
+| BussCompressor | the single master strip | warm-up, before everything else | with the context |
+| DrumSynth | every patch, and every voice's bounced preview | patches at load; previews for **all** pads at warm-up | a preview, when its patch changes |
+
+Samples are not an effect but obey the same rule, and the same file counts them:
+decoded once into `OA_DRUM_SAMPLES`, kept pitched per pad, and kept **in the
+browser** between sessions so a reload does not mean a folder prompt and a decode
+per pad ([`../SoundSynth/oaDrumkitStorage.js`](../SoundSynth/oaDrumkitStorage.js)).
+
+### The warm-up
+
+```
+ASYNC FUNCTION oaWarmMemory():           # on idle after load, and after a kit change
+    ctx = oaAudioCtx()
+    AWAIT oaRehydrateKit()               # the kit this browser was left holding
+    AWAIT oaWarmFx(ctx)                   # worklets, master, strips, rooms, tapes
+    FOR each reverb machine: oaBuildImpulse(ctx, unit)
+    oaRenderAllSynthVoices()              # every pad, not just the ones looked at
+    FOR each loaded pad without a pitched copy: oaPrecachePad(entry)
+    dispatch 'oa-memory-warm'
+```
+
+It runs on idle rather than immediately, because the first paint is a user
+staring at a blank page and the audio context has until the first gesture — which
+is the earliest a hit can arrive — to be ready. `oaWarmFx` is still called on that
+first gesture too; both paths are idempotent.
+
+### Two rules every store here obeys
+
+**A CACHE WITH NO CEILING IS A LEAK.** Every store is byte-budgeted with
+least-recently-used eviction. "Hold everything" and "hold what fits, drop the
+coldest" behave identically right up until the machine starts swapping, and only
+the second one keeps working after that. This is not hypothetical: the Tone Mode
+pitch cache in `../SoundSynth/oaDrumkitSynth.js` was written without a ceiling,
+and a full 5 × 5 grid of pre-rendered pitches came to over half a gigabyte of
+`AudioBuffer` — heard as dropouts, because the collector pressure alone stalled
+the main thread.
+
+**WHAT IS RESIDENT MUST BE COUNTABLE.** `oaResidentReport()` adds every class up,
+so *"is it all in memory?"* has an answer with a number in it. It also reports
+`samples.missing` — pads the app knows about but has no audio for, which is the
+number that actually answers the question.
+
+### What is deliberately *not* pre-built
+
+**Every reverb program.** There are eleven banks of ten; each response is several
+megabytes and about 11 ms of arithmetic on the main thread. Pre-building all 110
+would cost roughly half a gigabyte and a visible stall to hold 108 rooms nobody
+asked for. The two machines that exist are warmed, and every other program becomes
+resident the first time it is loaded and stays — so the first recall of a room is
+no slower than it ever was, and every one after it is a map lookup.
+
+**Every pitch of every pad.** Tone Mode renders 61 semitones of a pad, which is
+about seventy times the sample's own size, so it is built per pad on demand and
+evicted against its own budget.
+
+The principle both share: *warm what is in use, keep what has been used, and never
+let either grow without a ceiling.*
 
 ## Saved with the song
 

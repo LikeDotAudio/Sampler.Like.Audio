@@ -258,6 +258,19 @@ Previews are re-bounced on every `oa-synth-changed` (the cache entry is deleted
 first), and `oaRenderAllSynthVoices()` warms them at startup so pads show their
 waveforms without being touched.
 
+**Who calls that, and why it is not lazy.** `oaWarmMemory()` in
+[`../../SoundSynth/oaResident.js`](../../SoundSynth/oaResident.js) runs it on idle
+after load, and again after a kit change. Rendering on first sight of a pad would
+be the obvious alternative and is the wrong one twice over: the bounce would land
+while the pad is being drawn, and — because a synth voice is what a pad plays when
+no sample is loaded — the render would be competing with a take for the main
+thread at exactly the moment somebody is playing. Every voice is bounced before
+anything is played, or none of them are.
+
+The patches themselves need no warming: they are plain objects, held in
+`OA_DRUM_SYNTH` and mirrored to `localStorage` on every edit, so a value is never
+further away than a property read.
+
 ---
 
 ## 7. As a plugin

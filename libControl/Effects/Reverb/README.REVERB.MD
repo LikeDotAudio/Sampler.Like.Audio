@@ -446,3 +446,11 @@ result is a perfectly good reverb.
 A v1 song carried one flat reverb rather than a list; it lands on machine A. A
 pre-VARC song carries `size`/`tone` as strings, and `oaSetReverb` maps that pair
 onto the nearest program.
+
+---
+
+<sub>Part of **[Sampler.Like.Audio](https://Sampler.Like.audio)** · Written by Anthony P. Kuzub · i @ Like . audio ·
+Released under the **MIT Licence** — free, for everyone, for ever ([LICENSE](../../../LICENSE)).
+Every visual representation in this project is an homage to classic hardware; there is no affiliation with, or
+endorsement by, any of the original designers or manufacturers, and their layouts are used only because they are
+familiar interfaces.</sub>

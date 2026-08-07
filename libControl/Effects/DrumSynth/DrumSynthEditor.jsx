@@ -1,3 +1,14 @@
+// ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
+// https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
+//
+// MIT Licence. Free, for everyone, for ever. Full text in LICENSE at the root.
+//
+// Every visual representation in this project is an HOMAGE to classic hardware.
+// There is no affiliation with, or endorsement by, any of the original designers
+// or manufacturers; their layouts appear here only because they are familiar
+// interfaces, and every name they are known by remains the property of its owner.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Hz <-> MIDI note. A440, and midiNoteName's octave numbering (C3 = 60) so a
 // pitch reads the same here as it does on a pad.
 const hzToMidi = (hz) => 69 + 12 * Math.log2(Math.max(1e-6, hz) / 440);

@@ -145,3 +145,11 @@ See the checklist at the end of [PluginHost/README.PLUGINHOST.MD](PluginHost/REA
 In short: a folder, an engine that calls `oaRegisterPlugin`, a panel that uses
 only the four hooks, entries in `sources.json` / `test/harness.mjs` /
 `test/panels.test.mjs`, and a README beside the code.
+
+---
+
+<sub>Part of **[Sampler.Like.Audio](https://Sampler.Like.audio)** · Written by Anthony P. Kuzub · i @ Like . audio ·
+Released under the **MIT Licence** — free, for everyone, for ever ([LICENSE](../../LICENSE)).
+Every visual representation in this project is an homage to classic hardware; there is no affiliation with, or
+endorsement by, any of the original designers or manufacturers, and their layouts are used only because they are
+familiar interfaces.</sub>

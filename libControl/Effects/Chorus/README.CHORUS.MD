@@ -221,3 +221,11 @@ on the delay unit, so a song file holds it twice. That is deliberate — the
 duplicate is a few bytes, applying it twice is idempotent, and the alternative is
 a plugin that silently has no `save()` and an export whose completeness depends
 on load order.
+
+---
+
+<sub>Part of **[Sampler.Like.Audio](https://Sampler.Like.audio)** · Written by Anthony P. Kuzub · i @ Like . audio ·
+Released under the **MIT Licence** — free, for everyone, for ever ([LICENSE](../../../LICENSE)).
+Every visual representation in this project is an homage to classic hardware; there is no affiliation with, or
+endorsement by, any of the original designers or manufacturers, and their layouts are used only because they are
+familiar interfaces.</sub>

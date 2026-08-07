@@ -412,3 +412,11 @@ Two orderings matter:
   at. An eighth saved at 120 bpm becomes 333 ms in a song at 90, not the 250 ms
   it was — which is the whole point of storing a count of 16ths rather than a
   time. `test/plugins.test.mjs` asserts exactly that.
+
+---
+
+<sub>Part of **[Sampler.Like.Audio](https://Sampler.Like.audio)** · Written by Anthony P. Kuzub · i @ Like . audio ·
+Released under the **MIT Licence** — free, for everyone, for ever ([LICENSE](../../../LICENSE)).
+Every visual representation in this project is an homage to classic hardware; there is no affiliation with, or
+endorsement by, any of the original designers or manufacturers, and their layouts are used only because they are
+familiar interfaces.</sub>

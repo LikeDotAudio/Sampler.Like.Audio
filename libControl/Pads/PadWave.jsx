@@ -1,3 +1,14 @@
+// ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
+// https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
+//
+// MIT Licence. Free, for everyone, for ever. Full text in LICENSE at the root.
+//
+// Every visual representation in this project is an HOMAGE to classic hardware.
+// There is no affiliation with, or endorsement by, any of the original designers
+// or manufacturers; their layouts appear here only because they are familiar
+// interfaces, and every name they are known by remains the property of its owner.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // Faint waveform behind the pad label. Draws a loaded sample if there is one,
 // otherwise the synth voice bounced to a buffer — a synthesized pad shows its
 // shape exactly like a sampled one.

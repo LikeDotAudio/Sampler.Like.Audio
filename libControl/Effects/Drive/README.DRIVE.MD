@@ -302,3 +302,11 @@ The cached 4096-point curve hanging off each unit is derived data: it would
 treble the size of the song file and is rebuilt on load anyway, so only the
 fields go. `mode` leads because it decides which clipper the drive figure is
 driving — setting it afterwards would bake the table twice for nothing.
+
+---
+
+<sub>Part of **[Sampler.Like.Audio](https://Sampler.Like.audio)** · Written by Anthony P. Kuzub · i @ Like . audio ·
+Released under the **MIT Licence** — free, for everyone, for ever ([LICENSE](../../../LICENSE)).
+Every visual representation in this project is an homage to classic hardware; there is no affiliation with, or
+endorsement by, any of the original designers or manufacturers, and their layouts are used only because they are
+familiar interfaces.</sub>

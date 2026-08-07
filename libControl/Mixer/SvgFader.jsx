@@ -1,3 +1,14 @@
+// ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
+// https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
+//
+// MIT Licence. Free, for everyone, for ever. Full text in LICENSE at the root.
+//
+// Every visual representation in this project is an HOMAGE to classic hardware.
+// There is no affiliation with, or endorsement by, any of the original designers
+// or manufacturers; their layouts appear here only because they are familiar
+// interfaces, and every name they are known by remains the property of its owner.
+// ─────────────────────────────────────────────────────────────────────────────
+
 const DB_MIN = -60, DB_MAX = 12;
 const MAX_GAIN = Math.pow(10, DB_MAX / 20);
 const gainToPos = g => g <= 0 ? 0 : Math.max(0, Math.min(1, (20 * Math.log10(g) - DB_MIN) / (DB_MAX - DB_MIN)));

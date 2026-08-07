@@ -67,3 +67,11 @@ A sampler should feel like an instrument, not a spreadsheet.
 
 ### Conclusion
 A top-tier software sampler merges the tactile, intuitive design of classic grooveboxes with the limitless DSP power of modern computing. It provides an immediate, tactile bridge between raw audio data and musical expression, allowing producers to construct complex, grooving arrangements with deeply colored, personalized sounds.
+
+---
+
+<sub>Part of **[Sampler.Like.Audio](https://Sampler.Like.audio)** · Written by Anthony P. Kuzub · i @ Like . audio ·
+Released under the **MIT Licence** — free, for everyone, for ever ([LICENSE](../../../LICENSE)).
+Every visual representation in this project is an homage to classic hardware; there is no affiliation with, or
+endorsement by, any of the original designers or manufacturers, and their layouts are used only because they are
+familiar interfaces.</sub>

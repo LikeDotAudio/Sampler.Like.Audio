@@ -1,3 +1,14 @@
+// ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
+// https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
+//
+// MIT Licence. Free, for everyone, for ever. Full text in LICENSE at the root.
+//
+// Every visual representation in this project is an HOMAGE to classic hardware.
+// There is no affiliation with, or endorsement by, any of the original designers
+// or manufacturers; their layouts appear here only because they are familiar
+// interfaces, and every name they are known by remains the property of its owner.
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * Header: oaBussCompPresets.js
  * Purpose: The master buss compressor's factory settings, and nothing else.
@@ -69,8 +80,8 @@ window.OA_BUSS_PRESETS = {
     nypar:     { label: 'New York Blend',         on: true,  thresh: -14, ratio: 6,  attack: 1, release: 1,  makeup: 2,   sc: 90,  mix: 0.55, trim: 0, rate: 20, dist: 5, parallel: true },
 
     // ---- character: the two switches the Bus+ added to the faceplate --------
-    grit:      { label: '4K Grit',                on: true,  thresh: -5,  ratio: 4,  attack: 5, release: 10, makeup: 2,   sc: 50,  mix: 1,    trim: 0, rate: 20, dist: 7, fourK: true },
-    thick:     { label: '4K Thickener',           on: true,  thresh: -3,  ratio: 3,  attack: 6, release: 9,  makeup: 1.5, sc: 60,  mix: 1,    trim: 0, rate: 20, dist: 4, fourK: true },
+    grit:      { label: '44K Grit',                on: true,  thresh: -5,  ratio: 4,  attack: 5, release: 10, makeup: 2,   sc: 50,  mix: 1,    trim: 0, rate: 20, dist: 7, fourK: true },
+    thick:     { label: '44K Thickener',           on: true,  thresh: -3,  ratio: 3,  attack: 6, release: 9,  makeup: 1.5, sc: 60,  mix: 1,    trim: 0, rate: 20, dist: 4, fourK: true },
     relaxed:   { label: 'Relaxed (F/B)',          on: true,  thresh: -6,  ratio: 3,  attack: 6, release: 9,  makeup: 2,   sc: 70,  mix: 1,    trim: 0, rate: 20, dist: 5, fb: true, lowThd: true },
     clean:     { label: 'Clean Bottom (LOW THD)', on: true,  thresh: -7,  ratio: 4,  attack: 4, release: 1,  makeup: 2.5, sc: 30,  mix: 1,    trim: 0, rate: 20, dist: 5, lowThd: true },
     centre:    { label: 'Centre Focus (Σ S/C)',   on: true,  thresh: -6,  ratio: 4,  attack: 7, release: 9,  makeup: 2,   sc: 80,  mix: 1,    trim: 0, rate: 20, dist: 5, scSum: true },

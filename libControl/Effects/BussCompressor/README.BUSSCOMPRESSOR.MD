@@ -52,7 +52,7 @@ returns null, for three reasons:
 What *is* optional is the compression. With **IN** out, the worklet takes a fast
 path that copies its input to its output, and `plugins.test.mjs` asserts that
 copy is bit-for-bit — with the threshold at −40, the ratio at 20:1, make-up at
-+18 dB and 4K at full. The whole mix goes through this node; "almost the input"
++18 dB and 44K at full. The whole mix goes through this node; "almost the input"
 would be a permanent, unfixable veil over the record.
 
 The cost of the bus itself is **one gain node, one fade gain, one output gain,
@@ -63,14 +63,14 @@ the engine and two analysers, built once per context**. Not per hit —
 
 ## 2. What it is
 
-The SSL bus compressor: the one in the centre section of a 4000-series desk, and
+The SSL bus compressor: the one in the centre section of a 44K-series desk, and
 the reason a stack of thirty tracks stops sounding like a stack. A **VCA** design
 — fast, predictable, and much more about *cohesion* than about level control.
 
 The feature set is **The Bus+**'s, which is SSL's own most recent version of that
 circuit, so what is modelled here is theirs rather than invented. The faceplate is
-laid out like the rack emulations of the G-series: meter across the top, then
-three rows of three knobs, then three latching buttons.
+laid out the way that class of unit always is: meter across the top, then three
+rows of three knobs, then three latching buttons.
 
 **On a bus, less is more.** Two or three dB on the meter is what "glue" costs. A
 needle that goes down and never comes back up is a threshold set too low, not a
@@ -98,7 +98,7 @@ four to one" is a recall; "attack 3.4718 ms" is not.
 | **Trim** | −18…+18 dB | Gain into the whole unit. |
 | **Rate-S** | 1…60 s | How long the FADE button takes. |
 
-and five switches: **IN**, **ANALOG** (4K mode, with nine distortion
+and five switches: **IN**, **ANALOG** (44K mode, with nine distortion
 intensities), **F/B**, **LOW THD** and **Σ S/C**.
 
 ### Ratio, including the negative ones
@@ -234,9 +234,9 @@ make-up knob into a second threshold control.
 
 ---
 
-## 7. 4K MODE — even harmonics, not overload
+## 7. 44K MODE — even harmonics, not overload
 
-A 4000-series desk ran its bus VCA **unbalanced**. Unbalanced means asymmetric,
+A 44K-series desk ran its bus VCA **unbalanced**. Unbalanced means asymmetric,
 asymmetric means **even-order** harmonics, and even-order harmonics are what
 "thick" sounds like. A symmetric shaper — plain `tanh` — gives odd harmonics,
 which sound like fuzz. That difference is the entire point of the switch.
@@ -369,7 +369,7 @@ knee, make-up, trim and the mix blend. What cannot, and why:
 | **S/C Filter** | A native compressor has no side-chain input. |
 | **F/B** | No way to feed its detector from its own output. |
 | **Negative ratios** | Its ratio cannot go below 1 — a negative position lands on 20:1 rather than silently becoming 1:1. |
-| **4K mode** | The shaper is a per-sample loop that does not exist here. |
+| **44K mode** | The shaper is a per-sample loop that does not exist here. |
 | **LOW THD** | So is the release cap. |
 | **AUTO / AUTO 2** | No two-stage release; the short stage is used, which does most of the audible work. |
 
@@ -421,3 +421,11 @@ every effect at once.
   exactly that duplication, but is not in `sources.json` yet; this faceplate
   should move onto it when it lands, along with the other five that still carry
   their own copy of the pointer maths.
+
+---
+
+<sub>Part of **[Sampler.Like.Audio](https://Sampler.Like.audio)** · Written by Anthony P. Kuzub · i @ Like . audio ·
+Released under the **MIT Licence** — free, for everyone, for ever ([LICENSE](../../../LICENSE)).
+Every visual representation in this project is an homage to classic hardware; there is no affiliation with, or
+endorsement by, any of the original designers or manufacturers, and their layouts are used only because they are
+familiar interfaces.</sub>

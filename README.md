@@ -61,4 +61,39 @@ Contributions are welcome but never required. Whether you're a web developer cur
 
 ## License
 
-[MIT License](LICENSE) - Free to use, modify, and distribute.
+**[MIT License](LICENSE)** — free to use, modify, and distribute. All of it, for
+everyone, for ever. There is no paid tier and never will be.
+
+Written by **Anthony P. Kuzub** — i @ Like . audio — <https://Sampler.Like.audio>
+
+Every source file in this repository carries that notice at the top, so a file
+copied out on its own takes its licence and its attribution with it.
+
+### On the interfaces
+
+Every visual representation in this project — every faceplate, knob, meter, lamp,
+switch, engraved legend and colour scheme — is an **homage** to classic audio
+equipment. They are drawn from scratch in SVG and CSS, and they are here for one
+reason: they are the interfaces working engineers already know how to read, and
+an instrument you can already read is an instrument you can play.
+
+There is **no affiliation** with, sponsorship by, endorsement by, or connection of
+any kind to the original designers or manufacturers of the equipment these panels
+resemble. No original artwork, firmware, circuit, sample or measurement has been
+copied. Every trademark and product name belongs to its respective owner, and
+where such a name appears in this repository it appears only descriptively — to
+say what a control is modelled on, so that someone reading the code can look up
+what it is meant to do.
+
+The DSP is an independent implementation written from published descriptions of
+how such devices behave. It approximates a well-understood class of audio
+processing; it does not reproduce any particular manufacturer's product, and it
+should not be mistaken for one.
+
+---
+
+<sub>Part of **[Sampler.Like.Audio](https://Sampler.Like.audio)** · Written by Anthony P. Kuzub · i @ Like . audio ·
+Released under the **MIT Licence** — free, for everyone, for ever ([LICENSE](./LICENSE)).
+Every visual representation in this project is an homage to classic hardware; there is no affiliation with, or
+endorsement by, any of the original designers or manufacturers, and their layouts are used only because they are
+familiar interfaces.</sub>

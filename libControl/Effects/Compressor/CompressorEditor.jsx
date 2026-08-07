@@ -1,3 +1,14 @@
+// ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
+// https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
+//
+// MIT Licence. Free, for everyone, for ever. Full text in LICENSE at the root.
+//
+// Every visual representation in this project is an HOMAGE to classic hardware.
+// There is no affiliation with, or endorsement by, any of the original designers
+// or manufacturers; their layouts appear here only because they are familiar
+// interfaces, and every name they are known by remains the property of its owner.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // The COMPRESS panel for one channel: a 1U limiting amplifier, with the two
 // knobs that decide how hard it works (INPUT and OUTPUT), the two that decide
 // what it sounds like while it does (ATTACK and RELEASE), the ratio buttons,

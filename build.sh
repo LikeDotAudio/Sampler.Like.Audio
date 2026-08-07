@@ -1,4 +1,15 @@
 #!/usr/bin/env bash
+
+# ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
+# https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
+#
+# MIT Licence. Free, for everyone, for ever. Full text in LICENSE at the root.
+#
+# Every visual representation in this project is an HOMAGE to classic hardware.
+# There is no affiliation with, or endorsement by, any of the original designers
+# or manufacturers; their layouts appear here only because they are familiar
+# interfaces, and every name they are known by remains the property of its owner.
+# ─────────────────────────────────────────────────────────────────────────────
 # Compile the .jsx/.js sources into dist/app.js. Run this after editing anything
 # under libControl/ so your local copy of the app matches your sources.
 #

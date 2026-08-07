@@ -1,6 +1,7 @@
 {
   "name": "Web Sampler Sequencer",
   "short_name": "Sampler",
+  "description": "A free, MIT-licensed drum sampler and sequencer that runs entirely in the browser. By Anthony P. Kuzub — https://Sampler.Like.audio. Its faceplates are an homage to classic hardware, with no affiliation with the original manufacturers.",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#121212",

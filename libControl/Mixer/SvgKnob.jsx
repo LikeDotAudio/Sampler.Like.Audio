@@ -1,3 +1,14 @@
+// ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
+// https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
+//
+// MIT Licence. Free, for everyone, for ever. Full text in LICENSE at the root.
+//
+// Every visual representation in this project is an HOMAGE to classic hardware.
+// There is no affiliation with, or endorsement by, any of the original designers
+// or manufacturers; their layouts appear here only because they are familiar
+// interfaces, and every name they are known by remains the property of its owner.
+// ─────────────────────────────────────────────────────────────────────────────
+
 const SvgKnob = ({ value = 0, min = 0, max = 1, defaultVal = 0, bipolar = false, color = "var(--accent)", size = 42, onChange }) => {
     const cx = size / 2, cy = size / 2, R = size / 2 - 3, bodyR = R - 4;
     const [uid] = React.useState(() => "k" + Math.random().toString(36).slice(2, 8));

@@ -142,3 +142,11 @@ const playSlice = (audioContext, audioBuffer, startSec, endSec) => {
     *   *Solution*: Eagerly decode only the active program. Keep inactive samples stored as raw ArrayBuffers in `IndexedDB`. When a user switches programs, quickly swap the buffers.
 4.  **Hardware Integration (Web MIDI)**
     *   *Implementation*: Use the `navigator.requestMIDIAccess()` API. Map incoming MIDI Note On/Off messages to trigger your `VoiceManager` and highlight the UI pads in React.
+
+---
+
+<sub>Part of **[Sampler.Like.Audio](https://Sampler.Like.audio)** · Written by Anthony P. Kuzub · i @ Like . audio ·
+Released under the **MIT Licence** — free, for everyone, for ever ([LICENSE](../../../LICENSE)).
+Every visual representation in this project is an homage to classic hardware; there is no affiliation with, or
+endorsement by, any of the original designers or manufacturers, and their layouts are used only because they are
+familiar interfaces.</sub>

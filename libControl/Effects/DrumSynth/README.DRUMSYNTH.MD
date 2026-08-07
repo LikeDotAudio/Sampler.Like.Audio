@@ -368,3 +368,11 @@ instead of reaching an AudioParam and throwing mid-voice.
 
 `load()` also accepts a bare map of patches — the shape the `synth` key of a v1
 and v2 song file carried, and those files are still out there.
+
+---
+
+<sub>Part of **[Sampler.Like.Audio](https://Sampler.Like.audio)** · Written by Anthony P. Kuzub · i @ Like . audio ·
+Released under the **MIT Licence** — free, for everyone, for ever ([LICENSE](../../../LICENSE)).
+Every visual representation in this project is an homage to classic hardware; there is no affiliation with, or
+endorsement by, any of the original designers or manufacturers, and their layouts are used only because they are
+familiar interfaces.</sub>

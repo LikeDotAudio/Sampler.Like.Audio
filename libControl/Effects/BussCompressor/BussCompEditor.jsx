@@ -1,10 +1,21 @@
+// ─── Sampler.Like.Audio ──────────────────────────────────────────────────────
+// https://Sampler.Like.audio · Written by Anthony P. Kuzub · i @ Like . audio
+//
+// MIT Licence. Free, for everyone, for ever. Full text in LICENSE at the root.
+//
+// Every visual representation in this project is an HOMAGE to classic hardware.
+// There is no affiliation with, or endorsement by, any of the original designers
+// or manufacturers; their layouts appear here only because they are familiar
+// interfaces, and every name they are known by remains the property of its owner.
+// ─────────────────────────────────────────────────────────────────────────────
+
 // The BUSS COMPRESSOR panel — the centre section of the desk, the one unit in
 // this rack that everything else eventually goes through.
 //
 // Laid out as the hardware is: a moving-coil GAIN REDUCTION meter across the
 // top, then three rows of three — a large knob at each side and a small one
 // between them — and the three latching buttons along the bottom. The switches
-// The Bus+ added to that faceplate (F/B, LOW THD, Σ S/C, the mix law and the 4K
+// The Bus+ added to that faceplate (F/B, LOW THD, Σ S/C, the mix law and the 44K
 // intensity) sit in a column beside the plate rather than crowded onto it,
 // because they are mode switches rather than things a hand reaches for mid-mix.
 //
@@ -537,7 +548,7 @@ window.BussCompEditor = ({ onClose }) => {
                         opacity: full ? 1 : 0.4
                     }}>
                         <div style={{ fontSize: '8px', color: '#7d848d', letterSpacing: '1.6px', fontWeight: '700' }}>
-                            4K DISTORTION
+                            44K DISTORTION
                         </div>
                         {/* Nine steps, as nine cells rather than a knob — the
                             hardware sets this with a pair of + / - buttons and
@@ -556,7 +567,7 @@ window.BussCompEditor = ({ onClose }) => {
                                         key={n}
                                         disabled={!full}
                                         onClick={() => set('dist', n)}
-                                        title={`4K distortion ${n} of 9`}
+                                        title={`44K distortion ${n} of 9`}
                                         style={{
                                             width: '26px', height: '15px', padding: 0,
                                             borderRadius: '2px', cursor: full ? 'pointer' : 'not-allowed',
@@ -602,7 +613,7 @@ window.BussCompEditor = ({ onClose }) => {
                 </span>
                 {!full && (
                     <span style={{ fontSize: '9px', color: '#c98a2e', fontStyle: 'italic' }}>
-                        native fallback chain — F/B, LOW THD, Σ S/C, 4K and the negative ratios are unavailable
+                        native fallback chain — F/B, LOW THD, Σ S/C, 44K and the negative ratios are unavailable
                     </span>
                 )}
             </div>

@@ -13,6 +13,9 @@ const Mixer = () => {
                      "var(--accent-t15)", "var(--accent)", "var(--accent-s25)", "var(--accent-t25)",
                      "var(--accent)", "var(--accent-t15)", "var(--accent-s15)", "var(--accent)"];
 
+    // Display-only lift on the effect-return meters. See where it is applied.
+    const FX_METER_GAIN = 2;
+
     const isAnySolo = solos.some(v => v);
 
     const meterRefs = React.useRef([]);
@@ -88,6 +91,18 @@ const Mixer = () => {
     // mounted and it already reads the transport.
     React.useEffect(() => { window.oaResyncDelays(bpm); }, [bpm]);
 
+    // RECORD ARMS THE BYPASS. Every effect comes out of the path while a take is
+    // being recorded, so the distance from the pad to the speaker is a pan gain
+    // and nothing else — see OA_FX_BYPASS in oaFxBus.js for what comes out and
+    // why each one costs time.
+    //
+    // The Mixer is where this belongs for the same reason the tempo resync is
+    // here: it is always mounted, and it already reads the transport. The audio
+    // layer owns the flag; this only reports the button.
+    React.useEffect(() => {
+        if (window.oaSetFxBypass) window.oaSetFxBypass(!!recording);
+    }, [recording]);
+
     // A tail and a tape repeat decay on their own schedule, so unlike the
     // per-hit track meters these come off each plugin's telemetry frame.
     const fxMeterRefs = React.useRef({});
@@ -150,10 +165,19 @@ const Mixer = () => {
                 if (!frame) return;
                 // The decay is applied where the peak is WRITTEN, so two panels
                 // reading the same frame cannot decay it twice as fast as one.
+                //
+                // FX_METER_GAIN is a DISPLAY-ONLY lift, and the returns need it:
+                // a reverb tail and a tape repeat are quiet by nature, so against
+                // the same scale the channel strips use they sit at the bottom of
+                // the meter and flicker there. At 2x a typical return lands in the
+                // middle of the scale, which is where a meter is actually worth
+                // reading. Nothing downstream hears the difference — the same lift
+                // the VARC's own dot meter applies, for the same reason.
                 [S.PEAK_L, S.PEAK_R].forEach((slot, ch) => {
                     const el = els[ch];
                     if (!el) return;
-                    el.style.height = `${Math.max(0, (1 - Math.min(1, frame[slot])) * 100)}%`;
+                    const lit = Math.min(1, frame[slot] * FX_METER_GAIN);
+                    el.style.height = `${Math.max(0, (1 - lit) * 100)}%`;
                 });
             });
 
@@ -601,7 +625,22 @@ const Mixer = () => {
                 width: '64px', flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center',
                 padding: '8px 3px 8px', gap: '8px'
             }}>
-                <div style={{ fontSize: '10px', color: '#aaa', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '8px' }}>Master</div>
+                <div style={{ fontSize: '10px', color: '#aaa', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: recording ? '2px' : '8px' }}>Master</div>
+
+                {/* A rack that has silently stopped working is a support
+                    question. While record is armed the returns are dead and the
+                    dry path is a wire, so the panel says so rather than leaving
+                    someone to wonder where the reverb went. */}
+                {recording && (
+                    <div title="Every effect is out of the path while recording, for the lowest latency between the pad and the speaker."
+                         style={{
+                             fontSize: '7.5px', letterSpacing: '.8px', fontWeight: '700',
+                             color: '#ff8a80', border: '1px solid #722', borderRadius: '3px',
+                             padding: '2px 4px', marginBottom: '6px', textAlign: 'center', width: '100%'
+                         }}>
+                        FX BYPASS
+                    </div>
+                )}
 
                 <div style={{ display: 'flex', gap: '4px', alignItems: 'stretch', height: '270px' }}>
                     {/* L Meter */}

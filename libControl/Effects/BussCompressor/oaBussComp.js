@@ -772,6 +772,48 @@ const nativeEngine = function (ctx, u) {
  * passes its input through untouched, so "no compression" costs one gain node
  * and a copy rather than a different graph.
  */
+// ---------------------------------------------------------------------------
+// Hard bypass
+//
+// Switching the compressor OUT (the IN button) makes it a wire, sample for
+// sample — but a wire that is still a worklet, and a worklet in the path costs
+// one render quantum of latency whatever it does with the samples. That is
+// nothing while you are mixing and it is the whole problem while you are
+// playing: finger-drumming into the sequencer, every millisecond between the
+// pad and the speaker is one you can feel.
+//
+// So this ROUTES AROUND the engine rather than asking it to pass audio through:
+// input goes straight to the fade, and the compressor node is left connected to
+// the fade with nothing feeding it. Its own process() then sees no input, so it
+// reports zero reduction and the meter falls to zero on its own — no special
+// case, and no click, because nothing about the audio path's gain changed.
+//
+// The fade and the meters stay in circuit either way. They are not effects.
+// ---------------------------------------------------------------------------
+
+window.OA_BUSS_BYPASS = false;
+
+const applyBussBypass = function (bus, on) {
+    if (!bus || !bus.engine) return;
+    // `input` feeds exactly one node, so disconnecting it wholesale is safe and
+    // avoids having to remember which of the two it was wired to.
+    try { bus.input.disconnect(); } catch (e) {}
+    if (on) bus.input.connect(bus.fade);
+    else bus.input.connect(bus.engine.input);
+    bus.bypassed = !!on;
+};
+
+/** Take the buss compressor out of the signal path entirely, or put it back. */
+window.oaSetMasterBypass = function (on) {
+    window.OA_BUSS_BYPASS = !!on;
+    const ctx = window.OA_AUDIO_CTX;
+    const bus = ctx && ctx.__oaBuss;
+    if (bus) applyBussBypass(bus, window.OA_BUSS_BYPASS);
+};
+
+/** Is the master compressor currently routed around? */
+window.oaMasterBypassed = function () { return !!window.OA_BUSS_BYPASS; };
+
 const masterBus = function (ctx) {
     if (!ctx) return null;
     if (ctx.__oaBuss) return ctx.__oaBuss;
@@ -821,6 +863,10 @@ const masterBus = function (ctx) {
         });
         bus.split = split;
     }
+
+    // A bypass asked for before the bus existed — record mode armed on a page
+    // that has not made a sound yet — has to land when it is finally built.
+    if (window.OA_BUSS_BYPASS) applyBussBypass(bus, true);
 
     ctx.__oaBuss = bus;
     return bus;

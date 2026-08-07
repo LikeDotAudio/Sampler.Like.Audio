@@ -989,6 +989,54 @@ describe('fx bus', () => {
         assert.equal(built, 1, `a send of ${window.OA_FX_SEND_EPSILON / 2} built ${built} nodes`);
     });
 
+    test('record bypass takes the whole rack out of the path', async () => {
+        const w = await createWarmWorld();
+        const { window } = w;
+
+        // A channel that is doing everything at once: sent to a reverb, sent to
+        // a tape, driven, and compressed.
+        window.oaSetReverbSend(0, 4, 0.8);
+        window.oaSetDelaySend(0, 4, 0.8);
+        window.oaSetDrive(4, 'mix', 0.9);
+        window.oaSetComp(4, 'on', true);
+        window.oaCompWarm(w.ctx);
+
+        const loud = w.ctx.createdCount();
+        window.oaVoiceOut(w.ctx, 4, 0);
+        const withFx = w.ctx.createdCount() - loud;
+        assert.ok(withFx > 1, `a fully-loaded channel only built ${withFx} nodes`);
+
+        // Armed: the same channel, same settings, is a pan gain and nothing else.
+        window.oaSetFxBypass(true);
+        const quiet = w.ctx.createdCount();
+        window.oaVoiceOut(w.ctx, 4, 0);
+        assert.equal(w.ctx.createdCount() - quiet, 1,
+            'record bypass still built part of the rack');
+
+        // And it comes back — a bypass that latched would be far worse than one
+        // that never engaged, because the take after it would be silent of every
+        // effect and nothing would say why.
+        window.oaSetFxBypass(false);
+        const again = w.ctx.createdCount();
+        window.oaVoiceOut(w.ctx, 4, 0);
+        assert.ok(w.ctx.createdCount() - again > 1, 'the rack did not come back');
+    });
+
+    test('the master compressor is routed around, not merely switched out', async () => {
+        const w = await createWarmWorld();
+        const { window } = w;
+
+        window.oaSetFxBypass(true);
+        assert.equal(window.oaMasterBypassed(), true, 'the master was not told');
+        // Out of the PATH: a worklet that is only switched out still costs a
+        // render quantum, which is the whole reason this exists.
+        assert.equal(w.ctx.__oaBuss.bypassed, true);
+
+        window.oaSetFxBypass(false);
+        assert.equal(window.oaMasterBypassed(), false);
+        assert.equal(w.ctx.__oaBuss.bypassed, false);
+    });
+
     test('the voice counter reports what is actually sounding', async () => {
         const w = await createWarmWorld();
         const { window } = w;

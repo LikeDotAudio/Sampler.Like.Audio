@@ -82,7 +82,7 @@ the module that owns it.** This loop used to read `OA_REVERB.units[r].sends[idx]
 and then reach into the returned bus object for `.input` — so the one file whose
 job is to know nothing about how the effects are built knew both the shape of
 another module's settings *and* the shape of its node graph. See
-[the ports section](#7-the-ports-this-file-uses).
+[the ports section](#8-the-ports-this-file-uses).
 
 **Sends are read when the voice is built, not tracked live.** Moving a send knob
 lands on the next hit rather than re-levelling notes that are already ringing —
@@ -219,7 +219,49 @@ pad the user never toggled off is exactly the voice this exists to catch.
 
 ---
 
-## 7. The ports this file uses
+## 7. Record bypass
+
+While a take is being recorded, the whole rack comes out of the path — not turned
+down, **out**, so nothing between the pad and the speaker is doing work that costs
+time:
+
+| Comes out | What it was costing |
+|---|---|
+| the DRIVE pedal | a WaveShaper at 4× oversampling — it resamples up and back down, and carries the filters to do it |
+| the CHANNEL STRIP | an AudioWorklet, so at least one 128-frame quantum |
+| the SENDS | no latency on the dry path, but a convolver and four tape worklets running for a monitor nobody is listening to is CPU a glitch-free take needs more |
+| the BUSS COMPRESSOR | another worklet, on the one path everything shares |
+
+What is left is `source → pan → master fade → out`. **The fade and the meters
+stay** — they are not effects, and a take with no metering is worse than a take
+with three milliseconds more latency.
+
+```
+window.OA_FX_BYPASS          the flag
+window.oaFxBypassed()        ask
+window.oaSetFxBypass(on)     set it, and tell the master to stand aside
+```
+
+Two decisions worth keeping:
+
+**It is a build-time decision, read once per voice.** Arming record does not
+re-plumb voices that are already sounding: the tail of the last hit rings out
+through the rack it was born into and the next hit is dry. Re-plumbing live
+voices would click on every arm.
+
+**The master is routed AROUND, not switched out.** Its IN button already makes it
+a wire sample-for-sample — but a wire that is still a worklet, and a worklet in
+the path costs a render quantum whatever it does with the samples. So
+`oaSetMasterBypass()` reconnects the bus input straight to the fade and leaves
+the compressor connected to the fade with nothing feeding it. Its `process()`
+then sees no input, reports zero reduction, and the meter falls to zero on its
+own — no special case, and no click, because no gain in the audio path changed.
+
+The Mixer arms it from the transport (`recording`) and shows an **FX BYPASS**
+chip on the master strip while it is on, because a rack that has silently stopped
+working is a support question.
+
+## 8. The ports this file uses
 
 This is the router, so it is the file with the most reason to reach into other
 modules — and therefore the one the rule is really about. Everything it is
@@ -250,7 +292,7 @@ What it may **not** say: `ctx.__oaReverbs`, `ctx.__oaDelays`, `ctx.__oaComps`, o
 `.input` on anything it did not build. `test/boundary.test.mjs` fails the build
 if it does — see *each effect owns its own audio*.
 
-## 8. Where to change things
+## 9. Where to change things
 
 | You want to… | Touch |
 |---|---|

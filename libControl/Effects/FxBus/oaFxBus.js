@@ -23,6 +23,49 @@
 window.OA_FX_SEND_EPSILON = 0.001;
 
 // ---------------------------------------------------------------------------
+// RECORD BYPASS
+//
+// While a take is being recorded, every effect in the rack comes out of the
+// path. Not turned down — OUT, so that nothing between the pad and the speaker
+// is doing work that costs time:
+//
+//   the DRIVE pedal      a WaveShaper at 4x oversampling, which resamples up and
+//                        back down and carries the filters to do it
+//   the CHANNEL STRIP    an AudioWorklet, so at least one 128-frame quantum
+//   the SENDS            no latency on the dry path, but a convolver and four
+//                        tape worklets running for a monitor nobody is listening
+//                        to is CPU that a glitch-free take needs more
+//   the BUSS COMPRESSOR  another worklet, on the one path everything shares
+//
+// What is left is source → pan → master fade → out. The fade and the meters
+// stay: they are not effects, and a take with no metering is worse than a take
+// with three milliseconds more latency.
+//
+// It is deliberately a BUILD-TIME decision, read when each voice is built, so
+// arming record does not re-plumb voices that are already sounding — the tail
+// of the last hit rings out through the rack it was born into, and the next hit
+// is dry. The alternative is a click on every arm.
+// ---------------------------------------------------------------------------
+
+window.OA_FX_BYPASS = false;
+
+/** Is the rack out of the path right now? */
+window.oaFxBypassed = function () { return !!window.OA_FX_BYPASS; };
+
+/**
+ * Take the whole rack out of circuit, or put it back. The master is told
+ * separately because it owns its own routing — this file does not know what a
+ * buss compressor is made of, only that it has a way to stand aside.
+ */
+window.oaSetFxBypass = function (on) {
+    const next = !!on;
+    if (next === window.OA_FX_BYPASS) return;
+    window.OA_FX_BYPASS = next;
+    if (window.oaSetMasterBypass) window.oaSetMasterBypass(next);
+    window.dispatchEvent(new CustomEvent('oa-fx-bypass', { detail: { on: next } }));
+};
+
+// ---------------------------------------------------------------------------
 // Voice retirement
 //
 // Everything oaVoiceOut() builds is PER HIT: a panner, a send gain for each bus
@@ -110,10 +153,14 @@ window.oaVoiceOut = function (ctx, idx, pan) {
     }
     chain.push(node);
 
+    // Read ONCE, here, so a voice is built entirely in or entirely out of the
+    // rack — never half of each because the flag moved mid-construction.
+    const bypass = !!window.OA_FX_BYPASS;
+
     // Null on a channel that has never been compressed, and the pan goes
     // straight on to the master bus. An INPUT PORT, not a strip object: this
     // file no longer knows what a compressor is made of.
-    const compIn = window.oaCompInput ? window.oaCompInput(ctx, idx) : null;
+    const compIn = (!bypass && window.oaCompInput) ? window.oaCompInput(ctx, idx) : null;
     // …and on to the MASTER BUS, which is where every audible path in the app
     // now ends up. Guarded, because a test that loads a subset of the backend
     // still has to be able to make a sound.
@@ -132,19 +179,21 @@ window.oaVoiceOut = function (ctx, idx, pan) {
     // port. This loop used to read OA_REVERB.units[r].sends[idx] and reach into
     // the returned bus object for `.input` — so the router knew the shape of
     // another module's settings AND the shape of its node graph.
-    for (let r = 0; r < window.OA_REVERB_COUNT; r++) {
-        const amount = window.oaReverbSend(r, idx);
-        if (amount > window.OA_FX_SEND_EPSILON) tap(amount, window.oaReverbInput(ctx, r));
-    }
+    if (!bypass) {
+        for (let r = 0; r < window.OA_REVERB_COUNT; r++) {
+            const amount = window.oaReverbSend(r, idx);
+            if (amount > window.OA_FX_SEND_EPSILON) tap(amount, window.oaReverbInput(ctx, r));
+        }
 
-    for (let d = 0; d < window.OA_DELAY_COUNT; d++) {
-        const amount = window.oaDelaySend(d, idx);
-        if (amount > window.OA_FX_SEND_EPSILON) tap(amount, window.oaDelayInput(ctx, d));
+        for (let d = 0; d < window.OA_DELAY_COUNT; d++) {
+            const amount = window.oaDelaySend(d, idx);
+            if (amount > window.OA_FX_SEND_EPSILON) tap(amount, window.oaDelayInput(ctx, d));
+        }
     }
 
     // Returns null on a clean channel, and the voice connects straight to the
     // pan the way it always did — bit for bit, not "distortion turned down".
-    const drive = window.oaDriveNode ? window.oaDriveNode(ctx, idx, node, chain) : null;
+    const drive = (!bypass && window.oaDriveNode) ? window.oaDriveNode(ctx, idx, node, chain) : null;
     const head = drive || node;
     head.__oaChain = chain;
     return head;

@@ -489,7 +489,12 @@ window.BussCompEditor = ({ onClose }) => {
 
                 {/* ---- the mode switches, as a companion panel ---- */}
                 <div style={{
-                    flex: '1 1 200px', minWidth: '190px', display: 'flex', flexDirection: 'column', gap: '8px'
+                    // Capped rather than free to grow: this column is switches
+                    // and captions, and every pixel it takes past that comes off
+                    // the meter and the knobs, which are what anyone is actually
+                    // looking at.
+                    flex: '0 1 186px', minWidth: '168px', maxWidth: '200px',
+                    display: 'flex', flexDirection: 'column', gap: '8px'
                 }}>
                     <div style={{
                         border: '1px solid #333840', borderRadius: '5px', padding: '8px',
@@ -536,30 +541,38 @@ window.BussCompEditor = ({ onClose }) => {
                         </div>
                         {/* Nine steps, as nine cells rather than a knob — the
                             hardware sets this with a pair of + / - buttons and
-                            reports it as a colour, so a row that shows all nine
-                            at once is closer to the truth than a pointer is. */}
-                        <div style={{ display: 'flex', gap: '2px' }}>
-                            {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
-                                <button
-                                    key={n}
-                                    disabled={!full}
-                                    onClick={() => set('dist', n)}
-                                    title={`4K distortion ${n} of 9`}
-                                    style={{
-                                        flex: '1 1 0', minWidth: 0, height: '20px', padding: 0,
-                                        borderRadius: '2px', cursor: full ? 'pointer' : 'not-allowed',
-                                        border: `1px solid ${Math.round(unit.dist) === n ? window.OA_BUSS_COLOR : '#3a3f47'}`,
-                                        background: n <= Math.round(unit.dist) && unit.fourK ? '#16323c' : '#22252a',
-                                        color: Math.round(unit.dist) === n ? window.OA_BUSS_COLOR : '#6c737c',
-                                        fontSize: '8px', fontWeight: '700',
-                                    }}
-                                >
-                                    {n}
-                                </button>
-                            ))}
-                        </div>
-                        <div style={{ fontSize: '8.5px', color: '#7d848d', lineHeight: 1.45 }}>
-                            Even-order harmonics from an unbalanced VCA. Shaped, not overloaded, so it costs no headroom.
+                            reports it as a colour, so showing all nine at once is
+                            closer to the truth than a pointer is.
+                            
+                            Stacked rather than in a row, and 9 at the top: it is
+                            an AMOUNT, so it reads as a ladder that fills from the
+                            bottom the way every other level in the rack does. It
+                            also costs a column 26px wide instead of the width of
+                            the whole panel. */}
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'flex-start' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column-reverse', gap: '2px', flex: '0 0 auto' }}>
+                                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((n) => (
+                                    <button
+                                        key={n}
+                                        disabled={!full}
+                                        onClick={() => set('dist', n)}
+                                        title={`4K distortion ${n} of 9`}
+                                        style={{
+                                            width: '26px', height: '15px', padding: 0,
+                                            borderRadius: '2px', cursor: full ? 'pointer' : 'not-allowed',
+                                            border: `1px solid ${Math.round(unit.dist) === n ? window.OA_BUSS_COLOR : '#3a3f47'}`,
+                                            background: n <= Math.round(unit.dist) && unit.fourK ? '#16323c' : '#22252a',
+                                            color: Math.round(unit.dist) === n ? window.OA_BUSS_COLOR : '#6c737c',
+                                            fontSize: '8px', fontWeight: '700', lineHeight: 1,
+                                        }}
+                                    >
+                                        {n}
+                                    </button>
+                                ))}
+                            </div>
+                            <div style={{ fontSize: '8.5px', color: '#7d848d', lineHeight: 1.45, flex: '1 1 0', minWidth: 0 }}>
+                                Even-order harmonics from an unbalanced VCA. Shaped, not overloaded, so it costs no headroom.
+                            </div>
                         </div>
                     </div>
                 </div>

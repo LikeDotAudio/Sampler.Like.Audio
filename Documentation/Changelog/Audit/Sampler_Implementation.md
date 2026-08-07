@@ -1,6 +1,6 @@
 # Web-Based Sampler Implementation Strategy (React & HTML5)
 
-Building a modern software sampler in the browser requires bridging the gap between declarative UI (React) and the imperative, time-critical nature of digital signal processing (Web Audio API). Based on our audit of the MPC architecture, here is a technical blueprint for implementing a powerful, browser-based sampler.
+Building a modern software sampler in the browser requires bridging the gap between declarative UI (React) and the imperative, time-critical nature of digital signal processing (Web Audio API). Based on our audit of the classic pad-sampler architecture, here is a technical blueprint for implementing a powerful, browser-based sampler.
 
 ## 1. Core Technologies
 *   **UI Framework:** React (utilizing functional components and hooks for modular architecture).

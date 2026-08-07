@@ -388,7 +388,7 @@ const Mixer = () => {
                                         background: dOpen ? '#4a2418' : (dOn ? '#33201a' : '#2a2f38'),
                                         color: dOpen || dOn ? dColor : '#9aa3ae',
                                         cursor: 'pointer', fontSize: '9px', fontWeight: '700', letterSpacing: '.5px',
-                                        marginBottom: '4px'
+                                        marginBottom: '4px', ...veil
                                     }}
                                 >
                                     DRIVE{dOn ? ` ${Math.round(dUnit.mix * 100)}` : ''}
@@ -417,7 +417,7 @@ const Mixer = () => {
                                         color: cOpen || cOn ? cColor : '#9aa3ae',
                                         cursor: 'pointer', fontSize: '9px', fontWeight: '700', letterSpacing: '.3px',
                                         marginBottom: '4px', display: 'flex', alignItems: 'center',
-                                        justifyContent: 'center', gap: '3px', overflow: 'hidden'
+                                        justifyContent: 'center', gap: '3px', overflow: 'hidden', ...veil
                                     }}
                                 >
                                     <span>COMPRESS</span>
@@ -442,7 +442,8 @@ const Mixer = () => {
                             Two reverbs on the top row, then the four tape delays. */}
                         <div style={{
                             width: '100%', marginTop: '6px', paddingTop: '5px', borderTop: '1px solid #3a3f49',
-                            display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px 2px', justifyItems: 'center'
+                            display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '3px 2px', justifyItems: 'center',
+                            ...veil
                         }}>
                             {FX.map((fx) => {
                                 const amount = sendOf(fx, i);
@@ -497,7 +498,7 @@ const Mixer = () => {
                     <div key={fx.key} style={{
                         background: 'var(--strip)', border: 'none', borderRight: '1px solid #3a3f49', borderRadius: 0,
                         width: '78px', flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center',
-                        padding: '8px 4px 8px', gap: '8px'
+                        padding: '8px 4px 8px', gap: '8px', ...veil
                     }}>
                         <div style={{ fontSize: '10px', color: meta.color, letterSpacing: '1px', textTransform: 'uppercase' }}>{meta.name}</div>
 
@@ -569,7 +570,7 @@ const Mixer = () => {
                     <div key={fx.key} style={{
                         background: 'var(--strip)', border: 'none', borderRight: '1px solid #3a3f49', borderRadius: 0,
                         width: '74px', flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center',
-                        padding: '8px 4px 8px', gap: '6px'
+                        padding: '8px 4px 8px', gap: '6px', ...veil
                     }}>
                         <div style={{ fontSize: '10px', color: meta.color, letterSpacing: '1px', textTransform: 'uppercase' }}>{meta.name}</div>
 
@@ -690,7 +691,7 @@ const Mixer = () => {
                                 color: bussOpen || bOn ? bColor : '#9aa3ae',
                                 cursor: 'pointer', fontSize: '9px', fontWeight: '700', letterSpacing: '.3px',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                gap: '3px', overflow: 'hidden'
+                                gap: '3px', overflow: 'hidden', ...veil
                             }}
                         >
                             <span>BUSS</span>
@@ -747,6 +748,26 @@ const Mixer = () => {
                     name={(tracks[compPad] && tracks[compPad].name) || `Track ${compPad + 1}`}
                     onClose={() => setCompPad(null)}
                 />,
+                document.body
+            )}
+
+            {/* Why the desk has gone grey. Portalled rather than placed in the
+                strip row, because the rack is out of circuit for the whole app
+                — the pads and the sequencer are dry too — and because a banner
+                inside a horizontally scrolling row of strips scrolls away from
+                the thing it is explaining. */}
+            {bypassed && ReactDOM.createPortal(
+                <div style={{
+                    position: 'fixed', top: '4px', left: '50%', transform: 'translateX(-50%)',
+                    zIndex: 2000, pointerEvents: 'none',
+                    padding: '4px 14px', borderRadius: '12px',
+                    background: 'rgba(183,28,28,0.94)', border: '1px solid #ff8a80',
+                    boxShadow: '0 2px 10px rgba(0,0,0,0.6)',
+                    fontSize: '10px', fontWeight: '700', letterSpacing: '1.2px', color: '#fff',
+                    whiteSpace: 'nowrap'
+                }}>
+                    ● RECORD ARMED — EFFECTS RACK OUT OF CIRCUIT
+                </div>,
                 document.body
             )}
 

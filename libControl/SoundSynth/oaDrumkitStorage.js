@@ -39,6 +39,55 @@ async function oaNavigateToFile(root, folderPath, name) {
     return await dir.getFileHandle(name);
 }
 
+// ---------------------------------------------------------------------------
+// Kits that were renamed under someone's feet.
+//
+// The eight factory sample folders were renamed, and a song saved before that
+// stores the OLD folder against every pad. Nothing about the restore path fails
+// loudly when a folder is missing — it is a `catch` that skips the pad, because
+// a sample the user moved or deleted has to be survivable — so without this the
+// symptom is a song that opens with silent pads and no explanation at all.
+//
+// The saved name is tried FIRST and this is only the fallback: someone who kept
+// their own folder under the old name, or who has both, keeps working, and the
+// alias never overrides a folder that actually exists.
+// ---------------------------------------------------------------------------
+const OA_KIT_ALIASES = {
+    'Akai Linndrum':         'APK 404',
+    'Akai MPC-60':           'APK 414',
+    'Alesis SR-16':          'APK 424',
+    'Boss DR-550':           'APK 434',
+    'Oberheim DMX':          'APK 454',
+    'Roland CompuRhythm-78': 'APK 464',
+    'Roland TR-808':         'APK 474',
+    'Roland TR-909':         'APK 484',
+};
+
+/** The same path with a renamed kit folder swapped in, or null if none applies. */
+window.oaAliasKitFolder = function (folderPath) {
+    const parts = (folderPath || '').split('/');
+    const last = parts[parts.length - 1];
+    const alias = OA_KIT_ALIASES[last];
+    if (!alias) return null;
+    parts[parts.length - 1] = alias;
+    return parts.join('/');
+};
+
+/**
+ * Find a file, trying the folder as it was saved and then under its new name.
+ * Throws only when neither is there, so the caller's skip-and-carry-on still
+ * means what it meant.
+ */
+async function oaOpenSampleFile(root, folderPath, name) {
+    try {
+        return await oaNavigateToFile(root, folderPath, name);
+    } catch (e) {
+        const alias = window.oaAliasKitFolder(folderPath);
+        if (!alias) throw e;
+        return await oaNavigateToFile(root, alias, name);
+    }
+}
+
 // A pad whose sample came from the recorder carries the synthetic folder name
 // instead of a path on disk. Those come out of IndexedDB and need neither a
 // picked folder nor a permission prompt.
@@ -73,7 +122,7 @@ window.oaRestoreKit = async function (metaByIdx) {
         try {
             let file = null;
             if (oaIsRecMeta(m)) file = window.oaRecFile ? await window.oaRecFile(m.name) : null;
-            else if (root) file = await (await oaNavigateToFile(root, m.folder, m.name)).getFile();
+            else if (root) file = await (await oaOpenSampleFile(root, m.folder, m.name)).getFile();
             if (!file) continue;
             const buf = await window.oaDecodeAudio(window.oaAudioCtx(), await file.arrayBuffer());
             window.oaSetDrumSample(Number(idx), buf, { name: m.name, folder: m.folder || '' });
@@ -104,5 +153,5 @@ window.oaResolveFile = async function (folderPath, name) {
     const root = window.OA_SOUND_DIR || await window.oaIdbGet('oaRootDir');
     if (!root) return null;
     if (root.queryPermission) { const p = await root.queryPermission({ mode: 'read' }); if (p !== 'granted') return null; }
-    try { const fh = await oaNavigateToFile(root, folderPath, name); return await fh.getFile(); } catch (e) { return null; }
+    try { const fh = await oaOpenSampleFile(root, folderPath, name); return await fh.getFile(); } catch (e) { return null; }
 };

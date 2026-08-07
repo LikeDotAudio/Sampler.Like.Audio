@@ -1,7 +1,7 @@
 # Software Sampler Audit: Mechanics, Architecture, and Design
 
 ## 1. Introduction
-This audit synthesizes the concepts and mechanics of modern software samplers, drawing heavily from the quintessential workflow of the Akai MPC ecosystem (specifically the MPC Sample and MPC Renaissance/Studio platforms). A software sampler is the beating heart of modern electronic and hip-hop production—a digital instrument that captures audio, allows granular manipulation, and provides an environment for sequencing those sounds into a musical arrangement.
+This audit synthesizes the concepts and mechanics of modern software samplers, drawing heavily from the quintessential pad-sampler workflow established by the classic 16-pad hardware and carried into its modern software descendants. A software sampler is the beating heart of modern electronic and hip-hop production—a digital instrument that captures audio, allows granular manipulation, and provides an environment for sequencing those sounds into a musical arrangement.
 
 ## 2. Anatomy of a Software Sampler
 A great software sampler is divided into several interconnected modules. Understanding these modules is key to grasping how samplers function.
@@ -55,7 +55,7 @@ While any software can play a `.wav` file, a *great* sampler is defined by workf
 Beatmakers desire speed. The time between hearing a sound, chopping it, and playing it on the pads must be near-zero. Features like "Lazy Chopping" (tapping pads while a sample plays to instantly create slices) and automatic transient detection are mandatory. The software must stay out of the user's way.
 
 ### Sound Character and "Grit"
-Clean, pristine digital audio is often too sterile for hip-hop and electronic producers. A great software sampler offers emulations of vintage hardware (like the MPC60 or MPC3000). Features include:
+Clean, pristine digital audio is often too sterile for hip-hop and electronic producers. A great software sampler offers emulations of vintage 12-bit hardware samplers. Features include:
 *   **Bit-Reduction / Decimation**: Lowering the bit depth (e.g., to 12-bit) and sample rate to recreate the gritty, aliased sound of early 90s samplers.
 *   **Analog Emulation**: Modeled tape saturation, tube drive, and analog filters that add harmonic distortion and warmth to the signal.
 

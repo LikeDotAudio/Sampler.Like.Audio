@@ -111,6 +111,10 @@ const TransferPlot = ({ idx, unit, color }) => {
 window.DriveEditor = ({ idx, name, onClose }) => {
     const unit = window.useOaState('drive', idx);
     const params = window.useOaParams('drive', idx);
+    // Armed for a take: the pedal is not in the graph at all, so the faceplate
+    // says so and stops taking knob moves that nothing would hear.
+    const bypassed = window.useOaFxBypass();
+    const veil = window.oaBypassVeil(bypassed);
 
     // Taken once per channel, so ABORT goes back to how this channel sounded
     // when the panel was opened rather than to a factory setting.
@@ -154,6 +158,7 @@ window.DriveEditor = ({ idx, name, onClose }) => {
                         color={dirty ? '#b71c1c' : undefined} textColor={dirty ? '#fff' : undefined}
                         title="Back to how this channel sounded when the panel was opened"
                         style={{ padding: '4px 10px', border: 'none' }} />
+                    {bypassed && <window.OaOutOfCircuit />}
                     <window.SeqButton label="✖ Close" onClick={onClose} style={{ padding: '4px 10px' }} />
                 </div>
             </div>
@@ -162,7 +167,8 @@ window.DriveEditor = ({ idx, name, onClose }) => {
             <div style={{
                 background: 'linear-gradient(to bottom, #24262a 0%, #17181b 100%)',
                 border: '1px solid #000', borderRadius: '4px',
-                boxShadow: 'inset 0 1px 0 #ffffff12', padding: '12px 14px 10px'
+                boxShadow: 'inset 0 1px 0 #ffffff12', padding: '12px 14px 10px',
+                ...veil
             }}>
                 <div style={{ display: 'flex', gap: '6px', marginBottom: '12px' }}>
                     {window.OA_DRIVE_MODES.map((m) => (

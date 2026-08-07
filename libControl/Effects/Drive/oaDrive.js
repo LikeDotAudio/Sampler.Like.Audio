@@ -129,16 +129,7 @@ window.OA_DRIVE_PARAMS = [
 // are applied by nodes around it, so moving them must not rebuild the table.
 const OA_CURVE_KEYS = ['mode', 'drive', 'starve', 'rect'];
 
-window.OA_DRIVE_PRESETS = {
-    edge:    { label: 'Edge of Breakup', mode: 'od',   drive: 3.5,  starve: 0,    rect: 0,    tone: 14000, level: 1,    mix: 0.30 },
-    crunch:  { label: 'Crunch',          mode: 'od',   drive: 9,    starve: 0,    rect: 0,    tone: 9000,  level: 0.95, mix: 0.55 },
-    warm:    { label: 'Warm Tube',       mode: 'tube', drive: 5,    starve: 0,    rect: 0,    tone: 7500,  level: 1,    mix: 0.45 },
-    console: { label: 'Console Push',    mode: 'tube', drive: 2.2,  starve: 0,    rect: 0,    tone: 16000, level: 1,    mix: 0.22 },
-    fuzz:    { label: 'Big Fuzz',        mode: 'fuzz', drive: 18,   starve: 0,    rect: 0,    tone: 5200,  level: 0.85, mix: 0.85 },
-    starved: { label: 'Dying Battery',   mode: 'fuzz', drive: 26,   starve: 0.55, rect: 0,    tone: 4200,  level: 0.9,  mix: 1 },
-    octavia: { label: 'Octavia',         mode: 'fuzz', drive: 20,   starve: 0.12, rect: 0.9,  tone: 6000,  level: 0.85, mix: 0.9 },
-    clean:   { label: 'Clean (bypass)',  mode: 'od',   drive: 1,    starve: 0,    rect: 0,    tone: 18000, level: 1,    mix: 0 },
-};
+// The factory pedals live in oaDrivePresets.js, loaded first.
 
 // Fill in whatever a saved unit is missing and drop anything out of range, so a
 // hand-edited or half-written localStorage entry still comes up playable.
@@ -438,4 +429,38 @@ window.oaRegisterPlugin({
 
     /** The WaveShaper's own table: 4096 points, input -1..+1, output -1..+1. */
     curve: function (i) { return window.oaDriveCurve(window.oaDriveUnit(i)); },
+
+    /**
+     * Every channel's pedal. The cached curve hanging off each unit is derived
+     * data — it would treble the size of the song file and be rebuilt on load
+     * anyway — so only the fields go.
+     */
+    save: function () {
+        return {
+            units: window.OA_DRIVE.units.map(function (u) {
+                const o = { mode: u.mode };
+                window.OA_DRIVE_PARAMS.forEach(function (p) { o[p.key] = u[p.key]; });
+                return o;
+            }),
+        };
+    },
+
+    /**
+     * Put them back, through oaSetDrive() rather than by assignment: the setter
+     * clamps, persists and fires the change event, and a song file is exactly
+     * the untrusted input those three exist for.
+     *
+     * `mode` goes in first — it decides which clipper the drive figure is
+     * driving, so setting it after would rebuild the curve twice for nothing.
+     */
+    load: function (data) {
+        const units = Array.isArray(data && data.units) ? data.units : [];
+        units.slice(0, window.OA_PAD_MAX).forEach(function (u, i) {
+            if (!u) return;
+            if (u.mode) window.oaSetDrive(i, 'mode', u.mode);
+            window.OA_DRIVE_PARAMS.forEach(function (p) {
+                if (u[p.key] !== undefined) window.oaSetDrive(i, p.key, u[p.key]);
+            });
+        });
+    },
 });

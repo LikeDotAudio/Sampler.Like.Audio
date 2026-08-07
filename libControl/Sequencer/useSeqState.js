@@ -145,7 +145,10 @@ window.useSeqState = (label, DEFAULT_STEPS, TRACKS) => {
     };
     const getAudioCtx = () => {
         if (!audioCtxRef.current) {
-            audioCtxRef.current = window.oaAudioCtx ? window.oaAudioCtx() : new (window.AudioContext || window.webkitAudioContext)();
+            // Both routes end at oaNewAudioContext(), so a sequencer that comes
+            // up before the shared context does still gets one running at the
+            // app's sample rate rather than the device default.
+            audioCtxRef.current = window.oaAudioCtx ? window.oaAudioCtx() : window.oaNewAudioContext();
         }
         return audioCtxRef.current;
     };

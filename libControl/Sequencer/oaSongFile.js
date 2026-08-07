@@ -8,7 +8,7 @@
  *   re-read from the chosen sound folder on import.
  */
 
-window.OA_SONG_FILE_VERSION = 2;
+window.OA_SONG_FILE_VERSION = 3;
 
 // The per-track sample fields worth carrying. Deliberately excludes `buffer` and
 // `cachedBuffer` (decoded audio — not JSON) and `idx` (implied by position).
@@ -42,6 +42,19 @@ window.oaExportSong = function (library, song, name, mixer) {
         mixer: mixer || null,
         // The rest are plain globals — read them straight from the audio layer.
         padLayout: window.OA_PAD_LAYOUT,
+
+        // EVERY effect, asked rather than listed. Each plugin declares its own
+        // save() next to the state it owns, so a song carries the reverbs, the
+        // tapes, the Dimension inserts, the drum synth AND the per-channel
+        // pedals and compressors — the last two of which were missing from
+        // every export before this, because nothing here named them.
+        //
+        // An effect added later is in the file the moment it registers.
+        effects: window.oaSavePlugins ? window.oaSavePlugins() : {},
+
+        // The same three, where a v1/v2 importer still looks for them. Cheap
+        // insurance: an older build opening a newer song gets the reverb, the
+        // tapes and the synth back rather than nothing.
         synth: JSON.parse(JSON.stringify(window.OA_DRUM_SYNTH || {})),
         reverb: JSON.parse(JSON.stringify(window.OA_REVERB || {})),
         delay: JSON.parse(JSON.stringify(window.OA_DELAY || {})),
@@ -71,7 +84,8 @@ window.oaParseSongFile = function (text) {
     const clean = patterns.filter((p) => p && typeof p.name === 'string' && Array.isArray(p.data));
     // A song with no patterns is still worth importing if it carries a kit,
     // mixer or synth settings — only a file with nothing at all is an error.
-    const hasState = doc.kit || doc.mixer || doc.synth || doc.reverb || doc.delay || doc.padLayout;
+    const hasState = doc.kit || doc.mixer || doc.synth || doc.reverb || doc.delay
+        || doc.effects || doc.padLayout;
     if (!clean.length && !hasState) throw new Error('No usable patterns found in that file.');
     return {
         patterns: clean,
@@ -83,6 +97,9 @@ window.oaParseSongFile = function (text) {
         reverb: doc.reverb && typeof doc.reverb === 'object' ? doc.reverb : null,
         delay: doc.delay && typeof doc.delay === 'object' ? doc.delay : null,
         padLayout: typeof doc.padLayout === 'string' ? doc.padLayout : null,
+        // v3: one object keyed by plugin id. Absent in older files, which is
+        // what the three legacy keys above are still read for.
+        effects: doc.effects && typeof doc.effects === 'object' ? doc.effects : null,
     };
 };
 
@@ -90,7 +107,7 @@ window.oaParseSongFile = function (text) {
 // samples themselves. Async because re-reading the audio hits the filesystem.
 // Returns a short report so the caller can tell the user what actually landed.
 window.oaApplySongState = async function (parsed) {
-    const report = { synth: 0, reverb: false, delay: false, pads: '', samples: 0, sampleNote: '' };
+    const report = { synth: 0, reverb: false, delay: false, effects: [], pads: '', samples: 0, sampleNote: '' };
 
     // First: a song cut on a 5 x 5 has to land on a 5 x 5, or everything after
     // this only restores the first 16 voices.
@@ -99,56 +116,36 @@ window.oaApplySongState = async function (parsed) {
         report.pads = window.oaPadLayoutFor(window.OA_PAD_LAYOUT).label;
     }
 
-    if (parsed.synth) {
-        for (let i = 0; i < window.OA_PAD_MAX; i++) {
-            const p = parsed.synth[i];
-            if (p) { window.oaSetSynthPatch(i, p); report.synth++; }
-        }
-    }
+    // Every effect, restored by the effect itself.
+    //
+    // How to put a reverb back — program first, then the edits on top, then the
+    // sends — is the REVERB's business, and it used to live here, three hundred
+    // lines from the reverb in a file about song files. Same for the tape's
+    // grid locks. Now each plugin owns its own load() and this asks all of them.
+    //
+    // The tempo travels with the mixer levels and has to go in: a tape head
+    // locked to a 1/8 is re-derived at the tempo of the song it lands in.
+    const bpm = (parsed.mixer && parsed.mixer.bpm) || 120;
 
-    if (parsed.reverb) {
-        // A v1 export carried one flat reverb; it lands on unit A.
-        const units = Array.isArray(parsed.reverb.units) ? parsed.reverb.units : [parsed.reverb];
-        units.slice(0, window.OA_REVERB_COUNT).forEach((rv, u) => {
-            if (!rv) return;
-            if (Array.isArray(rv.sends)) rv.sends.forEach((v, i) => window.oaSetReverbSend(u, i, v));
-            // Program first, then the individual parameters on top of it — an
-            // edited machine has to restore its edits, not the program it
-            // started from. A pre-VARC song carries `tone`/`size` as strings
-            // instead; oaSetReverb maps that pair onto the nearest program.
-            if (typeof rv.bank === 'number' && typeof rv.prog === 'number') {
-                window.oaLoadReverbProgram(u, rv.bank, rv.prog);
-            }
-            window.OA_REVERB_PARAMS.forEach((p) => {
-                if (rv[p.key] !== undefined) window.oaSetReverb(u, p.key, rv[p.key]);
-            });
-            if (typeof rv.size === 'string') window.oaSetReverb(u, 'size', rv.size);
-            if (typeof rv.tone === 'string') window.oaSetReverb(u, 'tone', rv.tone);
-            if (rv.ret !== undefined) window.oaSetReverb(u, 'ret', rv.ret);
-        });
-        report.reverb = true;
-    }
-
-    if (parsed.delay && Array.isArray(parsed.delay.units)) {
-        // The tempo travels with the mixer levels; the Mixer re-derives every
-        // locked head anyway once that tempo lands in React state.
-        const bpm = (parsed.mixer && parsed.mixer.bpm) || 120;
-        parsed.delay.units.slice(0, window.OA_DELAY_COUNT).forEach((dl, u) => {
-            if (!dl) return;
-            if (Array.isArray(dl.sends)) dl.sends.forEach((v, i) => window.oaSetDelaySend(u, i, v));
-            if (Array.isArray(dl.toRv)) dl.toRv.forEach((v, r) => window.oaSetDelayToReverb(u, r, v));
-            window.OA_DELAY_PARAMS.forEach((p) => {
-                if (dl[p.key] !== undefined) window.oaSetDelay(u, p.key, Math.max(p.min, Math.min(p.max, Number(dl[p.key]))));
-            });
-            if (dl.ret !== undefined) window.oaSetDelay(u, 'ret', Number(dl.ret) || 0);
-            // After the times, so a head locked to the grid re-takes its lock —
-            // and lands on the imported song's tempo, not the one it was cut at.
-            ['L', 'R'].forEach((side) => {
-                const steps = Number(dl['sync' + side]) || 0;
-                if (steps > 0) window.oaSetDelaySync(u, side, steps, bpm);
-            });
-        });
-        report.delay = true;
+    if (parsed.effects) {
+        const done = window.oaLoadPlugins(parsed.effects, { bpm: bpm });
+        report.effects = done;
+        report.synth = done.indexOf('drumsynth') >= 0 ? window.OA_PAD_MAX : 0;
+        report.reverb = done.indexOf('reverb') >= 0;
+        report.delay = done.indexOf('delay') >= 0;
+    } else {
+        // A v1 or v2 file: the same three effects under their own top-level
+        // keys. Handed to the same load() the new path uses, so there is one
+        // implementation of "put a reverb back" rather than two that drift.
+        const legacy = {};
+        if (parsed.synth) legacy.drumsynth = parsed.synth;
+        if (parsed.reverb) legacy.reverb = parsed.reverb;
+        if (parsed.delay) legacy.delay = parsed.delay;
+        const done = window.oaLoadPlugins(legacy, { bpm: bpm });
+        report.effects = done;
+        report.synth = parsed.synth ? Object.keys(parsed.synth).length : 0;
+        report.reverb = done.indexOf('reverb') >= 0;
+        report.delay = done.indexOf('delay') >= 0;
     }
 
     if (parsed.kit && parsed.kit.some(Boolean)) {

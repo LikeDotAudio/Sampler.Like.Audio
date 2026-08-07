@@ -17,8 +17,13 @@
 // the single most expensive thing a drum synth can do.
 window.oaNoiseBuffer = function (ctx, seconds) {
     const dur = seconds || 2;
-    if (!window.OA_NOISE_BUF || window.OA_NOISE_BUF.sampleRate !== ctx.sampleRate) {
-        const buf = ctx.createBuffer(1, Math.ceil(ctx.sampleRate * dur), ctx.sampleRate);
+    // Keyed on the rate so a context running at a different one cannot be handed
+    // a buffer built for another. With every context now built at the app rate
+    // (oaAudioRate.js) this holds across the live context and every offline
+    // render, so the buffer really is made once for the session.
+    const rate = window.oaSampleRate(ctx);
+    if (!window.OA_NOISE_BUF || window.OA_NOISE_BUF.sampleRate !== rate) {
+        const buf = ctx.createBuffer(1, Math.ceil(rate * dur), rate);
         const d = buf.getChannelData(0);
         for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
         window.OA_NOISE_BUF = buf;

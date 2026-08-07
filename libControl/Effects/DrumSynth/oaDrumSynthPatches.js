@@ -6,62 +6,27 @@
  *   localStorage; these are the values a "Reset" returns to.
  */
 
-window.OA_SYNTH_FACTORY = [
-    // 0 Kick — deep pitch drop, short beater click
-    { engine: 'membrane', wave: 'sine', pitchStart: 190, pitchEnd: 48, pitchDecay: 22, decay: 340, click: 0.3, clickDecay: 7, drive: 0.2 },
-    // 1 Snare — shell plus wires
-    { engine: 'snare', tone1: 175, tone2: 235, pitchDrop: 0.3, toneDecay: 80, filterType: 'highpass', filterFreq: 1800, q: 1.2, noiseDecay: 260, mix: 0.6 },
-    // 2 Hi-Hat — closed: bright and fast
-    { engine: 'metal', base: 245, spread: 1, voices: 6, filterType: 'highpass', filterFreq: 8000, q: 2, noise: 0.12, decay: 75 },
-    // 3 Perc — short FM blip
-    { engine: 'fm', carrier: 420, ratio: 3.1, index: 700, indexDecay: 45, pitchDrop: 0.2, decay: 160 },
-    // 4 Clap — three hands
-    { engine: 'clap', bursts: 3, spacing: 11, filterFreq: 1200, q: 3, burstDecay: 9, tailDecay: 220 },
-    // 5 Rim — resonant wooden crack, noise-led
-    { engine: 'click', freq: 1700, q: 16, decay: 30, noise: 0.6, wave: 'triangle' },
-    // 6 Tom Lo
-    { engine: 'membrane', wave: 'sine', pitchStart: 220, pitchEnd: 90, pitchDecay: 40, decay: 520, click: 0.18, clickDecay: 8, drive: 0.1 },
-    // 7 Tom Mid
-    { engine: 'membrane', wave: 'sine', pitchStart: 300, pitchEnd: 140, pitchDecay: 36, decay: 440, click: 0.18, clickDecay: 8, drive: 0.1 },
-    // 8 Tom Hi
-    { engine: 'membrane', wave: 'sine', pitchStart: 420, pitchEnd: 210, pitchDecay: 32, decay: 380, click: 0.2, clickDecay: 7, drive: 0.1 },
-    // 9 Cymbal — long, dense, sizzling
-    { engine: 'metal', base: 300, spread: 1.25, voices: 6, filterType: 'highpass', filterFreq: 5500, q: 1.4, noise: 0.35, decay: 1600 },
-    // 10 Ride — pingier than the crash, mid-length
-    { engine: 'metal', base: 420, spread: 0.9, voices: 6, filterType: 'bandpass', filterFreq: 6000, q: 2.5, noise: 0.2, decay: 900 },
-    // 11 Cowbell — two-tone metallic, short
-    { engine: 'metal', base: 540, spread: 0.35, voices: 2, filterType: 'bandpass', filterFreq: 2600, q: 3.5, noise: 0.02, decay: 210 },
-    // 12 Conga — membrane, rings longer than a tom
-    { engine: 'membrane', wave: 'sine', pitchStart: 360, pitchEnd: 195, pitchDecay: 28, decay: 480, click: 0.22, clickDecay: 6, drive: 0.05 },
-    // 13 Clave — pure brief resonance
-    { engine: 'click', freq: 2450, q: 12, decay: 40, noise: 0.15, wave: 'sine' },
-    // 14 Shaker — ramped attack
-    { engine: 'shaker', filterFreq: 7200, q: 2.5, attack: 20, decay: 130 },
-    // 15 FX — laser-ish FM sweep
-    { engine: 'fm', carrier: 220, ratio: 5.5, index: 1400, indexDecay: 220, pitchDrop: 0.6, decay: 600 },
-    // --- the voices a 5 x 5 grid adds ------------------------------------
-    // 16 Kick 2 — tighter and clickier than voice 0, for doubles
-    { engine: 'membrane', wave: 'sine', pitchStart: 150, pitchEnd: 42, pitchDecay: 28, decay: 260, click: 0.45, clickDecay: 9, drive: 0.35 },
-    // 17 Snare 2 — higher tuned, shorter wires
-    { engine: 'snare', tone1: 220, tone2: 300, pitchDrop: 0.25, toneDecay: 55, filterType: 'highpass', filterFreq: 2400, q: 1.1, noiseDecay: 170, mix: 0.55 },
-    // 18 Open Hat — the closed hat left ringing
-    { engine: 'metal', base: 245, spread: 1, voices: 6, filterType: 'highpass', filterFreq: 7000, q: 1.8, noise: 0.18, decay: 620 },
-    // 19 Tom Fl — floor tom, below Tom Lo
-    { engine: 'membrane', wave: 'sine', pitchStart: 160, pitchEnd: 62, pitchDecay: 46, decay: 620, click: 0.16, clickDecay: 8, drive: 0.1 },
-    // 20 Crash — bigger and darker than the Cymbal voice
-    { engine: 'metal', base: 260, spread: 1.4, voices: 6, filterType: 'highpass', filterFreq: 4200, q: 1.2, noise: 0.4, decay: 2200 },
-    // 21 Splash — bright and gone
-    { engine: 'metal', base: 380, spread: 1.5, voices: 6, filterType: 'highpass', filterFreq: 7500, q: 1.3, noise: 0.3, decay: 420 },
-    // 22 Block — woodblock, drier than the Clave
-    { engine: 'click', freq: 1150, q: 20, decay: 26, noise: 0.08, wave: 'square' },
-    // 23 Triangle — thin and long
-    { engine: 'metal', base: 1100, spread: 0.18, voices: 3, filterType: 'bandpass', filterFreq: 5200, q: 6, noise: 0.01, decay: 1400 },
-    // 24 Bongo — small, high, hand-struck
-    { engine: 'membrane', wave: 'sine', pitchStart: 520, pitchEnd: 300, pitchDecay: 26, decay: 260, click: 0.24, clickDecay: 6, drive: 0.05 },
-];
+// ---------------------------------------------------------------------------
+// The voice library and the pad assignments live in oaDrumSynthPresets.js. This
+// resolves one into the other: OA_SYNTH_FACTORY stays an array of PATCHES, the
+// shape everything downstream already expects, built from the list of keys.
+// ---------------------------------------------------------------------------
 
-// The factory patch for a pad. Past the authored voices the list repeats, the
-// same way the kit's names do.
+/** Every ready-made voice, in menu order. */
+window.oaSynthLibrary = function () { return window.OA_SYNTH_LIBRARY || []; };
+
+/** One library voice by key, or null. */
+window.oaSynthVoice = function (key) {
+    return window.oaSynthLibrary().find(function (v) { return v.key === key; }) || null;
+};
+
+window.OA_SYNTH_FACTORY = (window.OA_SYNTH_FACTORY_KEYS || []).map(function (key) {
+    const voice = window.oaSynthVoice(key);
+    // A factory list naming a voice that is not in the library would leave a pad
+    // with no patch at all, so it falls back to the first voice there is.
+    return voice ? voice.patch : (window.oaSynthLibrary()[0] || {}).patch || { engine: 'membrane' };
+});
+
 window.oaFactoryPatch = function (idx) {
     return window.OA_SYNTH_FACTORY[idx % window.OA_SYNTH_FACTORY.length];
 };
@@ -129,6 +94,16 @@ window.oaSetSynthPatch = function (idx, patch) {
     window.dispatchEvent(new CustomEvent('oa-synth-changed', { detail: { idx } }));
 };
 
+/**
+ * Load a library voice onto a pad. Goes through oaSetSynthPatch() rather than
+ * assigning, so the patch is clamped to what its engine can do on the way in —
+ * a library entry is data like any other and gets no special trust.
+ */
+window.oaSetSynthVoice = function (idx, key) {
+    const voice = window.oaSynthVoice(key);
+    if (voice) window.oaSetSynthPatch(idx, voice.patch);
+};
+
 window.oaResetSynthPatch = function (idx) {
     window.OA_DRUM_SYNTH[idx] = window.oaSynthPatch(window.oaFactoryPatch(idx));
     window.oaSaveSynthPatches();
@@ -163,14 +138,17 @@ window.oaRenderSynthVoice = async function (idx) {
     const cached = window.OA_SYNTH_RENDER[idx];
     if (cached && cached.key === key) return cached.buffer;
 
-    const OfflineCtx = window.OfflineAudioContext || window.webkitOfflineAudioContext;
     const engine = window.OA_SYNTH_ENGINES[patch.engine];
-    if (!OfflineCtx || !engine) return null;
+    if (!engine) return null;
 
-    const rate = (window.OA_AUDIO_CTX && window.OA_AUDIO_CTX.sampleRate) || 44100;
+    // The app's rate, not this file's guess at one. A preview bounced at 44.1k
+    // and drawn beside a voice mixed at 48k is a waveform whose length does not
+    // match the sound it stands for.
+    const rate = window.oaSampleRate();
     const seconds = synthRenderSeconds(patch);
     try {
-        const off = new OfflineCtx(1, Math.ceil(rate * seconds), rate);
+        const off = window.oaOfflineContext(1, seconds, rate);
+        if (!off) return null;
         engine.render(off, patch, 0, 0.9, off.destination);
         const raw = await off.startRendering();
 
@@ -326,5 +304,36 @@ window.oaRegisterPlugin({
         for (let k = 0; k < SYNTH_CURVE_LEN; k++) out[k] /= top;
         synthCurveKey[i] = render.key;
         return out;
+    },
+
+    /**
+     * Every pad's patch. Saved for the LARGEST grid rather than the current one:
+     * a song cut on a 5x5 and imported on a 4x4 keeps its ninth tom, and gets it
+     * back the moment the grid is grown again.
+     */
+    save: function () {
+        const out = {};
+        for (let i = 0; i < window.OA_PAD_MAX; i++) {
+            const patch = window.OA_DRUM_SYNTH[i];
+            if (patch) out[i] = patch;
+        }
+        return { patches: out };
+    },
+
+    /**
+     * Put them back through oaSetSynthPatch(), which runs each one through
+     * oaSynthPatch() on the way in — so a patch from an older build, with a
+     * parameter this engine no longer has or a value out of the range it now
+     * declares, is held to what the engine can actually do instead of reaching
+     * an AudioParam and throwing mid-voice.
+     *
+     * Accepts a bare map of patches too: that is the shape the `synth` key of a
+     * v1 and v2 song file carried, and those files are still out there.
+     */
+    load: function (data) {
+        const patches = (data && data.patches) || data || {};
+        for (let i = 0; i < window.OA_PAD_MAX; i++) {
+            if (patches[i]) window.oaSetSynthPatch(i, patches[i]);
+        }
     },
 });

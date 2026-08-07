@@ -64,7 +64,12 @@
  *   nodes at all and connects to the output exactly as it did before.
  */
 
-window.OA_COMP_COLOR = '#ff8c1a';
+// The colour the strip is labelled in, wherever it appears — the mixer's
+// COMPRESS button, the panel title, the in-circuit lamp. Kept as the theme
+// accent rather than a fixed orange so it stays with the faceplate when the
+// colour picker moves. Used only in CSS positions, which is what lets a var()
+// stand in for a hex here.
+window.OA_COMP_COLOR = 'var(--accent)';
 
 // How far apart the two ends of each time knob are. Straight off the original's
 // spec sheet: 20-800 microseconds of attack, 50-1100 milliseconds of release.
@@ -165,16 +170,7 @@ window.OA_COMP_METERS = [
     { key: 'off', label: 'OFF', hint: 'Needle parked.' },
 ];
 
-window.OA_COMP_PRESETS = {
-    glue:    { label: 'Glue',            on: true, ratio: '4',   input: 6,  output: -3, attack: 0.25, release: 0.55, mix: 1 },
-    punch:   { label: 'Drum Punch',      on: true, ratio: '4',   input: 10, output: -5, attack: 0.10, release: 0.80, mix: 1 },
-    snap:    { label: 'Snap (fast atk)', on: true, ratio: '8',   input: 12, output: -6, attack: 0.95, release: 0.70, mix: 1 },
-    vocal:   { label: 'Vocal 4:1',       on: true, ratio: '4',   input: 8,  output: -4, attack: 0.45, release: 0.50, mix: 1 },
-    parallel:{ label: 'Parallel Crush',  on: true, ratio: '20',  input: 22, output: -8, attack: 0.85, release: 0.90, mix: 0.45 },
-    limit:   { label: 'Peak Limit',      on: true, ratio: '20',  input: 4,  output: 0,  attack: 1.00, release: 0.85, mix: 1 },
-    smash:   { label: 'All Buttons In',  on: true, ratio: 'all', input: 16, output: -9, attack: 0.75, release: 0.95, mix: 1 },
-    bypass:  { label: 'Bypass',          on: false,ratio: '4',   input: 0,  output: 0,  attack: 0.45, release: 0.5,  mix: 1 },
-};
+// The factory settings live in oaCompressorPresets.js, loaded first.
 
 // Fill in whatever a saved unit is missing and drop anything out of range, so a
 // hand-edited or half-written localStorage entry still comes up playable.
@@ -520,7 +516,7 @@ const nativeEngine = function (ctx, unit) {
  * switching the unit off sets its blend to zero, which passes the input through
  * untouched rather than tearing a live node out of a running graph.
  */
-window.oaCompStrip = function (ctx, idx) {
+const compStrip = function (ctx, idx) {
     const strips = ctx.__oaComps || (ctx.__oaComps = []);
     if (strips[idx]) return strips[idx];
     if (!window.oaCompActive(idx)) return null;
@@ -528,7 +524,10 @@ window.oaCompStrip = function (ctx, idx) {
     const unit = window.oaCompUnit(idx);
     const input = ctx.createGain();
     const output = ctx.createGain();
-    output.connect(ctx.destination);
+    // The strip's output is the channel's contribution to the mix, so it goes
+    // to the MASTER BUS rather than straight out — the buss compressor has to
+    // hear a compressed channel the way the listener will.
+    output.connect(window.oaMasterInput ? window.oaMasterInput(ctx) : ctx.destination);
 
     const bus = { input: input, output: output, engine: null, gr: 0, analyser: null };
 
@@ -554,6 +553,41 @@ window.oaCompStrip = function (ctx, idx) {
 
     strips[idx] = bus;
     return bus;
+};
+
+// ---------------------------------------------------------------------------
+// THE AUDIO PORTS.
+//
+// The strip builder and the strip object are FILE-LOCAL. A channel gets back a
+// node to play into, or null meaning "there is no compressor here, carry on to
+// the output as you were" — which is the same answer the DRIVE pedal gives, so
+// the router treats every optional insert the same way.
+// ---------------------------------------------------------------------------
+
+/**
+ * THE INPUT PORT for channel `idx`, or null when this channel has never been
+ * switched on. Null is a real answer, not a failure: it is what keeps an
+ * uncompressed channel's graph exactly as it was before this file existed.
+ */
+window.oaCompInput = function (ctx, idx) {
+    const bus = compStrip(ctx, idx);
+    return bus ? bus.input : null;
+};
+
+/**
+ * Build every strip that is switched on, once the worklet answer is in.
+ *
+ * This loop lived in oaWarmFx(), which had to know both that a strip exists per
+ * PAD and that building one early is what keeps it off the native fallback.
+ * Neither is the router's business; both are this file's.
+ */
+window.oaCompWarm = function (ctx) {
+    for (let i = 0; i < window.OA_PAD_MAX; i++) compStrip(ctx, i);
+};
+
+/** How many strips exist on this context — for the voice diagnostic. */
+window.oaCompStripCount = function (ctx) {
+    return ((ctx && ctx.__oaComps) || []).filter(Boolean).length;
 };
 
 /** Gain reduction on this channel right now, in dB. 0 when nothing is running. */
@@ -667,4 +701,38 @@ window.oaRegisterPlugin({
     },
 
     dispose: window.oaDisposeComp,
+
+    /** Every channel's strip, including the ones switched off. */
+    save: function () {
+        return {
+            units: window.OA_COMP.units.map(function (u) {
+                const o = { on: u.on, ratio: u.ratio, meter: u.meter };
+                window.OA_COMP_PARAMS.forEach(function (p) { o[p.key] = u[p.key]; });
+                return o;
+            }),
+        };
+    },
+
+    /**
+     * Put them back through oaSetComp(), which clamps, persists, pushes the new
+     * values at whichever engine is running and fires the change event.
+     *
+     * `on` goes LAST. Every other setter pushes to the bus, and pushing a half
+     * loaded strip that is already switched on means the channel is briefly
+     * compressed by a mixture of the old settings and the new ones — audible if
+     * the import happens while the sequencer is running, which is exactly when
+     * someone would notice and have no idea why.
+     */
+    load: function (data) {
+        const units = Array.isArray(data && data.units) ? data.units : [];
+        units.slice(0, window.OA_PAD_MAX).forEach(function (u, i) {
+            if (!u) return;
+            if (u.ratio) window.oaSetComp(i, 'ratio', u.ratio);
+            if (u.meter) window.oaSetComp(i, 'meter', u.meter);
+            window.OA_COMP_PARAMS.forEach(function (p) {
+                if (u[p.key] !== undefined) window.oaSetComp(i, p.key, u[p.key]);
+            });
+            window.oaSetComp(i, 'on', !!u.on);
+        });
+    },
 });

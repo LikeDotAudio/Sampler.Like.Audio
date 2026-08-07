@@ -1,7 +1,7 @@
 /**
  * Header: GalaxyKnob.jsx
  * Purpose: The hardware controls a tape echo faceplate is made of — brushed
- *   silver knobs on a green panel, and the big numbered HEAD SELECT dial.
+ *   silver knobs on a painted panel, and the big numbered HEAD SELECT dial.
  * Description: These are drawn, not skinned: every highlight is an SVG gradient
  *   so a knob stays sharp at any size and costs no image bytes. Both controls
  *   speak in a normalised 0..1 position and leave the units to the caller —
@@ -119,7 +119,7 @@ const KnobDefs = ({ uid }) => (
 );
 
 /**
- * One silver knob on the green panel, with its screened label above and the
+ * One silver knob on the painted panel, with its screened label above and the
  * value it is sitting on below. The ring of dots is the panel print the real
  * machine has around every control — they mark the sweep, not the setting.
  */
@@ -139,7 +139,11 @@ window.GalaxyKnob = ({
     for (let i = 0; i < dots; i++) {
         const a = -SWEEP + (i / (dots - 1)) * SWEEP * 2;
         const [x, y] = gPt(cx, cy, r * 1.30, a);
-        marks.push(<circle key={i} cx={x} cy={y} r={Math.max(0.8, size * 0.022)} fill="#14300f" opacity={0.85} />);
+        // The print is a dark cast of whatever the plate is painted, so it goes
+        // through `style` — var() in a fill attribute resolves in Firefox and
+        // silently blackens in WebKit.
+        marks.push(<circle key={i} cx={x} cy={y} r={Math.max(0.8, size * 0.022)}
+                           opacity={0.85} style={{ fill: 'var(--accent-s85)' }} />);
     }
 
     return (

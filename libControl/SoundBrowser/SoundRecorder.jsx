@@ -163,7 +163,10 @@ window.SoundRecorder = ({ onSaved }) => {
         recordingRef.current = false;
         setRecording(false);
         const n = nodesRef.current;
-        const rate = n ? n.ctx.sampleRate : 48000;
+        // The capture context's rate, falling back to the app's rather than to a
+        // literal — a WAV header that disagrees with the samples in it plays back
+        // at the wrong speed and nothing says why. See oaAudioRate.js.
+        const rate = window.oaSampleRate(n && n.ctx);
         const ch = chunksRef.current.length;
         const total = framesRef.current;
         if (!ch || total < rate * 0.02) { setErr('That take was too short to keep.'); return; }
@@ -198,7 +201,7 @@ window.SoundRecorder = ({ onSaved }) => {
     // is the length of the audio actually captured.
     React.useEffect(() => {
         if (!recording) return;
-        const rate = nodesRef.current ? nodesRef.current.ctx.sampleRate : 48000;
+        const rate = window.oaSampleRate(nodesRef.current && nodesRef.current.ctx);
         const id = setInterval(() => setElapsed(framesRef.current / rate), 80);
         return () => clearInterval(id);
     }, [recording]);

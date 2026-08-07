@@ -136,9 +136,18 @@ describe('the front end does not reach into the back end', () => {
         // React cannot run in the offline renderer, cannot be tested headlessly,
         // and has quietly become a component.
         const sources = JSON.parse(readFileSync(join(ROOT, 'sources.json'), 'utf8'));
+        // Each effect keeps its DSP and its panel in one folder under
+        // Effects/, so the boundary is no longer a directory — it is the
+        // EXTENSION. A .js under Effects/ or SoundSynth/ is audio and may not
+        // draw; the .jsx beside it is the panel and may not name a node (the
+        // test above). useOaPlugin.js is the one deliberate crossing: it is
+        // the React side of the plugin contract every panel is written to.
         const backends = sources.filter(
-            (f) => f.startsWith('libControl/SoundSynth/') && !f.includes('useOaPlugin'),
+            (f) => /^libControl\/(Effects|SoundSynth)\//.test(f)
+                && f.endsWith('.js')
+                && !f.includes('useOaPlugin'),
         );
+        assert.ok(backends.length >= 10, `only ${backends.length} backend files matched — has the layout moved?`);
 
         backends.forEach((f) => {
             const src = readFileSync(join(ROOT, f), 'utf8');
@@ -150,5 +159,134 @@ describe('the front end does not reach into the back end', () => {
                 );
             });
         });
+    });
+});
+
+/**
+ * Comments are where these boundaries get explained, so they are allowed to
+ * name the thing they explain. Block comments span lines, so they have to come
+ * out before the file is read line by line — the per-line strip the tests above
+ * use would miss every header in the rack.
+ */
+const codeOnly = (src) => src
+    .replace(/\/\*[\s\S]*?\*\//g, (m) => m.replace(/[^\n]/g, ' '))   // keep line numbers
+    .replace(/\/\/.*$/gm, '');
+
+const sourceList = () => JSON.parse(readFileSync(join(ROOT, 'sources.json'), 'utf8'));
+
+describe('each effect owns its own audio', () => {
+    /**
+     * Where each module keeps its nodes, and who is allowed to say so.
+     *
+     * A module's INPUT PORT is its whole public audio surface: oaReverbInput(),
+     * oaDelayInput(), oaCompInput() each hand back one node to connect to. The
+     * bus objects behind them — convolver, return fader, tape engine, chorus
+     * insert, analysers — are file-local, and the list they live on is private.
+     *
+     * This is what stopped the router from reaching through a returned bus for
+     * `.input`, and from counting three other modules' node lists to report how
+     * many buses existed.
+     */
+    const OWNED = [
+        { key: '__oaReverbs', owner: 'libControl/Effects/Reverb/oaReverb.js', port: 'oaReverbInput' },
+        { key: '__oaDelays', owner: 'libControl/Effects/TapeDelay/oaTapeDelay.js', port: 'oaDelayInput' },
+        { key: '__oaComps', owner: 'libControl/Effects/Compressor/oaCompressor.js', port: 'oaCompInput' },
+        // The master bus is the one every other module now connects INTO, which
+        // makes it the one most likely to be reached through: it would be very
+        // easy for a strip to want `.fade`, or for the mixer to want its
+        // analysers. Private from the first commit, for exactly that reason.
+        { key: '__oaBuss', owner: 'libControl/Effects/BussCompressor/oaBussComp.js', port: 'oaMasterInput' },
+    ];
+
+    test('no module reaches into another module\'s node list', () => {
+        const offences = [];
+        sourceList().forEach((f) => {
+            const src = codeOnly(readFileSync(join(ROOT, f), 'utf8'));
+            src.split('\n').forEach((line, i) => {
+                OWNED.forEach(({ key, owner, port }) => {
+                    if (f === owner || !line.includes(key)) return;
+                    offences.push(`${f}:${i + 1}  "${key}" belongs to ${owner}\n      use ${port}(ctx, i) — one node to connect to, nothing to reach through`);
+                });
+            });
+        });
+        assert.deepEqual(offences, [], `\n\n    ${offences.join('\n    ')}\n`);
+    });
+
+    test('the input ports are still exported', () => {
+        // The rule above is only worth anything while the replacement exists.
+        OWNED.forEach(({ owner, port }) => {
+            const src = readFileSync(join(ROOT, owner), 'utf8');
+            assert.ok(
+                src.includes(`window.${port} = function`),
+                `${owner} no longer exports ${port}() — the rule above has nothing to point at`,
+            );
+        });
+    });
+});
+
+describe('one sample rate', () => {
+    // Every module here turns seconds into samples somewhere. When each carried
+    // its own fallback they disagreed — 44100 in two places, 48000 in a third —
+    // and a preview bounced at one rate was drawn against a tail computed at
+    // another. oaAudioRate.js owns the number; everything else asks.
+    const RATE_OWNER = 'libControl/SoundSynth/oaAudioRate.js';
+
+    test('no file hard-codes a sample-rate fallback', () => {
+        const offences = [];
+        sourceList().forEach((f) => {
+            if (f === RATE_OWNER) return;
+            const src = codeOnly(readFileSync(join(ROOT, f), 'utf8'));
+            src.split('\n').forEach((line, i) => {
+                // `|| 44100`, `: 48000`, `?? 44100` — a rate standing in for the
+                // app's when something was missing.
+                if (/(\|\||\?\?|:)\s*(44100|48000|96000|22050)\b/.test(line)) {
+                    offences.push(`${f}:${i + 1}  ${line.trim()}\n      use window.oaSampleRate(ctx)`);
+                }
+            });
+        });
+        assert.deepEqual(offences, [], `\n\n    ${offences.join('\n    ')}\n`);
+    });
+
+    test('every live context is built through the shared helper', () => {
+        // A second `new AudioContext()` anywhere is a second device rate: it
+        // comes up at whatever the hardware defaults to, while everything
+        // already built is counting in OA_SAMPLE_RATE.
+        const offences = [];
+        sourceList().forEach((f) => {
+            if (f === RATE_OWNER) return;
+            const src = codeOnly(readFileSync(join(ROOT, f), 'utf8'));
+            src.split('\n').forEach((line, i) => {
+                if (/new\s+\(?\s*window\.(AudioContext|webkitAudioContext)/.test(line)
+                    || /new\s+AudioContext\s*\(/.test(line)) {
+                    offences.push(`${f}:${i + 1}  ${line.trim()}\n      use window.oaNewAudioContext()`);
+                }
+            });
+        });
+        assert.deepEqual(offences, [], `\n\n    ${offences.join('\n    ')}\n`);
+    });
+
+    test('every offline context is built through the shared helper', () => {
+        // A `new OfflineAudioContext(...)` is where a stray rate gets in, since
+        // the constructor takes frames and somebody has to have multiplied.
+        const allowed = new Set([
+            RATE_OWNER,
+            // Re-rendering an ALREADY DECODED buffer — trimming, fading,
+            // pitching a loaded sample. Those run at the source buffer's own
+            // rate on purpose; resampling a 44.1k sample to shave 20ms off its
+            // head would be work done for nothing.
+            'libControl/SoundSynth/oaDrumkitSynth.js',
+        ]);
+        const offences = [];
+        sourceList().forEach((f) => {
+            if (allowed.has(f)) return;
+            const src = codeOnly(readFileSync(join(ROOT, f), 'utf8'));
+            src.split('\n').forEach((line, i) => {
+                if (/new\s+(\w+\.)?(Offline\w*Ctx|OfflineAudioContext|webkitOfflineAudioContext)\s*\(/.test(line)
+                    || /new\s+Offline\s*\(/.test(line)) {
+                    offences.push(`${f}:${i + 1}  ${line.trim()}\n      use window.oaOfflineContext(channels, seconds)`);
+                }
+            });
+        });
+        assert.deepEqual(offences, [], `\n\n    ${offences.join('\n    ')}\n`);
     });
 });

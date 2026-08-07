@@ -100,7 +100,33 @@ window.DrumSynthEditor = ({ idx, name, onClose }) => {
                 </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '10px 0' }}>
+            {/* VOICE comes before ENGINE on purpose. Picking a ready-made voice
+                is what almost everyone wants — it sets the engine AND all of its
+                parameters at once — while picking a bare engine leaves you at
+                that engine's defaults with every knob still to set. Grouped by
+                what the voice is FOR, because a flat list of seventy is a wall. */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '10px 0 6px' }}>
+                <span style={label}>Voice</span>
+                <select
+                    value=""
+                    onChange={(e) => { if (e.target.value) window.oaSetSynthVoice(idx, e.target.value); }}
+                    style={{ background: '#222', color: 'var(--accent)', border: '1px solid #444', borderRadius: '3px', fontSize: '11px', padding: '3px 6px', maxWidth: '200px' }}
+                >
+                    <option value="">Load a voice…</option>
+                    {[...new Set(window.oaSynthLibrary().map((v) => v.group))].map((group) => (
+                        <optgroup key={group} label={group}>
+                            {window.oaSynthLibrary().filter((v) => v.group === group).map((v) => (
+                                <option key={v.key} value={v.key}>{v.name}</option>
+                            ))}
+                        </optgroup>
+                    ))}
+                </select>
+                <span style={{ fontSize: '10px', color: '#777', fontStyle: 'italic' }}>
+                    {window.oaSynthLibrary().length} in the library
+                </span>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 10px' }}>
                 <span style={label}>Engine</span>
                 <select
                     value={patch.engine}

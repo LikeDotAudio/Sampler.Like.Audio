@@ -1,3 +1,20 @@
+// yyyymmddhhmm, in local time, for the front of a rendered filename. Every
+// bounce of the same pattern otherwise lands on the same name and the browser
+// quietly files them as "beat.wav", "beat (1).wav", "beat (2).wav" — which
+// sorts by nothing and tells you nothing about which take is which. With the
+// stamp first, the folder sorts itself into the order the takes were made.
+//
+// Local time rather than UTC on purpose: it has to agree with the clock on the
+// wall of the room the take was rendered in, which is the only thing anyone
+// reads it against. Minutes is the finest it goes — two bounces inside the same
+// minute are the same session, and the browser's own suffix separates them.
+const oaRenderStamp = () => {
+    const d = new Date();
+    const p2 = (v) => String(v).padStart(2, '0');
+    return `${d.getFullYear()}${p2(d.getMonth() + 1)}${p2(d.getDate())}`
+         + `${p2(d.getHours())}${p2(d.getMinutes())}`;
+};
+
 window.useSeqRenderer = (pattern, steps, mutes, bpm, safeLabel) => {
     const [rendering, setRendering] = React.useState(false);
     const velOf = (c) => (typeof c === 'number' ? c : (c ? 100 : 0));
@@ -11,10 +28,11 @@ window.useSeqRenderer = (pattern, steps, mutes, bpm, safeLabel) => {
             const secPerStep = 0.25 * 60 / (bpm || 120);   // 16th note
             const totalSteps = steps * LOOPS;
             const dur = totalSteps * secPerStep;
-            const rate = (window.OA_AUDIO_CTX && window.OA_AUDIO_CTX.sampleRate) || 44100;
-            const Offline = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+            // The app's rate — the bounce has to print the same tape head
+            // spacing and reverb tail the user was monitoring.
+            const rate = window.oaSampleRate();
             const tailSec = 2.0;
-            const offline = new Offline(2, Math.max(1, Math.ceil((dur + tailSec) * rate)), rate);
+            const offline = window.oaOfflineContext(2, dur + tailSec, rate);
             const TRACKS = window.OA_DRUM_KIT || [];
 
             // Reverbs and tape delays print with the pattern. The tape worklet
@@ -46,7 +64,10 @@ window.useSeqRenderer = (pattern, steps, mutes, bpm, safeLabel) => {
             const blob = new Blob([window.oaEncodeWav(loopBuf)], { type: 'audio/wav' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url; a.download = `${safeLabel}_${bpm}bpm_${steps}steps_x${LOOPS}.wav`;
+            // Stamped here rather than at the top of the render, so the name
+            // agrees with the file's own modified time once it is on disk.
+            a.href = url;
+            a.download = `${oaRenderStamp()}_${safeLabel}_${bpm}bpm_${steps}steps_x${LOOPS}.wav`;
             document.body.appendChild(a); a.click(); a.remove();
             setTimeout(() => URL.revokeObjectURL(url), 2000);
         } catch (e) { console.error('🛑 [Sequencer] render failed:', e); }

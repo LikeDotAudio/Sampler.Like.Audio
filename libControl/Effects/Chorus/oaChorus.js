@@ -18,21 +18,39 @@
  *   exclusive, going from a gentle shimmer to the deepest setting the box has.
  */
 
-// One entry per front-panel button. `base` is the nominal head distance (the
-// BBD delay), `depth` the peak sweep either side of it, `rate` the LFO speed
-// and `mix` how much of the swept copy is cross-fed into the output.
-window.OA_CHORUS_MODES = [
-    { name: 'OFF', label: 'Bypass',   base: 0.0070, rate: 0,    depth: 0,       mix: 0 },
-    { name: '1',   label: 'Mode 1',   base: 0.0068, rate: 0.35, depth: 0.00018, mix: 0.32 },
-    { name: '2',   label: 'Mode 2',   base: 0.0072, rate: 0.42, depth: 0.00026, mix: 0.44 },
-    { name: '3',   label: 'Mode 3',   base: 0.0078, rate: 0.62, depth: 0.00040, mix: 0.58 },
-    { name: '4',   label: 'Mode 4',   base: 0.0085, rate: 0.88, depth: 0.00062, mix: 0.72 },
-];
+// Every setting the box has lives in oaChorusModes.js, loaded first: the four
+// buttons alone, and the combinations they make when more than one is held down.
 window.OA_CHORUS_COUNT = window.OA_CHORUS_MODES.length;
 
 window.oaChorusMode = function (m) {
     const i = Math.max(0, Math.min(window.OA_CHORUS_COUNT - 1, m | 0));
     return window.OA_CHORUS_MODES[i];
+};
+
+/** Which caps are down in mode `m` — [] for OFF, [1,3] for modes 1+3. */
+window.oaChorusButtons = function (m) {
+    return window.oaChorusMode(m).buttons || [];
+};
+
+/**
+ * Press button `n` while in mode `m`, and get back the mode that results.
+ *
+ * The panel has four buttons and the table has thirteen entries, so this is
+ * where one becomes the other: toggle the button into or out of the set that is
+ * currently down, then find the entry with that exact set. A combination the
+ * table does not list falls back to the highest single button pressed, which is
+ * what a mechanical interlock would do anyway — something has to stay down.
+ */
+window.oaChorusToggle = function (m, n) {
+    const now = window.oaChorusButtons(m);
+    const next = now.indexOf(n) >= 0
+        ? now.filter(function (b) { return b !== n; })
+        : now.concat([n]).sort();
+    const key = next.join('+');
+    for (let i = 0; i < window.OA_CHORUS_MODES.length; i++) {
+        if ((window.OA_CHORUS_MODES[i].buttons || []).join('+') === key) return i;
+    }
+    return next.length ? next[next.length - 1] : 0;
 };
 
 /**
@@ -198,6 +216,30 @@ window.oaRegisterPlugin({
         // is metered there. Saying so with a zero beats inventing a number.
         frame[S.PEAK_L] = 0;
         frame[S.PEAK_R] = 0;
+    },
+
+    /**
+     * Which combination is down on each tape return.
+     *
+     * This is the one plugin whose state is ALSO carried by another: the mode
+     * lives on the delay unit, so a song file gets it twice. That is deliberate
+     * — the duplicate is a few bytes, applying it twice is idempotent, and the
+     * alternative is a plugin that silently has no save() and an export that
+     * depends on load order to be complete.
+     */
+    save: function () {
+        const modes = [];
+        for (let u = 0; u < (window.OA_DELAY_COUNT || 0); u++) {
+            modes.push(window.oaDelayUnit(u).chorus || 0);
+        }
+        return { modes: modes };
+    },
+
+    load: function (data) {
+        const modes = Array.isArray(data && data.modes) ? data.modes : [];
+        modes.slice(0, window.OA_DELAY_COUNT).forEach(function (m, u) {
+            window.oaSetDelayChorus(u, m);
+        });
     },
 
     // Disposed with the delay it lives inside; see oaDisposeDelay.

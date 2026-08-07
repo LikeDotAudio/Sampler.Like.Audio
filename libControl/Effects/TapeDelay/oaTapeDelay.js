@@ -35,16 +35,9 @@ window.OA_DELAY_PARAMS = [
     { key: 'damp',     label: 'Tape Age', min: 800,  max: 16000, step: 50,    unit: 'Hz', fmt: (v) => Math.round(v) + ' Hz' },
 ];
 
-// Classic settings, so the four units are four different machines out of the
-// box rather than four copies of one.
-window.OA_DELAY_PRESETS = {
-    slap:    { label: 'Slapback',  timeL: 0.085, timeR: 0.115, feedback: 0.18, drive: 1.6, wowRate: 0.7,  wowDepth: 0.0012, damp: 7000 },
-    tape:    { label: 'Tape Echo', timeL: 0.28,  timeR: 0.42,  feedback: 0.45, drive: 1.9, wowRate: 0.9,  wowDepth: 0.0030, damp: 5000 },
-    space:   { label: 'Space',     timeL: 0.50,  timeR: 0.75,  feedback: 0.62, drive: 2.3, wowRate: 0.45, wowDepth: 0.0050, damp: 3400 },
-    dub:     { label: 'Dub Sink',  timeL: 0.75,  timeR: 1.00,  feedback: 0.82, drive: 3.0, wowRate: 0.30, wowDepth: 0.0080, damp: 2200 },
-    warble:  { label: 'Warble',    timeL: 0.20,  timeR: 0.20,  feedback: 0.30, drive: 2.6, wowRate: 3.40, wowDepth: 0.0120, damp: 4200 },
-    oscillate:{label: 'Runaway',   timeL: 0.34,  timeR: 0.51,  feedback: 1.02, drive: 2.0, wowRate: 0.6,  wowDepth: 0.0040, damp: 3000 },
-};
+// The factory settings live in oaTapeDelayPresets.js, loaded first — the four
+// units below are built from them, so a machine boots as a different tape from
+// its neighbour rather than as a fourth copy of one.
 
 // A head can be locked to the grid instead of set in milliseconds. The lock is
 // stored as a count of 16th notes, so it survives a tempo change: the head time
@@ -303,6 +296,7 @@ window.oaPrepareFx = function (ctx) {
                 if (ctx.audioWorklet && window.AudioWorkletNode && window.Blob && window.URL) {
                     await ctx.audioWorklet.addModule(tapeModuleUrl());
                     if (window.oaCompModuleUrl) await ctx.audioWorklet.addModule(window.oaCompModuleUrl());
+                    if (window.oaBussModuleUrl) await ctx.audioWorklet.addModule(window.oaBussModuleUrl());
                     ok = true;
                 }
             } catch (e) {
@@ -436,8 +430,16 @@ const attachEngine = function (ctx, bus, u) {
     bus.chorus.output.connect(bus.ret);
 };
 
+// ---------------------------------------------------------------------------
+// THE AUDIO PORTS.
+//
+// The bus builder and everything it holds — the tape engine, the chorus insert,
+// the return fader, the reverb throws — are FILE-LOCAL. Other modules get
+// oaDelayInput(), one node to send into, and nothing they can reach through.
+// ---------------------------------------------------------------------------
+
 // One set of buses per AudioContext, built on first use.
-window.oaDelayBus = function (ctx, u) {
+const delayBus = function (ctx, u) {
     const idx = Math.max(0, Math.min(window.OA_DELAY_COUNT - 1, u | 0));
     const buses = ctx.__oaDelays || (ctx.__oaDelays = []);
     if (!buses[idx]) {
@@ -445,7 +447,9 @@ window.oaDelayBus = function (ctx, u) {
         const input = ctx.createGain();
         const ret = ctx.createGain();
         ret.gain.value = unit.ret;
-        ret.connect(ctx.destination);
+        // Into the MASTER BUS, not the output — the repeats are part of the mix
+        // the buss compressor is holding together.
+        ret.connect(window.oaMasterInput ? window.oaMasterInput(ctx) : ctx.destination);
 
         let analysers = null;
         if (ctx.createAnalyser && ctx.createChannelSplitter) {
@@ -474,6 +478,43 @@ window.oaDelayBus = function (ctx, u) {
     return buses[idx];
 };
 
+/**
+ * THE INPUT PORT: the node a sender connects to, built on first ask. The tape,
+ * its heads and its chorus stay behind it.
+ */
+window.oaDelayInput = function (ctx, u) {
+    return delayBus(ctx, u).input;
+};
+
+/** Is any channel feeding tape `u`? */
+window.oaDelayIsFed = function (u) {
+    const unit = window.oaDelayUnit(u);
+    const eps = window.OA_FX_SEND_EPSILON || 0.001;
+    return !!(unit && unit.sends && unit.sends.some(function (v) { return v > eps; }));
+};
+
+/** This channel's send into tape `u`, 0..1. */
+window.oaDelaySend = function (u, idx) {
+    const unit = window.oaDelayUnit(u);
+    return (unit && unit.sends && unit.sends[idx]) || 0;
+};
+
+/**
+ * Build every tape anything sends to. Each bus wires its own reverb throws as
+ * it is built, so the caller no longer has to know that a delay can feed a room
+ * — which is how oaWarmFx() ended up reading this file's `toRv` arrays.
+ */
+window.oaDelayWarm = function (ctx) {
+    for (let d = 0; d < window.OA_DELAY_COUNT; d++) {
+        if (window.oaDelayIsFed(d)) delayBus(ctx, d);
+    }
+};
+
+/** How many tape buses exist on this context — for the voice diagnostic. */
+window.oaDelayBusCount = function (ctx) {
+    return ((ctx && ctx.__oaDelays) || []).filter(Boolean).length;
+};
+
 // Create (or re-level) the tap from delay `u` into reverb `r`.
 window.oaDelayToReverb = function (ctx, u, r, amount) {
     const bus = ctx.__oaDelays && ctx.__oaDelays[u];
@@ -484,7 +525,9 @@ window.oaDelayToReverb = function (ctx, u, r, amount) {
         feed = ctx.createGain();
         feed.gain.value = 0;
         bus.ret.connect(feed);
-        feed.connect(window.oaReverbBus(ctx, r).input);
+        // Through the reverb's own input port. This file knows there IS a room
+        // to throw into and nothing else about it.
+        feed.connect(window.oaReverbInput(ctx, r));
         bus.rvFeeds[r] = feed;
     }
     feed.gain.setTargetAtTime(amount, ctx.currentTime, 0.02);
@@ -667,4 +710,42 @@ window.oaRegisterPlugin({
     },
 
     dispose: window.oaDisposeDelay,
+
+    /** All four machines, whole — sends, throws, grid locks and the insert. */
+    save: function () { return { units: window.OA_DELAY.units }; },
+
+    /**
+     * Put them back. Two orderings matter:
+     *
+     *   THE HEAD TIMES GO IN BEFORE THE GRID LOCKS. Setting a time in
+     *   milliseconds is what takes a head OFF the grid, so a lock applied first
+     *   would be cleared by the very next line.
+     *
+     *   THE LOCKS ARE RE-DERIVED AT THE IMPORTED SONG'S TEMPO, not the one it
+     *   was cut at — that is what `opts.bpm` is for. A head locked to a 1/8 is
+     *   still a 1/8 in the song it lands in, which is the whole point of storing
+     *   a count of 16ths rather than a number of milliseconds.
+     */
+    load: function (data, opts) {
+        const bpm = (opts && opts.bpm) || 120;
+        const units = Array.isArray(data && data.units) ? data.units : [];
+        units.slice(0, window.OA_DELAY_COUNT).forEach(function (dl, u) {
+            if (!dl) return;
+            if (Array.isArray(dl.sends)) {
+                dl.sends.forEach(function (v, i) { window.oaSetDelaySend(u, i, v); });
+            }
+            if (Array.isArray(dl.toRv)) {
+                dl.toRv.forEach(function (v, r) { window.oaSetDelayToReverb(u, r, v); });
+            }
+            window.OA_DELAY_PARAMS.forEach(function (p) {
+                if (dl[p.key] !== undefined) window.oaSetDelay(u, p.key, dl[p.key]);
+            });
+            if (dl.ret !== undefined) window.oaSetDelay(u, 'ret', Number(dl.ret) || 0);
+            ['L', 'R'].forEach(function (side) {
+                const steps = Number(dl['sync' + side]) || 0;
+                if (steps > 0) window.oaSetDelaySync(u, side, steps, bpm);
+            });
+            if (dl.chorus !== undefined) window.oaSetDelayChorus(u, dl.chorus);
+        });
+    },
 });

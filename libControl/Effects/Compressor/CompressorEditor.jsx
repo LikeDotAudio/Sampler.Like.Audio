@@ -1,11 +1,32 @@
-// The COMPRESS panel for one channel: a 1U limiting amplifier in orange, with
-// the two knobs that decide how hard it works (INPUT and OUTPUT), the two that
-// decide what it sounds like while it does (ATTACK and RELEASE), the ratio
-// buttons, and the meter that shows you the gain being taken away in real time.
+// The COMPRESS panel for one channel: a 1U limiting amplifier, with the two
+// knobs that decide how hard it works (INPUT and OUTPUT), the two that decide
+// what it sounds like while it does (ATTACK and RELEASE), the ratio buttons,
+// and the meter that shows you the gain being taken away in real time.
 //
 // The needle is the reason this panel exists. Every other control here is a
 // number you could have typed; the meter is the only way to see that a 4:1 at
 // this input setting is pulling 6dB off the peaks and nothing off the tails.
+//
+// The paint is not a colour, it is the theme accent shaded down — the plate,
+// the ears, the engraving and the IN lamp all come off the one custom property
+// Config's colour picker rewrites, so the box repaints with the rest of the app
+// instead of staying orange under a blue theme. Only the parts that are not
+// paint keep their own colour: black knobs, aluminium caps, steel screws, and
+// the amber meter face, which is a lamp behind glass rather than a panel finish
+// and has to stay legible whatever hue the plate ends up.
+
+// Top-lit, the way a plate sits under a rack light: full accent along the top
+// edge, four stops of shade down to the bottom rail. The stops are the same
+// drop-per-inch the hand-mixed orange had, so the plate reads as the same piece
+// of painted steel it always did — it is only the hue that is now borrowed.
+const PLATE = 'linear-gradient(to bottom, var(--accent) 0%, var(--accent-s15) 16%,'
+            + ' var(--accent-s25) 60%, var(--accent-s40) 100%)';
+// The rack ears: the same paint, one stop further down, because an ear is the
+// part of the plate the room light misses.
+const EARS = 'linear-gradient(to bottom, var(--accent-s25) 0%, var(--accent-s55) 100%)';
+const INK = 'var(--accent-s85)';            // engraved letters, cut into the paint
+// The hairline of light under a cut letter — the paint's own tint, thinned.
+const INK_LIT = 'color-mix(in srgb, var(--accent-t40) 35%, transparent)';
 
 // Where each engraved dB mark sits along the meter's travel. A real VU scale is
 // squashed at the quiet end and stretched around 0, and the needle has to land
@@ -78,11 +99,16 @@ const RackKnob = ({ value, min, max, defaultVal, ticks, size = 62, onChange }) =
         const [x1, y1] = pt(bodyR + 3, a);
         const [x2, y2] = pt(bodyR + 6, a);
         const [lx, ly] = pt(bodyR + 12, a);
+        // Stroke and fill go through `style` rather than the presentation
+        // attribute: var() in a presentation attribute resolves in Firefox and
+        // silently falls back to black in WebKit, which would take the
+        // engraving with it.
         marks.push(
             <React.Fragment key={i}>
-                <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#2e1503" strokeWidth={1.2} strokeLinecap="round" />
-                <text x={lx} y={ly + 2.6} fill="#301604" fontSize="7" fontWeight="700"
-                      textAnchor="middle" style={{ userSelect: 'none' }}>{label}</text>
+                <line x1={x1} y1={y1} x2={x2} y2={y2} strokeWidth={1.2} strokeLinecap="round"
+                      style={{ stroke: INK }} />
+                <text x={lx} y={ly + 2.6} fontSize="7" fontWeight="700"
+                      textAnchor="middle" style={{ fill: INK, userSelect: 'none' }}>{label}</text>
             </React.Fragment>
         );
     });
@@ -137,12 +163,12 @@ const PushButton = ({ label, active, onPress, title, width = 20, height = 22 }) 
             background: active
                 ? 'linear-gradient(to bottom, #d8d2c4 0%, #b7b0a0 70%, #8a8478 100%)'
                 : 'linear-gradient(to bottom, #f4f1e8 0%, #d6d1c4 60%, #b3ada0 100%)',
-            border: '1px solid #1a1209',
+            border: `1px solid ${INK}`,
             boxShadow: active
                 ? 'inset 0 3px 5px rgba(0,0,0,0.55)'
-                : '0 2px 0 #1a1209, 0 3px 4px rgba(0,0,0,0.5)',
+                : `0 2px 0 ${INK}, 0 3px 4px rgba(0,0,0,0.5)`,
             transform: active ? 'translateY(2px)' : 'none',
-            padding: 0, fontSize: '8px', fontWeight: '700', color: '#2a1a08',
+            padding: 0, fontSize: '8px', fontWeight: '700', color: INK,
             transition: 'transform .06s, box-shadow .06s',
         }}
     >
@@ -154,8 +180,8 @@ const PushButton = ({ label, active, onPress, title, width = 20, height = 22 }) 
 // it, which is how a cut letter catches the light on a painted panel.
 const Engraved = ({ children, size = 8, style }) => (
     <div style={{
-        fontSize: `${size}px`, fontWeight: '700', letterSpacing: '1.4px', color: '#331704',
-        textShadow: '0 1px 0 rgba(255,220,180,0.35)', ...style
+        fontSize: `${size}px`, fontWeight: '700', letterSpacing: '1.4px', color: INK,
+        textShadow: `0 1px 0 ${INK_LIT}`, ...style
     }}>
         {children}
     </div>
@@ -373,7 +399,7 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
                 />
                 <Engraved size={7.5} style={{ letterSpacing: '2px' }}>{p.label.toUpperCase()}</Engraved>
                 <div style={{
-                    fontSize: '8.5px', color: '#2a1204', fontWeight: '700',
+                    fontSize: '8.5px', color: INK, fontWeight: '700',
                     fontVariantNumeric: 'tabular-nums', opacity: 0.85
                 }}>
                     {p.fmt(unit[key])}
@@ -403,17 +429,17 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
                 </div>
             </div>
 
-            {/* ---- the faceplate: brushed orange, 1U, rack ears at both ends ---- */}
+            {/* ---- the faceplate: brushed paint, 1U, rack ears at both ends ---- */}
             <div style={{
                 display: 'flex', alignItems: 'stretch', borderRadius: '4px', overflow: 'hidden',
                 border: '1px solid #000', boxShadow: '0 3px 10px rgba(0,0,0,0.55)',
-                background: 'linear-gradient(to bottom, #e08a２0 0%, #c96a12 18%, #b25a0d 55%, #8f4408 100%)'
+                background: PLATE
             }}>
                 {/* Rack ear */}
                 <div style={{
                     width: '26px', flex: '0 0 auto', display: 'flex', flexDirection: 'column',
                     justifyContent: 'space-between', alignItems: 'center', padding: '8px 0',
-                    background: 'linear-gradient(to bottom, #b3560c 0%, #8a3f06 100%)',
+                    background: EARS,
                     borderRight: '1px solid #00000055'
                 }}>
                     {screw}{screw}
@@ -421,9 +447,9 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
 
                 <div style={{
                     flex: 1, minWidth: 0, padding: '6px 8px',
-                    background: 'linear-gradient(to bottom, #e2892a 0%, #cd7016 16%, #b85c0e 60%, #9a4a09 100%)',
+                    background: PLATE,
                     // Brushed metal: a fine vertical grain over the paint.
-                    backgroundImage: 'repeating-linear-gradient(90deg, rgba(255,255,255,0.045) 0 1px, rgba(0,0,0,0.035) 1px 2px), linear-gradient(to bottom, #e2892a 0%, #cd7016 16%, #b85c0e 60%, #9a4a09 100%)',
+                    backgroundImage: `repeating-linear-gradient(90deg, rgba(255,255,255,0.045) 0 1px, rgba(0,0,0,0.035) 1px 2px), ${PLATE}`,
                     // space-around rather than centre: the groups are different
                     // heights and widths, and clustering them in the middle left
                     // a band of bare paint down each side of the plate.
@@ -438,12 +464,12 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
                             title={on ? 'Compressor in circuit' : 'Compressor out of circuit — the channel passes through untouched'}
                             style={{
                                 width: '30px', height: '30px', borderRadius: '50%', cursor: 'pointer',
-                                border: '2px solid #2a1405',
+                                border: `2px solid ${INK}`,
                                 background: on
-                                    ? 'radial-gradient(circle at 38% 30%, #fff0c8, #ff9a2e 45%, #c85a05 100%)'
+                                    ? 'radial-gradient(circle at 38% 30%, var(--accent-t40), var(--accent) 45%, var(--accent-s40) 100%)'
                                     : 'radial-gradient(circle at 38% 30%, #6b6357, #3a3128 60%, #241d16 100%)',
                                 boxShadow: on
-                                    ? '0 0 12px rgba(255,150,40,0.75), inset 0 1px 2px rgba(255,255,255,0.5)'
+                                    ? '0 0 12px rgba(var(--accent-rgb),0.75), inset 0 1px 2px rgba(255,255,255,0.5)'
                                     : 'inset 0 2px 4px rgba(0,0,0,0.6)',
                                 padding: 0
                             }}
@@ -490,8 +516,8 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
                             {window.OA_COMP_RATIOS.map((r) => (
                                 <div key={r.key} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                                     <span style={{
-                                        fontSize: '7.5px', fontWeight: '700', color: '#331704', width: '18px',
-                                        textAlign: 'right', textShadow: '0 1px 0 rgba(255,220,180,0.35)'
+                                        fontSize: '7.5px', fontWeight: '700', color: INK, width: '18px',
+                                        textAlign: 'right', textShadow: `0 1px 0 ${INK_LIT}`
                                     }}>{r.label}</span>
                                     <PushButton label="" active={unit.ratio === r.key} title={r.hint}
                                         onPress={() => set('ratio', r.key)} width={16} height={17} />
@@ -505,9 +531,9 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px', minWidth: 0 }}>
                             <VuMeter posRef={needleRef} mode={meterMode} />
                             <span style={{
-                                fontSize: '7px', fontWeight: '700', letterSpacing: '1.2px', color: '#2a1204',
+                                fontSize: '7px', fontWeight: '700', letterSpacing: '1.2px', color: INK,
                                 fontVariantNumeric: 'tabular-nums', opacity: 0.8,
-                                textShadow: '0 1px 0 rgba(255,220,180,0.3)'
+                                textShadow: `0 1px 0 ${INK_LIT}`
                             }}>
                                 GR <i ref={grRef} style={{ fontStyle: 'normal' }}>0.0 dB</i>
                             </span>
@@ -522,8 +548,8 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
                                     <PushButton label="" active={meterMode === m.key} title={m.hint}
                                         onPress={() => set('meter', m.key)} width={16} height={17} />
                                     <span style={{
-                                        fontSize: '7.5px', fontWeight: '700', color: '#331704', width: '20px',
-                                        textShadow: '0 1px 0 rgba(255,220,180,0.35)'
+                                        fontSize: '7.5px', fontWeight: '700', color: INK, width: '20px',
+                                        textShadow: `0 1px 0 ${INK_LIT}`
                                     }}>{m.label}</span>
                                 </div>
                             ))}
@@ -535,7 +561,7 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
                 <div style={{
                     width: '26px', flex: '0 0 auto', display: 'flex', flexDirection: 'column',
                     justifyContent: 'space-between', alignItems: 'center', padding: '8px 0',
-                    background: 'linear-gradient(to bottom, #b3560c 0%, #8a3f06 100%)',
+                    background: EARS,
                     borderLeft: '1px solid #00000055'
                 }}>
                     {screw}{screw}

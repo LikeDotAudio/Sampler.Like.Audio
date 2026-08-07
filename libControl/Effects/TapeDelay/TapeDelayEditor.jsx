@@ -1,7 +1,7 @@
 /**
  * Header: TapeDelayEditor.jsx
  * Purpose: The front panel of one tape echo — the machine, not a list of sliders.
- * Description: A green faceplate in a tolex-covered box, brushed silver knobs
+ * Description: A painted faceplate in a tolex-covered box, brushed silver knobs
  *   across it, and two HEAD SELECT dials with the note divisions printed around
  *   them. Every control writes straight through to the live bus: the tape is
  *   already turning, so a knob move is heard on the repeats still circulating in
@@ -49,7 +49,14 @@ const headDetents = (spec, bpm) => {
 };
 
 // Panel finishes. The box is tolex over ply, the trim strips are brushed
-// aluminium, and the faceplate is the painted green everything sits on.
+// aluminium, and the faceplate is the paint everything sits on.
+//
+// That paint is the theme accent shaded down rather than a fixed green, so the
+// machine repaints with the rest of the app when Config's colour picker moves.
+// The tolex and the aluminium do not follow it: black vinyl and bare metal are
+// what they are under any theme, and neither are the lamps — the nixie head
+// readouts and the lit note division stay green, because a lamp is not paint
+// and has to read against whatever hue the plate lands on.
 const TOLEX = {
     background:
         'repeating-linear-gradient(48deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 3px),'
@@ -73,14 +80,18 @@ const BRUSHED = {
     boxShadow: 'inset 0 1px 0 #ffffff88, 0 1px 3px rgba(0,0,0,0.5)',
 };
 
-const GREEN = {
+// Lit from above and to the left, as the plate is in a rack: the top corner
+// catches the room light and the far bottom corner is the shaded end.
+const PLATE = {
     background:
-        'radial-gradient(130% 110% at 28% -10%, #4d8f3d 0%, #327030 46%, #1e4b20 100%)',
-    border: '1px solid #06120a',
+        'radial-gradient(130% 110% at 28% -10%, var(--accent-s25) 0%, var(--accent-s40) 46%, var(--accent-s70) 100%)',
+    border: '1px solid var(--accent-s85)',
     borderRadius: '3px',
     boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.16), inset 0 -3px 8px rgba(0,0,0,0.45)',
 };
 
+// Section names are silkscreened, and silkscreen is white ink on whatever the
+// plate happens to be painted — so this one stays put when the theme moves.
 const SCREEN = { fontSize: '8px', color: '#eef2e2', letterSpacing: '1.6px', textShadow: '0 1px 1px #0007' };
 
 // A nixie-green readout, the way the head times are shown on the real machine.
@@ -179,7 +190,7 @@ window.TapeDelayEditor = ({ u, bpm, onClose }) => {
                 <div style={{ display: 'flex', gap: '6px', alignItems: 'stretch', flexWrap: 'wrap' }}>
 
                     {/* The main faceplate: heads on top, the tape controls below. */}
-                    <div style={{ ...GREEN, flex: '3 1 300px', padding: '7px 8px 9px' }}>
+                    <div style={{ ...PLATE, flex: '3 1 300px', padding: '7px 8px 9px' }}>
                         <div style={{ ...SCREEN, textAlign: 'center', marginBottom: '2px' }}>HEAD SELECT</div>
 
                         <div style={{ display: 'flex', justifyContent: 'space-evenly', gap: '4px' }}>
@@ -222,7 +233,7 @@ window.TapeDelayEditor = ({ u, bpm, onClose }) => {
                     {/* Aux out of an aux: throw the repeats into a room. Its own
                         green panel, the way the reverb section is boxed off on
                         the real front. */}
-                    <div style={{ ...GREEN, flex: '1 1 130px', padding: '7px 6px 9px' }}>
+                    <div style={{ ...PLATE, flex: '1 1 130px', padding: '7px 6px 9px' }}>
                         <div style={{ ...SCREEN, textAlign: 'center', marginBottom: '2px' }}>REVERB SEND</div>
                         <div style={{
                             display: 'flex', flexDirection: 'column', alignItems: 'center',

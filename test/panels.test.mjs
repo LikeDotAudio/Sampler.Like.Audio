@@ -40,6 +40,7 @@ const ALL_SOURCES = JSON.parse(readFileSync(join(ROOT, 'sources.json'), 'utf8'))
 /** The panels, and the props each is opened with. */
 const PANELS = [
     { name: 'CompressorEditor', props: { idx: 0, name: 'Kick', onClose() {} } },
+    { name: 'BussCompEditor', props: { onClose() {} } },
     { name: 'DriveEditor', props: { idx: 0, name: 'Kick', onClose() {} } },
     { name: 'TapeDelayEditor', props: { u: 0, bpm: 120, onClose() {} } },
     { name: 'ChorusEditor', props: { u: 0, onClose() {} } },

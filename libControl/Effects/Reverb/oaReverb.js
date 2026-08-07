@@ -98,87 +98,10 @@ window.oaReverbPageParams = function (page) {
 };
 
 // ---------------------------------------------------------------------------
-// The programs, in banks of up to ten, the way the machine stores them. A
-// program is nothing but a full set of the parameters above — loading one
-// overwrites every slider at once.
+// The programs live in oaReverbPrograms.js — eleven banks of ten, loaded before
+// this file because the two machines below are built from them. Only the way
+// they are ADDRESSED is here.
 // ---------------------------------------------------------------------------
-const P = function (rtMid, shape, spread, size, hfCut, preDelay, diffusion, rtLow, xover, erLevel, erTime) {
-    return { rtMid, shape, spread, size, hfCut, preDelay, diffusion, rtLow, xover, erLevel, erTime };
-};
-
-window.OA_REVERB_BANKS = [
-    {
-        name: 'RANDOM HALLS',
-        programs: [
-            { name: 'SMALL RAND HALL',  p: P(1.30,  90, 100, 18,  6800,  12, 170, 1.20, 500, 0.34, 1.00) },
-            { name: 'MEDIUM RAND HALL', p: P(2.065, 120, 127, 30,  3400,   0, 190, 1.35, 480, 0.30, 1.00) },
-            { name: 'LARGE RAND HALL',  p: P(3.40,  150, 170, 38,  4200,  24, 210, 1.50, 420, 0.26, 1.20) },
-            { name: 'RICH HALL',        p: P(2.80,  175, 190, 34,  5600,  32, 230, 1.60, 380, 0.22, 1.10) },
-            { name: 'GOTHIC HALL',      p: P(5.60,  200, 220, 39,  2600,  40, 240, 1.90, 300, 0.18, 1.40) },
-        ],
-    },
-    {
-        name: 'HALLS',
-        programs: [
-            { name: 'SMALL HALL',       p: P(1.10,  70,  70, 16,  8200,   8, 150, 1.10, 560, 0.40, 0.90) },
-            { name: 'MEDIUM HALL',      p: P(1.90, 100, 110, 26,  6400,  18, 175, 1.25, 500, 0.34, 1.00) },
-            { name: 'LARGE HALL',       p: P(2.90, 130, 150, 34,  5200,  28, 200, 1.40, 440, 0.28, 1.15) },
-            { name: 'CONCERT HALL',     p: P(2.40, 145, 165, 32,  7000,  35, 215, 1.30, 420, 0.24, 1.10) },
-            { name: 'CHURCH',           p: P(4.80, 185, 205, 39,  3200,  45, 235, 1.75, 340, 0.20, 1.30) },
-            { name: 'VOCAL HALL',       p: P(1.70, 110, 120, 24,  9000,  22, 205, 1.05, 520, 0.26, 0.95) },
-        ],
-    },
-    {
-        name: 'ROOMS',
-        programs: [
-            { name: 'SMALL ROOM',       p: P(0.42,  30,  25,  8, 10000,   4, 120, 0.90, 700, 0.62, 0.70) },
-            { name: 'MEDIUM ROOM',      p: P(0.72,  50,  45, 13,  8600,   8, 145, 0.95, 640, 0.54, 0.80) },
-            { name: 'LARGE ROOM',       p: P(1.15,  70,  70, 20,  7200,  14, 165, 1.05, 580, 0.46, 0.90) },
-            { name: 'BRIGHT ROOM',      p: P(0.80,  45,  40, 14, 16000,   6, 150, 0.75, 700, 0.55, 0.80) },
-            { name: 'DARK ROOM',        p: P(0.95,  60,  55, 16,  1800,  10, 160, 1.60, 400, 0.50, 0.85) },
-            { name: 'TILED ROOM',       p: P(1.05,  25,  20, 12, 18000,   5,  70, 0.85, 700, 0.85, 0.65) },
-        ],
-    },
-    {
-        name: 'PLATES',
-        programs: [
-            { name: 'SMALL PLATE',      p: P(0.85,  10,   8, 10, 11000,   6, 245, 0.80, 700, 0.10, 0.60) },
-            { name: 'MEDIUM PLATE',     p: P(1.60,  14,  12, 14, 10000,  10, 250, 0.85, 640, 0.08, 0.60) },
-            { name: 'LARGE PLATE',      p: P(2.60,  18,  16, 18,  9000,  14, 252, 0.90, 600, 0.06, 0.65) },
-            { name: 'VOCAL PLATE',      p: P(1.90,  20,  18, 15, 12000,  20, 250, 0.80, 620, 0.06, 0.60) },
-            { name: 'DRUM PLATE',       p: P(1.20,   8,   6, 12,  7600,   2, 248, 0.95, 660, 0.14, 0.55) },
-        ],
-    },
-    {
-        name: 'WILD SPACES',
-        programs: [
-            { name: 'CANYON',           p: P(7.50, 210, 240, 39,  4000, 120, 180, 1.80, 320, 0.45, 2.60) },
-            { name: 'CAVERN',           p: P(6.20, 230, 250, 39,  1600,  80, 215, 2.40, 260, 0.35, 2.00) },
-            { name: 'TUNNEL',           p: P(3.60,  60,  90, 22,  2800,  30,  90, 2.00, 300, 0.72, 1.80) },
-            { name: 'INSIDE A PIPE',    p: P(2.20,  20,  30, 10,  3600,   8,  40, 2.80, 280, 0.90, 0.90) },
-            { name: 'THE ABYSS',        p: P(11.0, 250, 255, 39,  1200, 200, 250, 3.20, 220, 0.12, 3.00) },
-        ],
-    },
-    {
-        name: 'AMBIENCE',
-        programs: [
-            { name: 'SMALL AMBIENCE',   p: P(0.28,  20,  14,  6, 13000,   2, 175, 0.85, 700, 0.70, 0.60) },
-            { name: 'STUDIO',           p: P(0.45,  35,  28, 10, 11000,   5, 190, 0.90, 660, 0.60, 0.70) },
-            { name: 'STAGE',            p: P(0.95,  80,  75, 20,  8000,  16, 200, 1.10, 560, 0.48, 1.00) },
-            { name: 'DRUM BOOTH',       p: P(0.34,  15,  10,  7,  9500,   1, 140, 1.00, 700, 0.78, 0.55) },
-        ],
-    },
-    {
-        name: 'EFFECTS',
-        programs: [
-            { name: 'GATED',            p: P(0.50, 255, 235, 22,  8500,   6, 240, 1.00, 600, 0.20, 0.90) },
-            { name: 'REVERSE',          p: P(0.90, 255, 255, 28,  9500,  10, 250, 1.00, 560, 0.05, 1.00) },
-            { name: 'NONLIN',           p: P(0.60, 240, 200, 18,  7000,   4, 230, 1.00, 600, 0.25, 0.80) },
-            { name: 'SLAP CHAMBER',     p: P(1.10,  12,  60, 24,  6200,  70,  55, 1.10, 580, 0.95, 1.60) },
-        ],
-    },
-];
-
 window.oaReverbBank = function (b) {
     return window.OA_REVERB_BANKS[Math.max(0, Math.min(window.OA_REVERB_BANKS.length - 1, b | 0))];
 };
@@ -289,7 +212,10 @@ const irSeconds = function (unit) {
  * that swells and then dies (the late tail).
  */
 window.oaBuildImpulse = function (ctx, unit) {
-    const rate = ctx.sampleRate;
+    // Through oaSampleRate() rather than ctx.sampleRate: the response is built
+    // for whichever context asked, but a missing context must not turn every
+    // coefficient below into NaN and hand the convolver a buffer of silence.
+    const rate = window.oaSampleRate(ctx);
     const len = Math.max(1, Math.floor(rate * irSeconds(unit)));
     const buf = ctx.createBuffer(2, len, rate);
 
@@ -392,8 +318,21 @@ window.oaMakeImpulse = function (ctx, u) {
     return window.oaBuildImpulse(ctx, window.oaReverbUnit(u | 0));
 };
 
+// ---------------------------------------------------------------------------
+// THE AUDIO PORTS.
+//
+// Everything below this line that builds or holds a node is FILE-LOCAL. The
+// only way another module reaches this reverb's audio is oaReverbInput(), which
+// hands back one node to connect into and says nothing about what is behind it.
+//
+// It used to be oaReverbBus(ctx, r).input, called from two other files. That
+// published the whole bus object — convolver, return fader, analysers — so
+// re-plumbing the machine meant re-plumbing its callers, and the tape delay
+// could (and did) reach past the input into the same object's internals.
+// ---------------------------------------------------------------------------
+
 // One set of buses per AudioContext — the offline renderer gets its own.
-window.oaReverbBus = function (ctx, u) {
+const reverbBus = function (ctx, u) {
     const idx = Math.max(0, Math.min(window.OA_REVERB_COUNT - 1, u | 0));
     const buses = ctx.__oaReverbs || (ctx.__oaReverbs = []);
     if (!buses[idx]) {
@@ -406,7 +345,10 @@ window.oaReverbBus = function (ctx, u) {
         ret.gain.value = unit.standby ? 0 : unit.ret;
         input.connect(convolver);
         convolver.connect(ret);
-        ret.connect(ctx.destination);
+        // The return is part of the mix, so it lands on the MASTER BUS with
+        // everything else — a bus compressor that could not hear the reverb
+        // would let the tails swell up every time the dry signal ducked.
+        ret.connect(window.oaMasterInput ? window.oaMasterInput(ctx) : ctx.destination);
 
         // Tap the wet output per side so the return strip and the VARC's own
         // meter can show what is actually ringing, rather than guessing from
@@ -425,6 +367,44 @@ window.oaReverbBus = function (ctx, u) {
         buses[idx] = { input: input, convolver: convolver, ret: ret, analysers: analysers, muted: false };
     }
     return buses[idx];
+};
+
+/**
+ * THE INPUT PORT: the node a sender connects to, built on first ask. This is the
+ * whole of this machine's public audio surface — a caller gets somewhere to send
+ * and nothing it could reach through.
+ */
+window.oaReverbInput = function (ctx, u) {
+    return reverbBus(ctx, u).input;
+};
+
+/** Is any channel feeding machine `u`? Asked by the warm-up, answered here. */
+window.oaReverbIsFed = function (u) {
+    const unit = window.oaReverbUnit(u);
+    const eps = window.OA_FX_SEND_EPSILON || 0.001;
+    return !!(unit && unit.sends && unit.sends.some(function (v) { return v > eps; }));
+};
+
+/** This channel's send into machine `u`, 0..1. */
+window.oaReverbSend = function (u, idx) {
+    const unit = window.oaReverbUnit(u);
+    return (unit && unit.sends && unit.sends[idx]) || 0;
+};
+
+/**
+ * Build every machine anything actually sends to. Called by oaWarmFx() — which
+ * used to loop over OA_REVERB.units itself, reading a send array belonging to
+ * this file and deciding on its behalf what "in use" meant.
+ */
+window.oaReverbWarm = function (ctx) {
+    for (let r = 0; r < window.OA_REVERB_COUNT; r++) {
+        if (window.oaReverbIsFed(r)) reverbBus(ctx, r);
+    }
+};
+
+/** How many reverb buses exist on this context — for the voice diagnostic. */
+window.oaReverbBusCount = function (ctx) {
+    return ((ctx && ctx.__oaReverbs) || []).filter(Boolean).length;
 };
 
 // Rebuilding a response is milliseconds of arithmetic, and a slider drag fires
@@ -658,4 +638,37 @@ window.oaRegisterPlugin({
     },
 
     dispose: window.oaDisposeReverb,
+
+    /** Both machines, whole. */
+    save: function () { return { units: window.OA_REVERB.units }; },
+
+    /**
+     * Put them back. The ORDER here is the whole of it: a program load
+     * overwrites every slider, so it has to happen FIRST and the saved
+     * parameters go on top of it — otherwise an edited machine comes back as
+     * the program it started from and every edit is silently lost.
+     *
+     * A v1 song carried one flat reverb rather than a list; it lands on unit A.
+     */
+    load: function (data) {
+        const units = Array.isArray(data && data.units) ? data.units : [data];
+        units.slice(0, window.OA_REVERB_COUNT).forEach(function (rv, u) {
+            if (!rv) return;
+            if (Array.isArray(rv.sends)) {
+                rv.sends.forEach(function (v, i) { window.oaSetReverbSend(u, i, v); });
+            }
+            if (typeof rv.bank === 'number' && typeof rv.prog === 'number') {
+                window.oaLoadReverbProgram(u, rv.bank, rv.prog);
+            }
+            window.OA_REVERB_PARAMS.forEach(function (p) {
+                if (rv[p.key] !== undefined) window.oaSetReverb(u, p.key, rv[p.key]);
+            });
+            // A pre-VARC song carries these two as STRINGS instead of a program
+            // number; oaSetReverb maps the pair onto the nearest program.
+            if (typeof rv.size === 'string') window.oaSetReverb(u, 'size', rv.size);
+            if (typeof rv.tone === 'string') window.oaSetReverb(u, 'tone', rv.tone);
+            if (rv.ret !== undefined) window.oaSetReverb(u, 'ret', rv.ret);
+            if (rv.standby !== undefined) window.oaSetReverbStandby(u, !!rv.standby);
+        });
+    },
 });

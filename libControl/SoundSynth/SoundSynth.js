@@ -70,7 +70,11 @@ window.oaBuildDrumKit();
 // Shared AudioContext so buffers decoded by the Sampler play in the Sequencer.
 window.oaAudioCtx = function () {
     if (!window.OA_AUDIO_CTX) {
-        window.OA_AUDIO_CTX = new (window.AudioContext || window.webkitAudioContext)();
+        // Through oaNewAudioContext(), which asks for OA_SAMPLE_RATE and — if
+        // the browser refuses it — adopts whatever the device gave instead, so
+        // every offline render in the app follows the live rate rather than a
+        // constant that turned out not to be true. See oaAudioRate.js.
+        window.OA_AUDIO_CTX = window.oaNewAudioContext();
     }
     if (window.OA_AUDIO_CTX.state === 'suspended') {
         // Best-effort resume (browsers gate audio until a user gesture).

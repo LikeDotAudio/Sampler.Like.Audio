@@ -1,19 +1,24 @@
-// The front panel of an SDD-320: a bypass switch, five interlocking buttons,
-// and nothing else. The original had no rate, depth or mix control — choosing
-// a number IS the whole interface, and that constraint is the reason the box
+// The front panel of an SDD-320: a bypass switch, four latching buttons, and
+// nothing else. The original had no rate, depth or mix control — choosing a
+// combination IS the whole interface, and that constraint is the reason the box
 // is so hard to make sound bad.
+//
+// The buttons LATCH TOGETHER rather than interlocking. Four caps give twelve
+// usable settings: each alone, then the pairs and the larger stacks, which is
+// where the widths between and beyond the numbered four come from. The panel
+// therefore draws five buttons whatever the size of the mode table — pressing
+// one toggles it into the combination and the back end resolves that to a mode.
 
-// One button on the faceplate. OFF is the red one, the four modes are ivory,
-// and the pressed button sits down in its well.
-const DimButton = ({ mode, active, color, onPress }) => {
-    const off = mode === 0;
+// One button on the faceplate. OFF is the red one, the four buttons are ivory,
+// and a pressed cap sits down in its well.
+const DimButton = ({ label, off, active, color, onPress }) => {
     const face = active
         ? (off ? '#e8402c' : color)
         : (off ? '#7a2418' : '#d9d4c8');
     return (
         <button
-            onClick={() => onPress(mode)}
-            title={off ? 'Chorus off' : `Dimension mode ${mode}`}
+            onClick={onPress}
+            title={off ? 'Chorus off' : `Dimension button ${label} — combines with the others`}
             style={{
                 width: '38px', height: '30px', borderRadius: '2px', cursor: 'pointer',
                 background: active
@@ -29,7 +34,7 @@ const DimButton = ({ mode, active, color, onPress }) => {
                 padding: 0, transition: 'transform .06s, box-shadow .06s',
             }}
         >
-            {off ? 'OFF' : mode}
+            {label}
         </button>
     );
 };
@@ -48,9 +53,11 @@ window.ChorusEditor = ({ u, onClose }) => {
     const mode = (state && state.chorus) || 0;
     const on = mode > 0;
 
-    // Interlocked, like the mechanical buttons: one goes down and the last one
-    // pops up. Pressing the lit mode releases it back to OFF.
-    const press = (m) => window.oaPluginSet('chorus', u, 'chorus', m === mode ? 0 : m);
+    // Which caps are physically down, and what pressing one more (or letting one
+    // up) resolves to. The back end owns that table; this only reports the press.
+    const down = window.oaChorusButtons(mode);
+    const press = (n) => window.oaPluginSet('chorus', u, 'chorus', window.oaChorusToggle(mode, n));
+    const allOff = () => window.oaPluginSet('chorus', u, 'chorus', 0);
 
     return (
         <div style={{
@@ -84,9 +91,21 @@ window.ChorusEditor = ({ u, onClose }) => {
                 </div>
 
                 <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', alignItems: 'flex-end' }}>
-                    {window.OA_CHORUS_MODES.map((m, i) => (
-                        <DimButton key={i} mode={i} active={mode === i} color={meta.color} onPress={press} />
+                    <DimButton label="OFF" off active={mode === 0} color={meta.color} onPress={allOff} />
+                    {[1, 2, 3, 4].map((n) => (
+                        <DimButton key={n} label={String(n)} active={down.indexOf(n) >= 0}
+                                   color={meta.color} onPress={() => press(n)} />
                     ))}
+                </div>
+
+                {/* What the combination currently down resolves to. On the box
+                    this is engraved nowhere — you learn it by ear — but a
+                    display that can name the setting may as well. */}
+                <div style={{
+                    fontSize: '9px', color: '#8f9299', letterSpacing: '1px',
+                    textAlign: 'center', marginTop: '8px'
+                }}>
+                    {window.oaChorusMode(mode).label}
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center', marginTop: '10px' }}>
@@ -105,7 +124,10 @@ window.ChorusEditor = ({ u, onClose }) => {
                 Not a warble — the sweep is kept far too shallow to hear as pitch. The
                 two sides sweep in opposite directions and the wet copy is inverted
                 across the pair, so it mostly cancels in mono and the ear reads what
-                is left as width. 1 is a gentle shimmer; 4 is as far as the box goes.
+                is left as width. 1 is a gentle shimmer, 4 is the deepest single
+                button — and the buttons latch TOGETHER, which is where the twelve
+                settings come from. 1+2 is the one to leave on and forget about; all
+                four down is the one that stops being width and starts being an effect.
             </div>
         </div>
     );

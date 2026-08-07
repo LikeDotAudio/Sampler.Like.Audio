@@ -26,6 +26,9 @@ const Mixer = () => {
     const [varcUnit, setVarcUnit] = React.useState(null);
     const [tapeUnit, setTapeUnit] = React.useState(null);
     const [chorusUnit, setChorusUnit] = React.useState(null);
+    // The master buss compressor. Not a channel, so it takes no index — there
+    // is one of it, on the strip at the end.
+    const [bussOpen, setBussOpen] = React.useState(false);
     const [, forceSamples] = React.useReducer((n) => n + 1, 0);
     React.useEffect(() => {
         const onSample = () => forceSamples();
@@ -70,11 +73,13 @@ const Mixer = () => {
         window.addEventListener('oa-delay-changed', onFx);
         window.addEventListener('oa-drive-changed', onFx);
         window.addEventListener('oa-comp-changed', onFx);
+        window.addEventListener('oa-buss-changed', onFx);
         return () => {
             window.removeEventListener('oa-reverb-changed', onFx);
             window.removeEventListener('oa-delay-changed', onFx);
             window.removeEventListener('oa-drive-changed', onFx);
             window.removeEventListener('oa-comp-changed', onFx);
+            window.removeEventListener('oa-buss-changed', onFx);
         };
     }, []);
 
@@ -118,6 +123,26 @@ const Mixer = () => {
                 if (el.textContent !== text) el.textContent = text;
             });
 
+            // The master bus meters itself, so the strip on the right is reading
+            // the same numbers the buss compressor's own panel is — one
+            // measurement, filled once by the back end, however many displays
+            // are watching it.
+            const bFrame = window.oaPluginFrame('buss', 0);
+            const bL = window.oaPluginLayout('buss');
+            if (bFrame) {
+                [S.PEAK_L, S.PEAK_R].forEach((slot, ch) => {
+                    const el = masterRefs.current[ch];
+                    if (!el) return;
+                    el.style.height = `${Math.max(0, (1 - Math.min(1, bFrame[slot])) * 100)}%`;
+                });
+                const el = bussGrRef.current;
+                if (el) {
+                    const gr = bFrame[S.ACTIVE] ? bFrame[bL.GR] : 0;
+                    const text = gr > 0.15 ? '-' + gr.toFixed(1) : '';
+                    if (el.textContent !== text) el.textContent = text;
+                }
+            }
+
             FX.forEach((fx) => {
                 const els = fxMeterRefs.current[fx.key];
                 if (!els) return;
@@ -142,7 +167,9 @@ const Mixer = () => {
     }, [FX]);
 
     const masterRefs = React.useRef([null, null]);
-    const masterPeaks = React.useRef({ L: 0, R: 0, pending: false });
+    // The buss compressor's live gain reduction, written straight into the
+    // master strip's button.
+    const bussGrRef = React.useRef(null);
 
     const stateRef = React.useRef({ trackVol, mutes, solos, isAnySolo, trackPan });
     React.useEffect(() => {
@@ -179,32 +206,14 @@ const Mixer = () => {
             el.style.transition = 'height 0.3s cubic-bezier(0.2, 1, 0.3, 1)';
             el.style.height = '100%';
 
-            // 2. Accumulate Master Meter Peaks
-            const tPan = stateRef.current.trackPan[idx] || 0;
-            // Simple equal power panning approximation
-            const lFactor = Math.cos((tPan + 1) * Math.PI / 4);
-            const rFactor = Math.sin((tPan + 1) * Math.PI / 4);
-            const hitVol = ((e.detail.velocity || 0) / 100) * vol;
-
-            masterPeaks.current.L = Math.min(1.05, masterPeaks.current.L + hitVol * lFactor * 0.9);
-            masterPeaks.current.R = Math.min(1.05, masterPeaks.current.R + hitVol * rFactor * 0.9);
-
-            if (!masterPeaks.current.pending) {
-                masterPeaks.current.pending = true;
-                requestAnimationFrame(() => {
-                    [masterRefs.current[0], masterRefs.current[1]].forEach((mel, c) => {
-                        if (!mel) return;
-                        const peak = c === 0 ? masterPeaks.current.L : masterPeaks.current.R;
-                        const mTarget = Math.max(0, (1 - peak) * 100);
-                        mel.style.transition = 'none';
-                        mel.style.height = `${mTarget}%`;
-                        void mel.offsetHeight;
-                        mel.style.transition = 'height 0.4s cubic-bezier(0.2, 1, 0.3, 1)';
-                        mel.style.height = '100%';
-                    });
-                    masterPeaks.current = { L: 0, R: 0, pending: false };
-                });
-            }
+            // The MASTER meters used to be accumulated here too — every trigger
+            // adding its velocity through an equal-power pan approximation, so
+            // the reading was an ESTIMATE of what the mix ought to be doing
+            // rather than a measurement of what it was. It could not see a
+            // reverb tail, a tape repeat, a channel compressor's makeup gain or
+            // the buss compressor itself, and it went on estimating while the
+            // fade took the output to silence. There is a real master bus now,
+            // and it meters itself; the loop above reads that.
         };
         // The click track gets its own meter — it bypasses the track strips entirely.
         const onClick = (e) => {
@@ -373,7 +382,7 @@ const Mixer = () => {
                                     style={{
                                         width: '100%', padding: '3px 0', textAlign: 'center', borderRadius: '4px',
                                         border: `1px solid ${cOpen || cOn ? cColor : '#444b57'}`,
-                                        background: cOpen ? '#4a3218' : (cOn ? '#33280f' : '#2a2f38'),
+                                        background: cOpen ? 'var(--accent-s70)' : (cOn ? 'var(--accent-s80)' : '#2a2f38'),
                                         color: cOpen || cOn ? cColor : '#9aa3ae',
                                         cursor: 'pointer', fontSize: '9px', fontWeight: '700', letterSpacing: '.3px',
                                         marginBottom: '4px', display: 'flex', alignItems: 'center',
@@ -617,6 +626,37 @@ const Mixer = () => {
                     <span>L</span><span>R</span>
                 </div>
 
+                {/* The compressor across the whole mix. When it is in, the
+                    button carries the live gain reduction — on a bus, that
+                    number is the setting: two or three dB is glue, and a figure
+                    that never comes back up is a threshold set too low. */}
+                {(() => {
+                    const bOn = window.oaBussActive();
+                    const bColor = window.OA_BUSS_COLOR;
+                    return (
+                        <button
+                            onClick={() => setBussOpen(!bussOpen)}
+                            title={`Master buss compressor${bOn ? ' — in circuit' : ' — out of circuit'}`}
+                            style={{
+                                width: '56px', padding: '3px 0', textAlign: 'center', borderRadius: '4px',
+                                border: `1px solid ${bussOpen || bOn ? bColor : '#444b57'}`,
+                                background: bussOpen ? '#16323c' : (bOn ? '#122a33' : '#2a2f38'),
+                                color: bussOpen || bOn ? bColor : '#9aa3ae',
+                                cursor: 'pointer', fontSize: '9px', fontWeight: '700', letterSpacing: '.3px',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                gap: '3px', overflow: 'hidden'
+                            }}
+                        >
+                            <span>BUSS</span>
+                            {/* Written straight into the DOM by the meter loop
+                                above — a number that moves at 60fps must not
+                                re-render the whole desk to do it. */}
+                            <i ref={(el) => { bussGrRef.current = el; }}
+                               style={{ fontStyle: 'normal', fontVariantNumeric: 'tabular-nums', opacity: 0.85 }}></i>
+                        </button>
+                    );
+                })()}
+
                 <button
                     onClick={clearSolos}
                     style={{
@@ -661,6 +701,11 @@ const Mixer = () => {
                     name={(tracks[compPad] && tracks[compPad].name) || `Track ${compPad + 1}`}
                     onClose={() => setCompPad(null)}
                 />,
+                document.body
+            )}
+
+            {bussOpen && window.BussCompEditor && ReactDOM.createPortal(
+                <window.BussCompEditor onClose={() => setBussOpen(false)} />,
                 document.body
             )}
 

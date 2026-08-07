@@ -111,9 +111,13 @@ window.oaVoiceOut = function (ctx, idx, pan) {
     chain.push(node);
 
     // Null on a channel that has never been compressed, and the pan goes
-    // straight out the way it always did.
-    const comp = window.oaCompStrip ? window.oaCompStrip(ctx, idx) : null;
-    node.connect(comp ? comp.input : ctx.destination);
+    // straight on to the master bus. An INPUT PORT, not a strip object: this
+    // file no longer knows what a compressor is made of.
+    const compIn = window.oaCompInput ? window.oaCompInput(ctx, idx) : null;
+    // …and on to the MASTER BUS, which is where every audible path in the app
+    // now ends up. Guarded, because a test that loads a subset of the backend
+    // still has to be able to make a sound.
+    node.connect(compIn || (window.oaMasterInput ? window.oaMasterInput(ctx) : ctx.destination));
 
     const tap = function (amount, target) {
         if (!(amount > window.OA_FX_SEND_EPSILON)) return;
@@ -124,16 +128,18 @@ window.oaVoiceOut = function (ctx, idx, pan) {
         chain.push(sg);
     };
 
-    const rv = (window.OA_REVERB && window.OA_REVERB.units) || [];
-    for (let r = 0; r < rv.length; r++) {
-        const amount = (rv[r].sends && rv[r].sends[idx]) || 0;
-        if (amount > window.OA_FX_SEND_EPSILON) tap(amount, window.oaReverbBus(ctx, r).input);
+    // Each module answers for its own send level and hands back its own input
+    // port. This loop used to read OA_REVERB.units[r].sends[idx] and reach into
+    // the returned bus object for `.input` — so the router knew the shape of
+    // another module's settings AND the shape of its node graph.
+    for (let r = 0; r < window.OA_REVERB_COUNT; r++) {
+        const amount = window.oaReverbSend(r, idx);
+        if (amount > window.OA_FX_SEND_EPSILON) tap(amount, window.oaReverbInput(ctx, r));
     }
 
-    const dl = (window.OA_DELAY && window.OA_DELAY.units) || [];
-    for (let d = 0; d < dl.length; d++) {
-        const amount = (dl[d].sends && dl[d].sends[idx]) || 0;
-        if (amount > window.OA_FX_SEND_EPSILON) tap(amount, window.oaDelayBus(ctx, d).input);
+    for (let d = 0; d < window.OA_DELAY_COUNT; d++) {
+        const amount = window.oaDelaySend(d, idx);
+        if (amount > window.OA_FX_SEND_EPSILON) tap(amount, window.oaDelayInput(ctx, d));
     }
 
     // Returns null on a clean channel, and the voice connects straight to the
@@ -152,29 +158,19 @@ window.oaVoiceOut = function (ctx, idx, pan) {
  */
 window.oaWarmFx = async function (ctx) {
     await window.oaPrepareFx(ctx);
-    // Every compressed channel, built now that the answer about worklets is in.
-    // Left until the first voice, a strip would be built while the module was
-    // still registering and would take the native fallback for the whole session.
-    if (window.oaCompStrip) {
-        for (let i = 0; i < window.OA_PAD_MAX; i++) window.oaCompStrip(ctx, i);
-    }
-    const used = function (units, idx) {
-        const u = units[idx];
-        return !!(u && u.sends && u.sends.some((v) => v > window.OA_FX_SEND_EPSILON));
-    };
-    const rv = (window.OA_REVERB && window.OA_REVERB.units) || [];
-    for (let r = 0; r < rv.length; r++) if (used(rv, r)) window.oaReverbBus(ctx, r);
-    const dl = (window.OA_DELAY && window.OA_DELAY.units) || [];
-    for (let d = 0; d < dl.length; d++) {
-        // A delay feeding a reverb needs that reverb built even if no channel
-        // sends to it directly.
-        if (used(dl, d)) {
-            window.oaDelayBus(ctx, d);
-            (dl[d].toRv || []).forEach((amount, r) => {
-                if (amount > window.OA_FX_SEND_EPSILON) window.oaDelayToReverb(ctx, d, r, amount);
-            });
-        }
-    }
+    // Each module builds what IT decides is in use, now that the answer about
+    // worklets is in. Order still matters and is the only thing left here that
+    // is genuinely the router's business: the MASTER BUS first, because
+    // everything below connects INTO it and a bus built lazily by the first
+    // sender would be a second summing point for anything already wired; then
+    // strips (left until the first voice, one would be built while the module
+    // was still registering and would take the native fallback for the whole
+    // session), then rooms, then tapes — a tape wires its own throw into a room
+    // as it is built.
+    if (window.oaMasterWarm) window.oaMasterWarm(ctx);
+    if (window.oaCompWarm) window.oaCompWarm(ctx);
+    if (window.oaReverbWarm) window.oaReverbWarm(ctx);
+    if (window.oaDelayWarm) window.oaDelayWarm(ctx);
 };
 
 /**
@@ -247,10 +243,15 @@ window.oaRegisterPlugin({
         frame[S.USER + 2] = window.oaToneCacheBytes
             ? window.oaToneCacheBytes() / (1024 * 1024)
             : 0;
-        const count = function (a) { return (a || []).filter(Boolean).length; };
-        frame[S.USER + 3] = ctx
-            ? count(ctx.__oaReverbs) + count(ctx.__oaDelays) + count(ctx.__oaComps)
-            : 0;
+        // Each module counts its own buses. Reading ctx.__oaReverbs /
+        // __oaDelays / __oaComps from here meant the one file that is supposed
+        // to know nothing about how the effects are built was the file that
+        // knew where all three of them keep their nodes.
+        const built = function (fn) { return fn ? fn(ctx) : 0; };
+        frame[S.USER + 3] = built(window.oaReverbBusCount)
+            + built(window.oaDelayBusCount)
+            + built(window.oaCompStripCount)
+            + built(window.oaMasterBusCount);
     },
 
     dispose: window.oaDisposeVoices,

@@ -116,6 +116,8 @@ window.oaWritePeak = function (frame, slot, peak) {
  *   layout    { NAME: slotIndex } for everything past the shared four
  *   read      (ctx,i,frame) => void — fill the frame. BACK END ONLY.
  *   dispose   (ctx) => void — tear every node this plugin built out of ctx
+ *   save      () => plain JSON — everything this effect would need to come back
+ *   load      (data, opts) => void — put it back
  */
 /**
  * A plugin keeps its own vocabulary — the reverb's schema calls a slider's name
@@ -236,6 +238,81 @@ window.oaPluginSubscribe = function (id, fn) {
     const handler = function (e) { fn(e.detail || {}); };
     window.addEventListener(p.event, handler);
     return function () { window.removeEventListener(p.event, handler); };
+};
+
+// ---------------------------------------------------------------------------
+// Save and restore
+//
+// A song export used to name each effect by hand: oaSongFile.js read
+// OA_REVERB, OA_DELAY and OA_DRUM_SYNTH out of the audio layer, wrote them into
+// three top-level keys, and had a matching block to put each one back. Two
+// consequences, and both of them shipped:
+//
+//   THE PEDAL AND THE COMPRESSOR WERE NEVER IN A SONG AT ALL. They were added
+//   after that list was written, nothing pointed at them, and an exported song
+//   quietly came back with every channel clean. Nothing failed — the settings
+//   simply were not in the file.
+//
+//   THE RESTORE LOGIC LIVED IN THE SEQUENCER. How to put a reverb back — program
+//   first, then the edits on top, then the sends — is the REVERB's business, and
+//   it was three hundred lines away from the reverb in a file about song files.
+//
+// So an effect now declares how it is saved, next to the thing being saved, and
+// the song file asks every plugin at once. An effect added tomorrow is in the
+// export the moment it registers, without the exporter knowing it exists.
+// ---------------------------------------------------------------------------
+
+/**
+ * Every plugin's settings, as one plain object keyed by plugin id. Anything
+ * without a save() is skipped — the voice counter has nothing to remember.
+ */
+window.oaSavePlugins = function () {
+    const out = {};
+    Object.keys(REG).forEach(function (id) {
+        const p = REG[id];
+        if (!p.save) return;
+        try {
+            const data = p.save();
+            // A plugin that returns nothing is saying "I have no state", which
+            // is different from an empty object and should not land in the file.
+            if (data != null) out[id] = JSON.parse(JSON.stringify(data));
+        } catch (e) {
+            console.warn('⚠️ [' + id + '] could not be saved:', e && e.message);
+        }
+    });
+    return out;
+};
+
+/**
+ * Put those settings back. `opts` carries what a plugin cannot work out for
+ * itself — the song's tempo, which the tape delay needs before it can re-derive
+ * a head that was locked to the grid.
+ *
+ * A plugin that throws is skipped and reported rather than taking the rest of
+ * the import down with it: a song that restores five effects out of six is
+ * worth far more than an import that fails at the first one.
+ *
+ * Returns the ids that actually loaded, so the caller can tell the user.
+ */
+window.oaLoadPlugins = function (data, opts) {
+    const done = [];
+    if (!data || typeof data !== 'object') return done;
+    Object.keys(REG).forEach(function (id) {
+        const p = REG[id];
+        if (!p.load || data[id] == null) return;
+        try {
+            p.load(data[id], opts || {});
+            done.push(id);
+        } catch (e) {
+            console.warn('⚠️ [' + id + '] could not be restored:', e && e.message);
+        }
+    });
+    return done;
+};
+
+/** Which plugins can be saved at all — used by the tests and the export UI. */
+window.oaSaveablePlugins = function () {
+    return Object.keys(REG).filter(function (id) { return !!REG[id].save; });
 };
 
 // ---------------------------------------------------------------------------

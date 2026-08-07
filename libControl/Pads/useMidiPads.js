@@ -9,11 +9,37 @@
 // interfaces, and every name they are known by remains the property of its owner.
 // ─────────────────────────────────────────────────────────────────────────────
 
+// ---------------------------------------------------------------------------
+// Reading a spring-loaded wheel as a LATCHING control.
+//
+// A pitch wheel is sprung: let go and it flies home to centre. Taken at face
+// value that means the bend only exists while a hand is on the wheel, and the
+// note snaps back the instant it is released — which is right for an organ and
+// wrong for a sampler, where the wheel is how a pad gets tuned by ear and then
+// PLAYED at that tuning.
+//
+// So the return trip is thrown away. A hand cannot move the wheel anywhere near
+// as fast as the spring does, so a run toward centre faster than SPRING_SPEED
+// is the spring, not the player: those messages are ignored outright, which
+// leaves the pitch exactly where it was released. Reaching centre after such a
+// run confirms it and changes nothing.
+//
+// The way back to no bend, then, is to walk the wheel home BY HAND — slowly
+// enough that every message is applied on the way, ending at centre with no
+// spring run behind it, which zeroes. (The on-screen wheel's ⟲ does it too.)
+// ---------------------------------------------------------------------------
+const BEND_CENTRE = 8192;      // 14-bit centre
+const BEND_DEAD = 200;         // ±this counts as "at centre" (wheels rest imprecisely)
+const SPRING_SPEED = 12;       // units per ms toward centre that no hand achieves
+
 window.useMidiPads = (midiBase, toneRootRef, padButtons, triggerPadAt, setVelocities) => {
     const [midiStatus, setMidiStatus] = React.useState('');
     const [midiNote, setMidiNote] = React.useState(null);
     const triggerRef = React.useRef(triggerPadAt); triggerRef.current = triggerPadAt;
-    
+    // Where the wheel was last seen, when, and whether the spring has since
+    // taken it home (in which case centre must NOT clear the bend).
+    const bendRef = React.useRef({ raw: 0, t: 0, sprang: false });
+
     // Restart the velocity glow on a pad element (bright → fades over sound length).
     const startGlow = (el, idx, i) => {
         if (!el) return;
@@ -32,8 +58,22 @@ window.useMidiPads = (midiBase, toneRootRef, padButtons, triggerPadAt, setVeloci
             if (window.OA_MIDI_CAPTURED) return;   // Pad Browser (or other modal) owns MIDI right now
             const status = e.data[0], note = e.data[1], vel = e.data[2];
             if ((status & 0xf0) === 0xe0) {                   // pitch-bend wheel → retune sounding voices
-                const val = ((e.data[2] << 7) | e.data[1]) - 8192;   // 14-bit, centered at 0
-                if (window.oaSetPitchBend) window.oaSetPitchBend((val / 8192) * 200);  // ±2 semitones
+                const raw = ((e.data[2] << 7) | e.data[1]) - BEND_CENTRE;   // 14-bit, centred at 0
+                const st = bendRef.current;
+                const now = (window.performance && performance.now()) ? performance.now() : Date.now();
+                const dt = Math.max(1, now - st.t);
+                const speed = Math.abs(raw - st.raw) / dt;
+                const homing = Math.abs(raw) < Math.abs(st.raw);
+                st.t = now; st.raw = raw;
+
+                if (homing && speed > SPRING_SPEED) { st.sprang = true; return; }  // the spring, not the player
+                if (Math.abs(raw) <= BEND_DEAD) {
+                    // At centre. Cleared only if the wheel was WALKED here.
+                    if (!st.sprang && window.oaSetPitchBend) window.oaSetPitchBend(0);
+                    return;
+                }
+                st.sprang = false;
+                if (window.oaSetPitchBend) window.oaSetPitchBend((raw / BEND_CENTRE) * (window.OA_BEND_RANGE || 200));
                 return;
             }
             if ((status & 0xf0) === 0x90 && vel > 0) {        // note-on

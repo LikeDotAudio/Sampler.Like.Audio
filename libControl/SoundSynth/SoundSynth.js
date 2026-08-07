@@ -120,6 +120,8 @@ window.OA_DRUM_LOOPS = window.OA_DRUM_LOOPS || {};
 // voice that never fires 'ended' piles up. Separate names, separate arrays.
 window.OA_LIVE_VOICES = window.OA_LIVE_VOICES || [];
 window.OA_PITCH_BEND = window.OA_PITCH_BEND || 0;
+// How far the wheel reaches, in cents. ±200 = the usual two semitones.
+window.OA_BEND_RANGE = window.OA_BEND_RANGE || 200;
 
 // Pre-rendered pitched buffers for Tone Mode (avoids real-time resampling
 // latency). rootIdx -> { semitones -> AudioBuffer }. See oaDrumkitSynth.js for
@@ -127,12 +129,27 @@ window.OA_PITCH_BEND = window.OA_PITCH_BEND || 0;
 window.OA_TONE_CACHE = window.OA_TONE_CACHE || {};
 
 // Set the global pitch-bend (cents) and retune every sounding voice live.
+//
+// The bend LATCHES: it is a standing offset, not a gesture. Whatever is set
+// here stays set — sounding voices are retuned now, and every voice started
+// afterwards opens at the same offset (oaPlayDrumSample / oaPlayDrumVoice) —
+// until something sets it again. The spring on a hardware wheel is handled
+// where the wheel is read (useMidiPads.js), not here.
 window.oaSetPitchBend = function (cents) {
     window.OA_PITCH_BEND = cents || 0;
     for (let i = 0; i < window.OA_LIVE_VOICES.length; i++) {
         const s = window.OA_LIVE_VOICES[i];
         try { if (s.detune) s.detune.value = window.OA_PITCH_BEND; } catch (e) {}
     }
+    // The on-screen wheel follows the hardware one, and vice versa; this is how
+    // whichever moved tells the other. (PitchWheel.jsx)
+    window.dispatchEvent(new CustomEvent('oa-pitch-bend', { detail: { cents: window.OA_PITCH_BEND } }));
+};
+
+// The bend as a frequency ratio, for the paths that have no detune AudioParam
+// to hand (the synth voices, which are built from frequencies).
+window.oaBendRatio = function () {
+    return Math.pow(2, (window.OA_PITCH_BEND || 0) / 1200);
 };
 
 // Store/replace a pad's sample. opts: { loop, pitch, fade, name }.
@@ -151,7 +168,12 @@ window.oaSetDrumSample = function (idx, buffer, opts) {
         offset: opts.offset || 0,   // start offset in seconds (time shift)
         end: (opts.end != null ? opts.end : null),   // cut-off in seconds (null = EOF)
         loop: !!opts.loop,
-        fade: !!opts.fade,
+        // fade is the old both-ends switch; fadeIn/fadeOut are lengths in
+        // seconds of the source, set by chopping in the browser. Either one
+        // being present is enough to say this sound is faded.
+        fadeIn: opts.fadeIn || 0,
+        fadeOut: opts.fadeOut || 0,
+        fade: !!opts.fade || !!opts.fadeIn || !!opts.fadeOut,
         name: name,
         folder: opts.folder || '',  // source folder (for set snapshots / revert)
     };

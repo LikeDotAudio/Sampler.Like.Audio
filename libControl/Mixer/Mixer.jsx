@@ -422,6 +422,7 @@ const Mixer = () => {
                             </div>
                             <SvgFader
                                 value={vol} color={color} width={36} height={180}
+                                label={`${track.name || `Track ${i + 1}`} level`}
                                 onChange={(v) => setTrackVol((prev) => { const n = [...prev]; n[i] = v; return n; })}
                             />
                         </div>
@@ -506,6 +507,7 @@ const Mixer = () => {
                         <div style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
                             <SvgKnob
                                 value={pan} min={-1} max={1} defaultVal={0} bipolar={true} color={color} size={32}
+                                label={`${track.name || `Track ${i + 1}`} pan`} display={panLabel(pan)}
                                 onChange={(v) => setTrackPan((pprev) => { const n = [...pprev]; n[i] = v; return n; })}
                             />
                             <div style={{ fontSize: '8px', color: 'var(--muted)', fontVariantNumeric: 'tabular-nums' }}>{panLabel(pan)}</div>
@@ -546,6 +548,8 @@ const Mixer = () => {
                                     <div key={fx.key} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1px' }}>
                                         <SvgKnob
                                             value={amount} min={0} max={1} defaultVal={0} color={fx.color} size={26}
+                                            label={`${track.name || `Track ${i + 1}`} → ${fx.name}`}
+                                            display={Math.round(amount * 100)}
                                             onChange={(v) => setSend(fx, i, v)}
                                         />
                                         <div title={`${track.name || 'Track'} → ${fx.name}`} style={{
@@ -579,7 +583,8 @@ const Mixer = () => {
                     }}>
                         <i ref={clickMeterRef} style={{ position: 'absolute', left: 0, right: 0, top: 0, height: '100%', background: '#15171b' }}></i>
                     </div>
-                    <SvgFader value={clickVol} color={recording ? "#d32f2f" : "#aaa"} width={36} height={180} onChange={(v) => setClickVol(v)} />
+                    <SvgFader value={clickVol} color={recording ? "#d32f2f" : "#aaa"} width={36} height={180}
+                              label="Click level" onChange={(v) => setClickVol(v)} />
                 </div>
 
                 <div style={{ fontSize: '10px', color: 'var(--muted)', fontWeight: '700', fontVariantNumeric: 'tabular-nums', marginTop: '23px' }}>{Math.round(clickVol * 100)}</div>
@@ -639,6 +644,7 @@ const Mixer = () => {
                             {fxMeters(fx)}
                             <SvgFader
                                 value={unit.ret} color={meta.color} width={36} height={210}
+                                label={`${meta.name} return`}
                                 onChange={(v) => window.oaSetReverb(u, 'ret', v)}
                             />
                         </div>
@@ -707,6 +713,7 @@ const Mixer = () => {
                             {fxMeters(fx)}
                             <SvgFader
                                 value={unit.ret} color={meta.color} width={36} height={210}
+                                label={`${meta.name} return`}
                                 onChange={(v) => window.oaPluginSet('delay', u, 'ret', v)}
                             />
                         </div>
@@ -754,7 +761,8 @@ const Mixer = () => {
                         <i ref={el => masterRefs.current[0] = el} style={{ position: 'absolute', left: 0, right: 0, top: 0, height: '100%', background: '#15171b', transition: 'height 0.05s linear' }}></i>
                     </div>
                     {/* Master Fader */}
-                    <SvgFader value={masterVol} color="#aaa" width={36} height={270} onChange={(v) => setMasterVol(v)} />
+                    <SvgFader value={masterVol} color="#aaa" width={36} height={270}
+                              label="Master" onChange={(v) => setMasterVol(v)} />
                     {/* R Meter */}
                     <div style={{
                         width: '6px', borderRadius: '2px', position: 'relative', overflow: 'hidden', border: '1px solid #0008',

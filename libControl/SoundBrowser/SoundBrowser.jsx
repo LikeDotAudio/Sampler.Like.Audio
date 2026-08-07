@@ -23,7 +23,6 @@
 const AUDIO_RE = /\.(mp3|wav|wave|aif|aiff|aac|m4a|ogg|oga|flac|opus)$/i;
 const COLS = 4;   // grid columns (drives arrow up/down)
 
-const drawWave = window.drawWave;
 const WaveThumb = window.WaveThumb;
 const SoundCloudView = window.SoundCloudView;
 const gatherAll = window.gatherAll;
@@ -38,7 +37,6 @@ const DEEP_MAX = 20000;
 window.SoundBrowser = ({ onClose, onChoose, onChooseOther, targetLabel, inline }) => {
     const [buffer, setBuffer] = React.useState(null);
     const [autoPreview, setAutoPreview] = React.useState(true);
-    const bigCanvasRef = React.useRef(null);
     const gridScrollRef = React.useRef(null);
     const selectedThumbRef = React.useRef(null);
     
@@ -50,23 +48,33 @@ window.SoundBrowser = ({ onClose, onChoose, onChooseOther, targetLabel, inline }
         shown, pickFolder, selectFolder, onPlainFiles, selectFileByIndex, files
     } = window.useSoundBrowseState();
 
-    const { playing, loop, setLoop, pos, setPos, togglePlay, rewind, scrub } = window.useSoundBrowseAudio(buffer, autoPreview);
-
-    // Big waveform of the selected file. Also redrawn when the theme colour
-    // moves: a canvas keeps whatever it was last painted with, so unlike every
-    // var(--accent) style around it, it does not follow on its own.
-    const [accentTick, setAccentTick] = React.useState(0);
-    React.useEffect(() => window.oaOnAccent(() => setAccentTick((n) => n + 1)), []);
-    React.useEffect(() => { drawWave(bigCanvasRef.current, buffer, window.oaAccent()); }, [buffer, accentTick]);
+    const {
+        playing, loop, setLoop, pos, setPos, duration, togglePlay, rewind, scrub,
+        trim, trimmed, setTrimPoint, resetTrim,
+    } = window.useSoundBrowseAudio(buffer, autoPreview);
 
     // Read the takes once on open, so the RECORDER tab carries its count before
     // anyone clicks it — otherwise a device full of recordings looks empty.
     React.useEffect(() => { reloadRecs(); }, [reloadRecs]);
 
-    const chooseIt = () => { if (selected && onChoose) onChoose(selected.file, { name: selected.name, folder: selected.folder || '' }); };
-    const chooseOther = () => { if (selected && onChooseOther) onChooseOther(selected.file, { name: selected.name, folder: selected.folder || '' }); };
+    // The chop rides along with the sound: whatever was set on the waveform is
+    // what the pad gets, so a take is trimmed once, here, and not again.
+    const chopMeta = () => ({
+        name: selected.name,
+        folder: selected.folder || '',
+        offset: trim.in,
+        end: trim.out,
+        fadeIn: trim.fadeIn,
+        fadeOut: trim.fadeOut,
+    });
+    const chooseIt = () => { if (selected && onChoose) onChoose(selected.file, chopMeta()); };
+    const chooseOther = () => { if (selected && onChooseOther) onChooseOther(selected.file, chopMeta()); };
 
-    window.useSoundBrowseKeys(shown, selectedIndex, (idx) => selectFileByIndex(idx, setBuffer, setPos), chooseIt, onClose, gridScrollRef, selectedThumbRef);
+    window.useSoundBrowseKeys(
+        shown, selectedIndex, (idx) => selectFileByIndex(idx, setBuffer, setPos), chooseIt, onClose,
+        gridScrollRef, selectedThumbRef,
+        { setTrimPoint, resetTrim, at: pos * duration, duration },
+    );
 
     const tbtn = (extra) => ({ background: '#333', color: '#fff', border: '1px solid #444', borderRadius: '3px', padding: '6px 12px', cursor: 'pointer', fontSize: '13px', ...extra });
 
@@ -118,7 +126,7 @@ window.SoundBrowser = ({ onClose, onChoose, onChooseOther, targetLabel, inline }
                     <input type="text" value={filter} onChange={(e) => { setFilter(e.target.value); setSelectedIndex(-1); }} placeholder="Filter (e.g. HH)"
                         style={{ background: '#111', color: '#eee', border: '1px solid #444', borderRadius: '3px', padding: '4px 8px', fontSize: '12px', width: '130px' }} />
                     {filter.trim() && <span style={{ fontSize: '11px', color: 'var(--accent-t15)' }}>{deepSearching ? 'searching…' : `${shown.length} match${shown.length === 1 ? '' : 'es'}`}</span>}
-                    <span style={{ fontSize: '11px', color: '#666' }}>↑ ↓ ← → browse · Enter load</span>
+                    <span style={{ fontSize: '11px', color: '#666' }}>↑ ↓ ← → browse · Enter load · I / O chop (⇧ for fades)</span>
                 </div>
 
                 {err && <div style={{ padding: '6px 16px', color: '#f88', fontSize: '12px' }}>⚠️ {err}</div>}
@@ -205,13 +213,29 @@ window.SoundBrowser = ({ onClose, onChoose, onChooseOther, targetLabel, inline }
                 </div>
 
                 <div style={{ borderTop: '1px solid #333', padding: '10px 16px' }}>
-                    <div style={{ fontSize: '12px', color: '#aaa', marginBottom: '6px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {selected ? selected.name : 'No file selected'}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', color: '#aaa', marginBottom: '6px' }}>
+                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {selected ? selected.name : 'No file selected'}
+                        </span>
+                        <div style={{ flexGrow: 1 }} />
+                        {selected && duration > 0 && (
+                            <span style={{ fontSize: '11px', color: trimmed ? 'var(--accent)' : '#666', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}
+                                title="IN → OUT, and the fade at each end. Drag the handles, or press I / O (⇧I / ⇧O for the fades) at the playhead.">
+                                ✂ {trim.in.toFixed(3)} → {trim.out.toFixed(3)}s ({(trim.out - trim.in).toFixed(3)}s)
+                                {(trim.fadeIn > 0 || trim.fadeOut > 0) ? ` · fade ${trim.fadeIn.toFixed(2)}/${trim.fadeOut.toFixed(2)}` : ''}
+                            </span>
+                        )}
+                        {selected && trimmed && (
+                            <button onClick={resetTrim} title="Drop the chop — back to the whole file"
+                                style={{ background: '#333', color: '#ccc', border: '1px solid #444', borderRadius: '3px', padding: '2px 7px', fontSize: '11px', cursor: 'pointer' }}>⟲ whole</button>
+                        )}
                     </div>
-                    <div onClick={scrub} style={{ position: 'relative', width: '100%', height: '60px', background: '#0a0a0a', border: '1px solid #444', cursor: selected ? 'pointer' : 'default' }}>
-                        <canvas ref={bigCanvasRef} style={{ width: '100%', height: '100%', display: 'block' }} />
-                        {selected && <div style={{ position: 'absolute', top: 0, bottom: 0, left: `${pos * 100}%`, width: '2px', background: '#fff', pointerEvents: 'none' }} />}
-                    </div>
+                    {/* The chop lives on the waveform: IN, OUT and a fade at
+                        each end, dragged or set with I / O at the playhead. It
+                        applies to whatever is selected — a file from a folder,
+                        a favourite, or a take off the recorder — and travels to
+                        the pad with the sound. */}
+                    <window.WaveTrim buffer={buffer} trim={trim} setTrimPoint={setTrimPoint} pos={pos} onScrub={scrub} active={!!selected} />
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px' }}>
                         <button onClick={rewind} disabled={!selected} style={tbtn()}>⏮ Rewind</button>
                         <button onClick={togglePlay} disabled={!selected} style={tbtn({ background: playing ? '#c00' : '#388e3c', border: 'none', fontWeight: 'bold' })}>{playing ? '⏸ Pause' : '► Play'}</button>

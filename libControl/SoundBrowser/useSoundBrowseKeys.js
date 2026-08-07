@@ -9,7 +9,7 @@
 // interfaces, and every name they are known by remains the property of its owner.
 // ─────────────────────────────────────────────────────────────────────────────
 
-window.useSoundBrowseKeys = (shown, selectedIndex, selectFileByIndex, chooseIt, onClose, gridScrollRef, selectedThumbRef) => {
+window.useSoundBrowseKeys = (shown, selectedIndex, selectFileByIndex, chooseIt, onClose, gridScrollRef, selectedThumbRef, chop) => {
     // Keep the selected thumbnail centered in the grid as you browse.
     React.useEffect(() => {
         const el = selectedThumbRef.current, cont = gridScrollRef.current;
@@ -19,11 +19,27 @@ window.useSoundBrowseKeys = (shown, selectedIndex, selectFileByIndex, chooseIt, 
         if (Math.abs(delta) > 2) cont.scrollTo({ top: cont.scrollTop + delta, behavior: 'smooth' });
     }, [selectedIndex, gridScrollRef, selectedThumbRef]);
 
+    const chopRef = React.useRef(chop); chopRef.current = chop;
+
     // Arrow-key navigation across the thumbnail grid; Enter = Load.
     React.useEffect(() => {
         const onKey = (e) => {
             if (e.key === 'Escape') { onClose(); e.preventDefault(); return; }
             if (e.target && (e.target.tagName === 'INPUT')) return;  // don't hijack the filter box
+
+            // I and O drop the in- and out-point on the playhead — the tape-machine
+            // marks, so a sound can be chopped while it plays instead of by
+            // aiming at a 2px handle. Shift takes the fade to the same spot.
+            // Read through the ref: the playhead moves every frame, and this
+            // listener must not be torn down and re-added at that rate.
+            const c = chopRef.current;
+            if (c && c.duration && (e.key === 'i' || e.key === 'I' || e.key === 'o' || e.key === 'O')) {
+                e.preventDefault();
+                const isIn = (e.key === 'i' || e.key === 'I');
+                c.setTrimPoint(e.shiftKey ? (isIn ? 'fadeIn' : 'fadeOut') : (isIn ? 'in' : 'out'), c.at);
+                return;
+            }
+
             if (!shown.length) return;
             let d = 0;
             // Snake traversal: forward advances one (…over, over, over, down a row),

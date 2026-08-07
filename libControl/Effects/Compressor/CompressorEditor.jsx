@@ -64,7 +64,7 @@ const vuPos = (db) => {
 // around it, which is what makes a rack unit look like a rack unit. The numbers
 // are spread evenly across the 270° of travel, low end first.
 // ---------------------------------------------------------------------------
-const RackKnob = ({ value, min, max, defaultVal, ticks, size = 62, onChange }) => {
+const RackKnob = ({ value, min, max, defaultVal, ticks, size = 62, label, display, onChange }) => {
     // Room outside the knob for the collar. The engraved numbers sit past the
     // tick marks and a two-character label is ~10px wide, so the box has to
     // clear the knob by more than the label radius or the end stops get cropped.
@@ -82,8 +82,15 @@ const RackKnob = ({ value, min, max, defaultVal, ticks, size = 62, onChange }) =
 
     // Drag vertically, wheel to nudge, alt-click to reset — the same gesture
     // set as every other control in the mixer, so the hands do not relearn.
+    const readout = window.useOaReadout({
+        label, color: window.OA_COMP_COLOR,
+        display: display != null ? display : cur,
+        pct: ((cur - min) / ((max - min) || 1)) * 100,
+    });
+
     const onPointerDown = (e) => {
         if (e.altKey) { onChange(defaultVal); return; }
+        readout.begin(e);
         const startY = e.clientY;
         const startV = cur;
         e.target.setPointerCapture(e.pointerId);
@@ -412,6 +419,7 @@ window.CompressorEditor = ({ idx, name, onClose }) => {
                 <RackKnob
                     value={unit[key]} min={p.min} max={p.max} defaultVal={p.def}
                     ticks={p.ticks} size={size} onChange={(v) => set(key, v)}
+                    label={p.label.toUpperCase()} display={p.fmt(unit[key])}
                 />
                 <Engraved size={7.5} style={{ letterSpacing: '2px' }}>{p.label.toUpperCase()}</Engraved>
                 <div style={{

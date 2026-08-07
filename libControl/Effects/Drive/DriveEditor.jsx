@@ -28,6 +28,7 @@ const DriveKnob = ({ p, value, color, size = 40, onChange }) => (
         <window.SvgKnob
             value={toNorm(p, value)} min={0} max={1} defaultVal={toNorm(p, p.def)}
             color={color} size={size}
+            label={p.label.toUpperCase()} display={p.fmt(value)}
             onChange={(n) => onChange(fromNorm(p, n))}
         />
         <div style={{ fontSize: '8px', color: '#8f9299', letterSpacing: '1px' }}>{p.label.toUpperCase()}</div>

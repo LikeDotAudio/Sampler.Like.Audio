@@ -14,7 +14,12 @@ const MAX_GAIN = Math.pow(10, DB_MAX / 20);
 const gainToPos = g => g <= 0 ? 0 : Math.max(0, Math.min(1, (20 * Math.log10(g) - DB_MIN) / (DB_MAX - DB_MIN)));
 const posToGain = p => p <= 0.004 ? 0 : Math.pow(10, (DB_MIN + p * (DB_MAX - DB_MIN)) / 20);
 
-const SvgFader = ({ value = 0, color = "var(--accent)", width = 50, height = 180, onChange }) => {
+// A fader reads in dB on its own scale, so that is what the drag overlay shows
+// unless the caller hands over a `display` of its own. `label` names the thing
+// being moved — which channel, which return.
+const dbLabel = (g) => (g <= 0.0011 ? '-∞ dB' : `${(20 * Math.log10(g)).toFixed(1)} dB`);
+
+const SvgFader = ({ value = 0, color = "var(--accent)", width = 50, height = 180, label, display, onChange }) => {
     // A tall cap, so it can be grabbed with a fingertip rather than a cursor.
     const thumbW = 30, thumbH = 34;
     // Half a cap of clearance at each end. The cap's CENTRE travels the slot,
@@ -29,8 +34,15 @@ const SvgFader = ({ value = 0, color = "var(--accent)", width = 50, height = 180
     const p = gainToPos(cur);
     const y = yAt(p);
     
+    const readout = window.useOaReadout({
+        label, color,
+        display: display != null ? display : dbLabel(cur),
+        pct: p * 100,
+    });
+
     const handlePointerDown = (e) => {
         const svg = e.currentTarget;
+        readout.begin(e);
         svg.setPointerCapture(e.pointerId);
         
         const update = (em) => {

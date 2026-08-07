@@ -104,9 +104,13 @@ const Key = ({ label, onClick, onDown, onUp, lit, title, wide, tone = 'cream', s
  * is a fader with a real position on a real scale, so grabbing halfway up the
  * slot should put it halfway up, exactly as your hand expects from the picture.
  */
-const VarcSlider = ({ value, onChange, height = 224 }) => {
+const VarcSlider = ({ value, onChange, height = 224, label, display }) => {
     const trackRef = React.useRef(null);
     const CAP_H = 13;
+    const readout = window.useOaReadout({
+        label, display: display != null ? display : Math.round(value * 100),
+        pct: Math.max(0, Math.min(1, value)) * 100, color: 'var(--accent)',
+    });
 
     const fromEvent = (e) => {
         const el = trackRef.current;
@@ -118,6 +122,7 @@ const VarcSlider = ({ value, onChange, height = 224 }) => {
     };
     const onDown = (e) => {
         e.currentTarget.setPointerCapture(e.pointerId);
+        readout.begin(e);
         onChange(fromEvent(e));
         e.preventDefault();
     };
@@ -519,7 +524,8 @@ window.VarcRemote = ({ u, onClose }) => {
                     boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.25)'
                 }}>
                     {params.map((p) => (
-                        <VarcSlider key={p.key} value={normOf(p)} onChange={(n) => setParam(p, n)} />
+                        <VarcSlider key={p.key} value={normOf(p)} onChange={(n) => setParam(p, n)}
+                                    label={p.label} display={p.fmt(unit[p.key])} />
                     ))}
                 </div>
 

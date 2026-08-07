@@ -19,7 +19,10 @@ window.oaPlayDrumVoice = function (ctx, track, time, volume, pan) {
     const engine = window.OA_SYNTH_ENGINES[patch.engine] || window.OA_SYNTH_ENGINES.membrane;
 
     // Tone Mode hands us a ratio; shift every frequency-shaped parameter by it.
-    const ratio = track.pitchRatio || 1;
+    // The pitch wheel is a standing offset on top of that — a synth voice has no
+    // detune AudioParam to retune later, so it opens at the current bend and
+    // keeps it for its (short) life.
+    const ratio = (track.pitchRatio || 1) * (window.oaBendRatio ? window.oaBendRatio() : 1);
     const tuned = (ratio === 1) ? patch : window.oaTransposePatch(patch, ratio);
 
     const out = window.oaVoiceOut ? window.oaVoiceOut(ctx, idx, pan) : ctx.destination;

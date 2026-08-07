@@ -121,6 +121,10 @@
                     </main>
 
                     {window.Footer ? <window.Footer /> : null}
+
+                    {/* One for the whole desk: whichever control is being dragged
+                        puts its value up here, large enough to read past a hand. */}
+                    {window.OaReadout ? <window.OaReadout /> : null}
                 </div>
             );
         }

@@ -34,8 +34,9 @@ const angleOf = (n) => (n * 2 - 1) * SWEEP;
 // The pointer drag, shared by both controls. `norm` is where the control is now;
 // every move reports an absolute position rather than a delta, so a drag that
 // runs past an end stop and comes back lands where the finger is.
-const useGalaxyDrag = (norm, onNorm, defaultNorm) => React.useCallback((e) => {
+const useGalaxyDrag = (norm, onNorm, defaultNorm, readout) => React.useCallback((e) => {
     if (e.altKey && defaultNorm != null) { onNorm(defaultNorm); return; }
+    if (readout) readout.begin(e);
     const el = e.currentTarget;
     const startY = e.clientY;
     const start = norm;
@@ -143,7 +144,10 @@ window.GalaxyKnob = ({
     const cx = box / 2, cy = box / 2;
     const r = size / 2 - 3;
     const n = Math.max(0, Math.min(1, norm));
-    const down = useGalaxyDrag(n, onNorm, defaultNorm);
+    // The knob already prints its own name and value under it; the overlay shows
+    // the same two, at a size that survives a finger over the panel.
+    const rd = window.useOaReadout({ label, display: readout != null ? readout : Math.round(n * 100), pct: n * 100, color: accent });
+    const down = useGalaxyDrag(n, onNorm, defaultNorm, rd);
     const wheel = useGalaxyWheel(n, onNorm);
 
     const marks = [];
@@ -209,7 +213,8 @@ window.GalaxyHeadSelect = ({
     const cx = box / 2, cy = box / 2;
     const r = size / 2 - 2;
     const n = Math.max(0, Math.min(1, norm));
-    const down = useGalaxyDrag(n, onNorm, defaultNorm);
+    const rd = window.useOaReadout({ label, display: readout != null ? readout : Math.round(n * 100), pct: n * 100, color: activeSteps ? '#c6ff8a' : '#dfe6c8' });
+    const down = useGalaxyDrag(n, onNorm, defaultNorm, rd);
     const wheel = useGalaxyWheel(n, onNorm);
 
     return (

@@ -50,6 +50,25 @@
             overflow: hidden;
         }
 
+        /* This is an instrument, not a document. On a phone a press-and-hold on
+           a pad, a step or a knob's label raised the selection loupe and the
+           Copy/Share bar instead of playing the sound — and a drag that started
+           on a label selected a paragraph of the UI. Nothing here is text you
+           are meant to select, so selection is off everywhere and switched back
+           on only for the fields you type into. Add class="selectable" to
+           anything that should be copyable. */
+        body {
+            -webkit-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        input, textarea, select, [contenteditable], .selectable {
+            -webkit-user-select: text;
+            user-select: text;
+            -webkit-touch-callout: default;
+        }
+
         /* Variables extracted from user's mixer */
         :root {
             --bg: #1b1c1e;

@@ -184,6 +184,9 @@ const Pads = ({ label = "Drum Pads", centerVelocity = 100, edgeVelocity = 10, on
                     );
                 })}
             </div>
+            {/* The keyboard's pitch wheel, on its side — see PitchWheel.jsx for
+                why it holds its position instead of springing back. */}
+            {window.PitchWheel && <window.PitchWheel maxWidth={Math.min(1100, 200 * grid.cols)} />}
             {missingCount > 0 && (
                 <div style={{ marginTop: '10px', textAlign: 'center' }}>
                     <button onClick={restoreSounds} title="Re-load the samples remembered on these pads (from MQTT) using the saved folder"

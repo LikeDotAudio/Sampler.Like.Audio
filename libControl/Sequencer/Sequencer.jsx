@@ -157,6 +157,15 @@ const Sequencer = ({ activeTabs = ['SEQ'], label = "Pattern Sequencer" }) => {
 
     const showSeq = activeTabs.includes('SEQ');
     const showSong = activeTabs.includes('SONG');
+    // SEQ and SONG share ONE panel slot in App (they are both this component), so
+    // App's "most-recently-pressed sits on top" re-ordering cannot separate them —
+    // it only ever sees the pair. Their stacking is decided here instead, by the
+    // same rule: lower index in activeTabs = pressed more recently = on top.
+    const seqOrder = activeTabs.indexOf('SEQ');
+    const songOrder = activeTabs.indexOf('SONG');
+    const songOnTop = showSong && (!showSeq || songOrder < seqOrder);
+    // The rule between the two, drawn at the top of whichever one is underneath.
+    const divider = <hr style={{ borderColor: '#444', margin: '20px 0' }} />;
 
     return (
         <div style={{ padding: '0', backgroundColor: 'transparent', borderRadius: '0', color: '#fff', border: 'none', width: '100%', boxSizing: 'border-box', marginTop: '10px' }}>
@@ -189,9 +198,10 @@ const Sequencer = ({ activeTabs = ['SEQ'], label = "Pattern Sequencer" }) => {
                     <div id="config-dropup-slot" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}></div>
                 </div>, document.body)}
 
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
             {showSong && (
-                <>
-                {showSeq && <hr style={{borderColor: '#444', margin: '20px 0'}} />}
+                <div style={{ order: songOrder }}>
+                {showSeq && !songOnTop && divider}
                 <window.SeqLibrary
                     library={library}
                     loadPattern={loadPattern}
@@ -218,10 +228,12 @@ const Sequencer = ({ activeTabs = ['SEQ'], label = "Pattern Sequencer" }) => {
                     mixer={{ trackVol, trackPan, mutes, solos, masterVol, clickVol, bpm, steps }}
                     setMixer={{ setTrackVol, setTrackPan, setMutes, setSolos, setMasterVol, setClickVol, setBpm, setSteps }}
                 />
-                </>
+                </div>
             )}
-            
+
             {showSeq && (
+            <div style={{ order: seqOrder }}>
+            {showSong && songOnTop && divider}
             <div className="chunky-scrollbar" style={{ display: 'flex', flexDirection: 'column', gap: '2px', overflowX: 'auto', alignItems: 'safe center', paddingBottom: '6px' }}>
                 {TRACKS.map(({ name: trackName }, trkIdx) => {
                   const muted = mutes[trkIdx];
@@ -247,10 +259,9 @@ const Sequencer = ({ activeTabs = ['SEQ'], label = "Pattern Sequencer" }) => {
                   );
                 })}
             </div>
-            )}
 
-            {toneRoot !== null && showSeq && (
-                <window.SeqToneTrack 
+            {toneRoot !== null && (
+                <window.SeqToneTrack
                     toneRoot={toneRoot}
                     steps={steps}
                     toneTrack={toneTrack}
@@ -268,6 +279,9 @@ const Sequencer = ({ activeTabs = ['SEQ'], label = "Pattern Sequencer" }) => {
                     trackVolRef={trackVolRef}
                 />
             )}
+            </div>
+            )}
+            </div>
 
             <window.SeqFader activeFader={activeFader} />
 

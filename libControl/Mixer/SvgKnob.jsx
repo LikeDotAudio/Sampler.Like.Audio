@@ -9,7 +9,10 @@
 // interfaces, and every name they are known by remains the property of its owner.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const SvgKnob = ({ value = 0, min = 0, max = 1, defaultVal = 0, bipolar = false, color = "var(--accent)", size = 42, onChange }) => {
+// `label` and `display` are what the drag overlay says — the knob's engraved
+// name and the value as the panel beside it would print it. Without them the
+// overlay still appears, showing the raw number.
+const SvgKnob = ({ value = 0, min = 0, max = 1, defaultVal = 0, bipolar = false, color = "var(--accent)", size = 42, label, display, onChange }) => {
     const cx = size / 2, cy = size / 2, R = size / 2 - 3, bodyR = R - 4;
     const [uid] = React.useState(() => "k" + Math.random().toString(36).slice(2, 8));
     
@@ -29,8 +32,15 @@ const SvgKnob = ({ value = 0, min = 0, max = 1, defaultVal = 0, bipolar = false,
     const [ix, iy] = pt(bodyR * 0.32, a);
     const [ox, oy] = pt(bodyR * 0.9, a);
 
+    const readout = window.useOaReadout({
+        label, color, bipolar,
+        display: display != null ? display : cur,
+        pct: ((cur - min) / ((max - min) || 1)) * 100,
+    });
+
     const handlePointerDown = (e) => {
         if (e.altKey) { onChange(defaultVal); return; }
+        readout.begin(e);
         const startY = e.clientY;
         const startV = cur;
         e.target.setPointerCapture(e.pointerId);

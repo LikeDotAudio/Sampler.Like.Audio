@@ -35,7 +35,7 @@ const GR_FULL = 20;
 // into the faceplate around it — the numbers spread evenly across 270° of
 // travel, low end first.
 // ---------------------------------------------------------------------------
-const BussKnob = ({ value, min, max, defaultVal, ticks, size = 54, onChange, title }) => {
+const BussKnob = ({ value, min, max, defaultVal, ticks, size = 54, onChange, title, label, display }) => {
     // Room outside the knob for the collar. The engraved numbers sit past the
     // tick marks and a three-character label is ~14px wide, so the box has to
     // clear the knob by more than the label radius or the end stops get cropped.
@@ -53,8 +53,15 @@ const BussKnob = ({ value, min, max, defaultVal, ticks, size = 54, onChange, tit
 
     // Drag vertically, wheel to nudge, alt-click to reset — the same gesture set
     // as every other control in the mixer, so the hands do not relearn.
+    const readout = window.useOaReadout({
+        label, color: window.OA_BUSS_COLOR,
+        display: display != null ? display : cur,
+        pct: ((cur - min) / ((max - min) || 1)) * 100,
+    });
+
     const onPointerDown = (e) => {
         if (e.altKey) { onChange(defaultVal); return; }
+        readout.begin(e);
         const startY = e.clientY;
         const startV = cur;
         e.target.setPointerCapture(e.pointerId);
@@ -422,6 +429,7 @@ window.BussCompEditor = ({ onClose }) => {
                     value={unit[key]} min={p.min} max={p.max} defaultVal={p.def}
                     ticks={p.ticks} size={size} title={`${p.label} — ${p.hint || ''}`}
                     onChange={(v) => set(key, v)}
+                    label={p.label.toUpperCase()} display={p.fmt(unit[key])}
                 />
                 <Cut size={7} style={{ letterSpacing: '1.8px' }}>{p.label.toUpperCase()}</Cut>
                 <div style={{

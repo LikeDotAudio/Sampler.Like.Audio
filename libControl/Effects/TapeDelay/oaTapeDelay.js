@@ -84,6 +84,10 @@ const dlUnit = function (saved, i) {
         // 16ths each head is locked to; 0 means it is set free in milliseconds.
         syncL: Math.max(0, Math.min(64, Number(s.syncL) || 0)),
         syncR: Math.max(0, Math.min(64, Number(s.syncR) || 0)),
+        // POWER, persisted — the machine is out of circuit until it is pressed
+        // again, and comes back that way after a reload. MUTE is the other one,
+        // and lives on the bus; see dlGain().
+        standby: !!s.standby,
         // width-mode button, 0 = OFF. See oaChorus.js.
         chorus: Math.max(0, Math.min(window.OA_CHORUS_COUNT - 1, Number(s.chorus) || 0)),
     };
@@ -457,7 +461,7 @@ const delayBus = function (ctx, u) {
         const unit = window.oaDelayUnit(idx);
         const input = ctx.createGain();
         const ret = ctx.createGain();
-        ret.gain.value = unit.ret;
+        ret.gain.value = unit.standby ? 0 : unit.ret;
         // Into the MASTER BUS, not the output — the repeats are part of the mix
         // the buss compressor is holding together.
         ret.connect(window.oaMasterInput ? window.oaMasterInput(ctx) : ctx.destination);
@@ -487,6 +491,47 @@ const delayBus = function (ctx, u) {
         else window.oaPrepareFx(ctx).then(() => attachEngine(ctx, bus, idx));
     }
     return buses[idx];
+};
+
+// Two separate ways for a tape to go quiet, and they must not fight: KILL is
+// momentary and lives on the bus, POWER is a persistent standby and lives on
+// the unit so it survives a reload. Either one alone silences the return.
+//
+// The reverb has had exactly this pair since it was written; the tapes had
+// neither, which is why a return strip could offer the buttons for one and not
+// the other.
+const dlGain = function (u, bus) {
+    const unit = window.oaDelayUnit(u);
+    return (bus.muted || unit.standby) ? 0 : unit.ret;
+};
+window.oaDelayGain = dlGain;
+
+/** KILL on a tape return: silent for exactly as long as it is engaged. */
+window.oaMuteDelay = function (u, on) {
+    const ctx = window.OA_AUDIO_CTX;
+    const bus = ctx && ctx.__oaDelays && ctx.__oaDelays[u];
+    if (!bus) return;
+    bus.muted = !!on;
+    bus.ret.gain.setTargetAtTime(dlGain(u, bus), ctx.currentTime, 0.01);
+    window.dispatchEvent(new CustomEvent('oa-delay-changed', { detail: { unit: u, mute: !!on } }));
+};
+
+/** Is this tape return killed right now? */
+window.oaDelayMuted = function (u) {
+    const ctx = window.OA_AUDIO_CTX;
+    const bus = ctx && ctx.__oaDelays && ctx.__oaDelays[u];
+    return !!(bus && bus.muted);
+};
+
+/** POWER on a tape: out of circuit until it is pressed again, and it persists. */
+window.oaSetDelayStandby = function (u, on) {
+    const unit = window.oaDelayUnit(u);
+    unit.standby = !!on;
+    window.oaSaveDelay();
+    const ctx = window.OA_AUDIO_CTX;
+    const bus = ctx && ctx.__oaDelays && ctx.__oaDelays[u];
+    if (bus) bus.ret.gain.setTargetAtTime(dlGain(u, bus), ctx.currentTime, 0.02);
+    window.dispatchEvent(new CustomEvent('oa-delay-changed', { detail: { unit: u, standby: !!on } }));
 };
 
 /**
@@ -583,7 +628,7 @@ window.oaSetDelay = function (u, key, value, keepSync) {
     const ctx = window.OA_AUDIO_CTX;
     const bus = ctx && ctx.__oaDelays && ctx.__oaDelays[u];
     if (bus) {
-        if (key === 'ret') bus.ret.gain.setTargetAtTime(value, ctx.currentTime, 0.02);
+        if (key === 'ret') bus.ret.gain.setTargetAtTime(dlGain(u, bus), ctx.currentTime, 0.02);
         else if (bus.engine) bus.engine.apply(key, value);
     }
     window.dispatchEvent(new CustomEvent('oa-delay-changed', { detail: { unit: u, key: key } }));
@@ -757,6 +802,7 @@ window.oaRegisterPlugin({
                 if (steps > 0) window.oaSetDelaySync(u, side, steps, bpm);
             });
             if (dl.chorus !== undefined) window.oaSetDelayChorus(u, dl.chorus);
+            if (dl.standby !== undefined) window.oaSetDelayStandby(u, !!dl.standby);
         });
     },
 });

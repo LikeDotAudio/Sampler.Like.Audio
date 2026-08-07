@@ -213,7 +213,10 @@ window.OA_BUSS_PARAMS = [
         hint: '12 dB/oct high-pass in the DETECTOR only. Stops the kick and the bass from ducking the whole record; the low end itself is untouched.',
     },
     {
-        key: 'mix', label: 'Mix', min: 0, max: 1, def: 1,
+        // DEPRECATED — off the faceplate, and bussSettings() no longer reads it.
+        // Kept in the schema so an older saved unit and the presets that carry a
+        // blend still load; see the note in bussSettings().
+        key: 'mix', label: 'Mix', min: 0, max: 1, def: 1, deprecated: true,
         ticks: ['DRY', '25', '50', '75', 'WET'],
         fmt: function (v) { return Math.round(v * 100) + '%'; },
         hint: 'Wet against the untouched mix. Below 100% is parallel compression: peaks held, transients alive underneath.',
@@ -253,7 +256,8 @@ window.OA_BUSS_SWITCHES = [
       hint: 'Stops a fast release from following the cycles of a bass note. A gain that moves at 50 Hz IS 50 Hz distortion.' },
     { key: 'scSum', label: 'Σ S/C',
       hint: 'Sum the two sides into one detector instead of rectifying each. More sensitive to what is up the middle — kick, snare, bass.' },
-    { key: 'parallel', label: 'PARALLEL',
+    // DEPRECATED with MIX, which is the only thing it changed.
+    { key: 'parallel', label: 'PARALLEL', deprecated: true,
       hint: 'MIX keeps the dry mix at 100% and rides the wet in on top, rather than crossfading between them. Fully wet auditions the compressed path alone.' },
 ];
 
@@ -632,16 +636,22 @@ window.oaBussModuleUrl = function () {
 const bussSettings = function (u) {
     const on = !!u.on;
     const rel = window.oaBussRelease(u.release);
-    // MIX works two ways, and the difference matters at the top of the travel.
-    // CLASSIC crossfades: at 50% you get half of each. PARALLEL holds the dry
-    // mix at full and rides the wet in on top, which is the New York trick —
-    // except fully clockwise, which auditions the compressed path alone so the
-    // settings can be heard while they are being made.
-    let wet = u.mix;
-    let dry = 1 - u.mix;
-    if (u.parallel) {
-        dry = u.mix >= 0.999 ? 0 : 1;
-    }
+    // MIX IS DEPRECATED, and this is where it stopped applying.
+    //
+    // Parallel compression on the MASTER is a control with one right answer and
+    // a lot of wrong ones: it is the last thing before the output, so any blend
+    // below fully wet is a second, uncompressed copy of the whole record summed
+    // back over itself. That is a phase problem before it is a taste problem —
+    // the wet path has the compressor's own group delay, so the two copies do
+    // not line up, and what sounds like "punch coming back" is a comb filter
+    // across the mix. Where parallel belongs is a CHANNEL, and every channel
+    // already has it: the strip compressor's BLEND knob.
+    //
+    // The field survives so that saved settings, songs and the factory presets
+    // still load without a special case; it simply no longer reaches the DSP.
+    // Fully wet, both laws, always.
+    const wet = 1;
+    const dry = 0;
     return {
         // Out of circuit, the trim goes with it: IN is a bypass of the whole
         // unit, not of the compression alone.

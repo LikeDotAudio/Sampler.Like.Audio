@@ -1153,6 +1153,42 @@ describe('fx bus', () => {
 // asking for it and building with it both land on the same one.
 // ---------------------------------------------------------------------------
 
+describe('deprecated controls', () => {
+    test('the buss MIX no longer reaches the DSP', async () => {
+        const w = await createWarmWorld();
+        const { window } = w;
+        const Processor = w.processors.get('oa-buss-comp');
+        assert.ok(Processor, 'the buss processor never registered');
+
+        // A setting that carries a blend — the old New York preset shape.
+        window.oaSetBuss('on', true);
+        window.oaSetBuss('mix', 0.5);
+        window.oaSetBuss('parallel', true);
+
+        // Whatever the field says, the unit is fully wet: an uncompressed copy
+        // of the whole record summed back over itself is a comb filter, not a
+        // parallel bus, because the wet path carries the compressor's own delay.
+        const bus = w.ctx.__oaBuss;
+        const wet = bus.engine.input.parameters.get('wet');
+        const dry = bus.engine.input.parameters.get('dry');
+        assert.equal(wet.value, 1, 'MIX still reaches the wet leg');
+        assert.equal(dry.value, 0, 'MIX still reaches the dry leg');
+
+        // …and switching the whole unit out is still a wire.
+        window.oaSetBuss('on', false);
+        assert.equal(bus.engine.input.parameters.get('wet').value, 0);
+        assert.equal(bus.engine.input.parameters.get('dry').value, 1);
+    });
+
+    test('a saved setting carrying a blend still loads', async () => {
+        const w = await createWarmWorld();
+        const { window } = w;
+        // The field is kept precisely so this does not throw or drop the rest.
+        window.oaLoadPlugins({ buss: { on: true, mix: 0.35, parallel: true, thresh: -6 } }, {});
+        assert.equal(window.oaBussUnit().thresh, -6, 'the rest of the setting was lost');
+    });
+});
+
 describe('sample rate', () => {
     test('one number answers for every context, and a context always wins', async () => {
         const w = await createWarmWorld();

@@ -135,6 +135,7 @@ window.TapeDelayEditor = ({ u, bpm, onClose }) => {
     // and stops taking moves that nothing would hear.
     const bypassed = window.useOaFxBypass();
     const veil = window.oaBypassVeil(bypassed);
+    const [showHelp, setShowHelp] = React.useState(false);
 
     // Taken once per unit, so ABORT goes back to however the tape sounded when
     // the panel was opened — not to the factory preset.
@@ -179,7 +180,13 @@ window.TapeDelayEditor = ({ u, bpm, onClose }) => {
                 <span style={{ fontSize: '9px', color: '#666', fontVariantNumeric: 'tabular-nums' }}>
                     {bpm} BPM
                 </span>
-                <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
+                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {/* Help is a BUTTON rather than a standing paragraph: it is
+                        read once and then in the way for ever. */}
+                    <window.SeqButton label="? Help" onClick={() => setShowHelp((v) => !v)}
+                        active={showHelp}
+                        title="How to drive this thing"
+                        style={{ padding: '4px 10px' }} />
                     <window.SeqButton label="⟲ Abort" onClick={abort} disabled={!dirty}
                         color={dirty ? '#b71c1c' : undefined} textColor={dirty ? '#fff' : undefined}
                         title="Back to how this tape sounded when the panel was opened"
@@ -302,13 +309,18 @@ window.TapeDelayEditor = ({ u, bpm, onClose }) => {
                 </div>
             </div>
 
-            <div style={{ fontSize: '9px', color: '#666', marginTop: '10px', lineHeight: 1.5 }}>
+            {showHelp && (
+            <div style={{
+                fontSize: '9px', color: '#8f9299', marginTop: '10px', lineHeight: 1.6,
+                border: '1px solid #333840', borderRadius: '5px', background: '#1b1e23', padding: '8px 10px'
+            }}>
                 Turn a head dial to set it in milliseconds; tap a number printed around it to
                 lock that head to a note division, and it follows the tempo from then on.
                 Drag any knob up or down — hold shift for fine, alt-click for the factory
                 setting. Intensity past ~100% self-oscillates: the loop feeds itself faster
                 than the tape can shed it, and the repeats build until the saturation holds them.
             </div>
+            )}
         </div>
     );
 };

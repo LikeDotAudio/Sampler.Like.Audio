@@ -63,6 +63,7 @@ window.ChorusEditor = ({ u, onClose }) => {
     // plate greys and stops taking buttons that nothing would hear.
     const bypassed = window.useOaFxBypass();
     const veil = window.oaBypassVeil(bypassed);
+    const [showHelp, setShowHelp] = React.useState(false);
 
     const meta = window.OA_DELAY_UNITS[u];
     const mode = (state && state.chorus) || 0;
@@ -86,8 +87,14 @@ window.ChorusEditor = ({ u, onClose }) => {
                     {meta.name} — CHORUS
                 </span>
                 <span style={{ fontSize: '9px', color: '#666' }}>after the tape</span>
-                <div style={{ marginLeft: 'auto' }}>
+                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     {bypassed && <window.OaOutOfCircuit />}
+                    {/* Help is a BUTTON rather than a standing paragraph: it is
+                        read once and then in the way for ever. */}
+                    <window.SeqButton label="? Help" onClick={() => setShowHelp((v) => !v)}
+                        active={showHelp}
+                        title="What the buttons do"
+                        style={{ padding: '4px 10px' }} />
                     <window.SeqButton label="✖ Close" onClick={onClose} style={{ padding: '4px 10px' }} />
                 </div>
             </div>
@@ -136,7 +143,11 @@ window.ChorusEditor = ({ u, onClose }) => {
                 </div>
             </div>
 
-            <div style={{ fontSize: '9px', color: '#666', marginTop: '10px', lineHeight: 1.5 }}>
+            {showHelp && (
+            <div style={{
+                fontSize: '9px', color: '#8f9299', marginTop: '10px', lineHeight: 1.6,
+                border: '1px solid #333840', borderRadius: '5px', background: '#1b1e23', padding: '8px 10px'
+            }}>
                 Not a warble — the sweep is kept far too shallow to hear as pitch. The
                 two sides sweep in opposite directions and the wet copy is inverted
                 across the pair, so it mostly cancels in mono and the ear reads what
@@ -145,6 +156,7 @@ window.ChorusEditor = ({ u, onClose }) => {
                 settings come from. 1+2 is the one to leave on and forget about; all
                 four down is the one that stops being width and starts being an effect.
             </div>
+            )}
         </div>
     );
 };

@@ -499,6 +499,13 @@ const rvGain = function (u, bus) {
 };
 window.oaReverbGain = rvGain;
 
+/** Is this machine killed right now? A display asks; the flag lives on the bus. */
+window.oaReverbMuted = function (u) {
+    const ctx = window.OA_AUDIO_CTX;
+    const bus = ctx && ctx.__oaReverbs && ctx.__oaReverbs[u];
+    return !!(bus && bus.muted);
+};
+
 /** MUTE on the VARC: drops the return for exactly as long as it is held. */
 window.oaMuteReverb = function (u, on) {
     const ctx = window.OA_AUDIO_CTX;

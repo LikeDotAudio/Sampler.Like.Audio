@@ -397,14 +397,16 @@ window.BussCompEditor = ({ onClose }) => {
         );
     };
 
-    const row = (left, mid, right) => (
+    // Three knobs to a row, the middle one smaller — except where a control has
+    // been deprecated out of the faceplate, and the row is simply shorter.
+    const row = (...keys) => (
         <div style={{
-            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-around',
             width: '100%', gap: '4px'
         }}>
-            {knob(left, 54)}
-            {knob(mid, 34)}
-            {knob(right, 54)}
+            {keys.filter(Boolean).map((k, i) => (
+                <React.Fragment key={k}>{knob(k, keys.length === 3 && i === 1 ? 34 : 54)}</React.Fragment>
+            ))}
         </div>
     );
 
@@ -474,7 +476,10 @@ window.BussCompEditor = ({ onClose }) => {
                     </div>
 
                     {row('thresh', 'sc', 'makeup')}
-                    {row('attack', 'mix', 'release')}
+                    {/* MIX is deprecated: parallel compression belongs on a
+                        channel, not across the master, and every channel strip
+                        already has a BLEND knob. Two knobs on this row now. */}
+                    {row('attack', 'release')}
                     {row('ratio', 'trim', 'rate')}
 
                     {/* IN, ANALOG and FADE. Everything above decides what the
@@ -538,22 +543,9 @@ window.BussCompEditor = ({ onClose }) => {
                             onPress={() => set('scSum', !unit.scSum)} />
                     </div>
 
-                    <div style={{
-                        border: '1px solid #333840', borderRadius: '5px', padding: '8px',
-                        background: '#1b1e23', display: 'flex', flexDirection: 'column', gap: '6px'
-                    }}>
-                        <div style={{ fontSize: '8px', color: '#7d848d', letterSpacing: '1.6px', fontWeight: '700' }}>
-                            MIX LAW
-                        </div>
-                        <ModeSwitch label={unit.parallel ? 'PARALLEL' : 'CLASSIC'} active={!!unit.parallel}
-                            title={sw('parallel').hint}
-                            onPress={() => set('parallel', !unit.parallel)} />
-                        <div style={{ fontSize: '8.5px', color: '#7d848d', lineHeight: 1.45 }}>
-                            {unit.parallel
-                                ? 'Dry stays at 100% and the wet rides in on top. Fully wet auditions the compressed path alone.'
-                                : 'MIX crossfades between the untouched mix and the compressed one.'}
-                        </div>
-                    </div>
+                    {/* MIX LAW went with MIX: it only ever described how that
+                        knob crossfaded, and with the unit always fully wet there
+                        is nothing left for it to say. */}
 
                     <div style={{
                         border: '1px solid #333840', borderRadius: '5px', padding: '8px',

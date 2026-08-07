@@ -279,6 +279,70 @@ const Mixer = () => {
     const panLabel = v => Math.abs(v) < 0.02 ? "C" : (v < 0 ? "L" + Math.round(-v * 100) : "R" + Math.round(v * 100));
 
     // A pair of meter bars for one effect return, gradient-tinted to the unit.
+    /**
+     * The head of an effect-return strip: the name IS the power button, and KILL
+     * sits under it — the same two controls a channel gets, because a return is
+     * a channel of the wet path and people reach for the same things.
+     *
+     * It is coloured in the RETURN's own colour rather than the app accent, so
+     * the button, the meter, the send knob on every channel and the panel that
+     * opens from it are all visibly the same effect. A channel strip is orange
+     * because a channel has no identity of its own; a return does.
+     *
+     * The two are not the same control, and the hardware they come from does not
+     * treat them as one either:
+     *
+     *   POWER  persistent. Out of circuit until pressed again, and it survives a
+     *          reload — the machine is not part of the mix at all.
+     *   KILL   momentary in spirit: the return is silenced, the tail keeps
+     *          ringing behind it, and letting go brings it back where it got to.
+     *          What you hit when the reverb is suddenly wrong in a take.
+     *
+     * Either one alone silences the return, and neither cancels the other.
+     */
+    const fxHead = (fx) => {
+        const rv = fx.kind === 'rv';
+        const unit = rv ? window.oaReverbUnit(fx.i) : window.oaDelayUnit(fx.i);
+        const on = !unit.standby;
+        const killed = rv ? window.oaReverbMuted(fx.i) : window.oaDelayMuted(fx.i);
+        const power = () => (rv ? window.oaSetReverbStandby : window.oaSetDelayStandby)(fx.i, on);
+        const kill = () => (rv ? window.oaMuteReverb : window.oaMuteDelay)(fx.i, !killed);
+        return (
+            <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: '3px' }}>
+                <button
+                    onClick={power}
+                    title={`${fx.name} — ${on ? 'in circuit; click to take it out' : 'out of circuit; click to bring it back'}`}
+                    style={{
+                        width: '100%', padding: '7px 2px', textAlign: 'center', borderRadius: '4px',
+                        border: `1px solid ${on ? fx.color : '#444b57'}`,
+                        // The strip's own colour, dimmed to a plate rather than
+                        // used flat: a lit button that IS the colour fights the
+                        // meter beside it, which is the same colour and moving.
+                        background: on ? 'color-mix(in srgb, ' + fx.color + ' 22%, #23262b)' : '#353b45',
+                        color: on ? fx.color : 'var(--muted)',
+                        cursor: 'pointer', fontSize: '10px', fontWeight: '700', letterSpacing: '1px',
+                        textTransform: 'uppercase', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+                    }}
+                >
+                    {fx.name}
+                </button>
+                <button
+                    onClick={kill}
+                    title={killed ? 'Killed — click to let it back in' : 'Kill this return; the tail keeps ringing behind it'}
+                    style={{
+                        width: '100%', padding: '3px 0', textAlign: 'center', borderRadius: '4px',
+                        border: `1px solid ${killed ? '#e5533d' : '#444b57'}`,
+                        background: killed ? '#5c1d14' : '#353b45',
+                        color: killed ? '#ffd9d2' : 'var(--muted)',
+                        cursor: 'pointer', fontSize: '9px', fontWeight: '600', letterSpacing: '.5px'
+                    }}
+                >
+                    KILL
+                </button>
+            </div>
+        );
+    };
+
     const fxMeters = (fx) => (
         <React.Fragment>
             {[0, 1].map((ch) => (
@@ -531,7 +595,7 @@ const Mixer = () => {
                         width: '78px', flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center',
                         padding: '8px 4px 8px', gap: '8px', ...veil
                     }}>
-                        <div style={{ fontSize: '10px', color: meta.color, letterSpacing: '1px', textTransform: 'uppercase' }}>{meta.name}</div>
+                        {fxHead(fx)}
 
                         {/* The two dropdowns that used to sit here — a tone and a
                             size, four choices each — are now the VARC. The strip
@@ -603,7 +667,7 @@ const Mixer = () => {
                         width: '74px', flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center',
                         padding: '8px 4px 8px', gap: '6px', ...veil
                     }}>
-                        <div style={{ fontSize: '10px', color: meta.color, letterSpacing: '1px', textTransform: 'uppercase' }}>{meta.name}</div>
+                        {fxHead(fx)}
 
                         <button
                             onClick={() => { setChorusUnit(null); setTapeUnit(open ? null : u); }}

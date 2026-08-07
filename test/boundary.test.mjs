@@ -235,6 +235,51 @@ describe('each effect owns its own audio', () => {
     });
 });
 
+describe('the panels behave like each other', () => {
+    /**
+     * The panels that carry written help.
+     *
+     * Every one of them used to end in a standing paragraph of instructions.
+     * That text is read once and is then in the way for ever — and on a short
+     * screen it is what pushes the controls the panel exists for off the bottom
+     * of it. They are behind a `? Help` button now, and a panel added later
+     * should copy that rather than the thing it replaced.
+     */
+    const HELP_PANELS = [
+        'libControl/Effects/Chorus/ChorusEditor.jsx',
+        'libControl/Effects/Compressor/CompressorEditor.jsx',
+        'libControl/Effects/BussCompressor/BussCompEditor.jsx',
+        'libControl/Effects/Drive/DriveEditor.jsx',
+        'libControl/Effects/TapeDelay/TapeDelayEditor.jsx',
+        'libControl/Effects/Reverb/VarcRemote.jsx',
+    ];
+
+    test('help is behind a button, not standing under the controls', () => {
+        HELP_PANELS.forEach((f) => {
+            const src = readFileSync(join(ROOT, f), 'utf8');
+            // Quoted either way: most write label="? Help", the VARC swaps the
+            // glyph and so writes label={showHelp ? '✖ Help' : '? Help'}.
+            assert.match(src, /['"][^'"]*Help['"]/, `${f} has no ? Help button`);
+            assert.match(
+                src, /\{showHelp && \(/,
+                `${f} has a help toggle but its prose is not behind it`,
+            );
+        });
+    });
+
+    test('every effect panel says when it is out of circuit', () => {
+        // Record arms a bypass of the whole rack. A panel that goes on looking
+        // live while nothing it controls is in the signal path is the same
+        // failure as a knob that turns and is not heard.
+        HELP_PANELS.forEach((f) => {
+            const src = readFileSync(join(ROOT, f), 'utf8');
+            assert.match(src, /useOaFxBypass\(\)/, `${f} never asks whether the rack is bypassed`);
+            assert.match(src, /OaOutOfCircuit/, `${f} does not show the out-of-circuit badge`);
+            assert.match(src, /\.\.\.veil/, `${f} does not grey itself out`);
+        });
+    });
+});
+
 describe('one sample rate', () => {
     // Every module here turns seconds into samples somewhere. When each carried
     // its own fallback they disagreed — 44100 in two places, 48000 in a third —

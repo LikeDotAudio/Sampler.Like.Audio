@@ -115,6 +115,7 @@ window.DriveEditor = ({ idx, name, onClose }) => {
     // says so and stops taking knob moves that nothing would hear.
     const bypassed = window.useOaFxBypass();
     const veil = window.oaBypassVeil(bypassed);
+    const [showHelp, setShowHelp] = React.useState(false);
 
     // Taken once per channel, so ABORT goes back to how this channel sounded
     // when the panel was opened rather than to a factory setting.
@@ -153,7 +154,13 @@ window.DriveEditor = ({ idx, name, onClose }) => {
                     {name} — DRIVE
                 </span>
                 <span style={{ fontSize: '9px', color: '#666' }}>before the pan and the sends</span>
-                <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
+                <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    {/* Help is a BUTTON rather than a standing paragraph: it is
+                        read once and then in the way for ever. */}
+                    <window.SeqButton label="? Help" onClick={() => setShowHelp((v) => !v)}
+                        active={showHelp}
+                        title="What the switches do"
+                        style={{ padding: '4px 10px' }} />
                     <window.SeqButton label="⟲ Abort" onClick={abort} disabled={!dirty}
                         color={dirty ? '#b71c1c' : undefined} textColor={dirty ? '#fff' : undefined}
                         title="Back to how this channel sounded when the panel was opened"
@@ -236,12 +243,17 @@ window.DriveEditor = ({ idx, name, onClose }) => {
                 </span>
             </div>
 
-            <div style={{ fontSize: '9px', color: '#666', marginTop: '10px', lineHeight: 1.5 }}>
+            {showHelp && (
+            <div style={{
+                fontSize: '9px', color: '#8f9299', marginTop: '10px', lineHeight: 1.6,
+                border: '1px solid #333840', borderRadius: '5px', background: '#1b1e23', padding: '8px 10px'
+            }}>
                 STARVE is a dying battery — the dead zone around silence gets wide enough
                 that the tail of a note sputters out instead of decaying. OCTAVE folds the
                 bottom half of the wave up onto the top, so it repeats twice as often and
                 the pitch jumps an octave. Blend both back against the dry signal with MIX.
             </div>
+            )}
         </div>
     );
 };

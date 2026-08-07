@@ -25,18 +25,28 @@
 window.PitchWheel = ({ maxWidth = 460 }) => {
     const range = window.OA_BEND_RANGE || 200;
     const [cents, setCents] = React.useState(() => window.OA_PITCH_BEND || 0);
+    // Which pad the wheel is holding. It follows the last pad played, so the
+    // bar always reads the tuning of the sound you just heard.
+    const [pad, setPad] = React.useState(() => window.OA_BEND_PAD || 0);
     const trackRef = React.useRef(null);
     const dragRef = React.useRef(false);
 
-    // Whichever wheel moved, both read the same.
+    // Whichever wheel moved — this one, the keyboard's, or a pad being struck —
+    // they all read the same.
     React.useEffect(() => {
-        const onBend = (e) => setCents((e.detail && e.detail.cents) || 0);
+        const onBend = (e) => {
+            setCents((e.detail && e.detail.cents) || 0);
+            if (e.detail && e.detail.idx != null) setPad(e.detail.idx);
+        };
         window.addEventListener('oa-pitch-bend', onBend);
         // A bend set before this mounted (a wheel nudged on the Sequencer tab)
         // never fires an event this component is around to hear.
         setCents(window.OA_PITCH_BEND || 0);
+        setPad(window.OA_BEND_PAD || 0);
         return () => window.removeEventListener('oa-pitch-bend', onBend);
     }, []);
+
+    const padName = (window.OA_DRUM_KIT && window.OA_DRUM_KIT[pad] && window.OA_DRUM_KIT[pad].name) || `Pad ${pad + 1}`;
 
     const apply = (c) => {
         const v = Math.max(-range, Math.min(range, c));
@@ -63,7 +73,13 @@ window.PitchWheel = ({ maxWidth = 460 }) => {
 
     return (
         <div style={{ width: '100%', maxWidth: `${maxWidth}px`, marginTop: '12px', display: 'flex', alignItems: 'center', gap: '10px', boxSizing: 'border-box', padding: '0 4px' }}>
-            <span style={{ fontSize: '9px', fontWeight: 'bold', color: '#888', letterSpacing: '1px' }}>PITCH</span>
+            {/* The wheel tunes ONE pad — whichever was played last — so it says
+                which, or a bend would look like it had gone missing when the
+                next pad's (untouched) tuning came up. */}
+            <span title={`The wheel is holding ${padName}. Play another pad and it takes that pad's tuning.`}
+                style={{ fontSize: '9px', fontWeight: 'bold', color: '#888', letterSpacing: '1px', whiteSpace: 'nowrap' }}>
+                PITCH <b style={{ color: 'var(--accent)', fontWeight: 'bold' }}>{padName}</b>
+            </span>
 
             <div
                 ref={trackRef}

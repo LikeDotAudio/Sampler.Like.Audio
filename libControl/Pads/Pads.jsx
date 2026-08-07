@@ -65,6 +65,24 @@ const Pads = ({ label = "Drum Pads", centerVelocity = 100, edgeVelocity = 10, on
         window.addEventListener('oa-drum-play', onPlay);
         return () => window.removeEventListener('oa-drum-play', onPlay);
     }, []);
+    // A sample can now be loaded from somewhere other than these pads — the
+    // mixer's SAMPLER panel picks straight into a channel — so the names the
+    // pads show are re-read from the shared store whenever one changes, rather
+    // than only at mount.
+    React.useEffect(() => {
+        const onChanged = (e) => {
+            const idx = e.detail && e.detail.idx;
+            if (idx == null) return;
+            const entry = window.OA_DRUM_SAMPLES && window.OA_DRUM_SAMPLES[idx];
+            setSampleNames((prev) => {
+                const next = entry ? (entry.name || '(loaded)') : null;
+                if (prev[idx] === next) return prev;
+                const n = [...prev]; n[idx] = next; return n;
+            });
+        };
+        window.addEventListener('oa-sample-changed', onChanged);
+        return () => window.removeEventListener('oa-sample-changed', onChanged);
+    }, []);
     // A sound sent over from the EDITOR tab, which has no pad of its own to load
     // into — it arrives armed, and the next pad clicked takes it.
     React.useEffect(() => {

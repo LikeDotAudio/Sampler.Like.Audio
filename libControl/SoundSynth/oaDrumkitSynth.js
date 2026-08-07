@@ -19,10 +19,10 @@ window.oaPlayDrumVoice = function (ctx, track, time, volume, pan) {
     const engine = window.OA_SYNTH_ENGINES[patch.engine] || window.OA_SYNTH_ENGINES.membrane;
 
     // Tone Mode hands us a ratio; shift every frequency-shaped parameter by it.
-    // The pitch wheel is a standing offset on top of that — a synth voice has no
-    // detune AudioParam to retune later, so it opens at the current bend and
-    // keeps it for its (short) life.
-    const ratio = (track.pitchRatio || 1) * (window.oaBendRatio ? window.oaBendRatio() : 1);
+    // This pad's own bend is a standing offset on top of that — a synth voice
+    // has no detune AudioParam to retune later, so it opens at the pad's tuning
+    // and keeps it for its (short) life.
+    const ratio = (track.pitchRatio || 1) * (window.oaBendRatio ? window.oaBendRatio(idx) : 1);
     const tuned = (ratio === 1) ? patch : window.oaTransposePatch(patch, ratio);
 
     const out = window.oaVoiceOut ? window.oaVoiceOut(ctx, idx, pan) : ctx.destination;
@@ -108,10 +108,13 @@ window.oaPlayDrumSample = function (ctx, entry, time, volume, pan) {
     if (src.loop) src.start(time, offset);
     else src.start(time, offset, region);
     
-    // Register as an active voice so a MIDI pitch-bend can retune it live, and
-    // start it at the current wheel offset. Auto-removed when the note ends.
+    // Register as an active voice so the wheel can retune it live, and start it
+    // at THIS PAD's bend — every pad carries its own, so a pattern plays each
+    // track at its own tuning. Tagged with the pad so a wheel move can find the
+    // voices it owns. Auto-removed when the note ends.
     try {
-        if (src.detune) src.detune.value = window.OA_PITCH_BEND || 0;
+        src.__oaPad = entry.idx;
+        if (src.detune) src.detune.value = window.oaPadBend ? window.oaPadBend(entry.idx) : 0;
         window.OA_LIVE_VOICES.push(src);
         src.addEventListener('ended', function () {
             const i = window.OA_LIVE_VOICES.indexOf(src);

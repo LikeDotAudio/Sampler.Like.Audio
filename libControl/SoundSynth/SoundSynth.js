@@ -119,37 +119,91 @@ window.OA_DRUM_LOOPS = window.OA_DRUM_LOOPS || {};
 // the app's only strong reference to a playing source, so it is exactly where a
 // voice that never fires 'ended' piles up. Separate names, separate arrays.
 window.OA_LIVE_VOICES = window.OA_LIVE_VOICES || [];
-window.OA_PITCH_BEND = window.OA_PITCH_BEND || 0;
 // How far the wheel reaches, in cents. ±200 = the usual two semitones.
 window.OA_BEND_RANGE = window.OA_BEND_RANGE || 200;
+
+// ---------------------------------------------------------------------------
+// The bend belongs to the PAD, not to the desk.
+//
+// One global offset made the wheel a master tuning control: bend a kick down
+// and the hats went with it, and a sequence playing sixteen voices played all
+// sixteen at whatever the last gesture was. That is not what a wheel is for on
+// a sampler. Here each pad keeps its own standing offset, so a pad can be tuned
+// by ear once and then played — and the sequencer plays every track at its own
+// tuning, all at the same time, which a single global number cannot express.
+//
+// The wheel is therefore a control that has to be POINTED at something: playing
+// a pad hands it that pad (oaFocusBendPad), the pad's own value jumps into the
+// wheel, and moving the wheel writes back to that pad and no other.
+// ---------------------------------------------------------------------------
+window.OA_PAD_BEND = window.OA_PAD_BEND || {};       // pad idx -> cents
+// Which pad the wheel is currently holding. Pad 1 until something is played,
+// so a wheel moved before the first hit still has somewhere to put the value.
+window.OA_BEND_PAD = (window.OA_BEND_PAD != null) ? window.OA_BEND_PAD : 0;
+// The focused pad's value, mirrored for the display and for anything that only
+// wants "the bend right now".
+window.OA_PITCH_BEND = window.OA_PITCH_BEND || 0;
+
+/** One pad's standing offset in cents. */
+window.oaPadBend = function (idx) {
+    return (idx != null && window.OA_PAD_BEND[idx]) || 0;
+};
+
+/**
+ * Point the wheel at a pad — called when that pad is PLAYED by hand, from the
+ * grid, the computer keyboard or a MIDI note. The pad's own tuning becomes what
+ * the wheel reads and what the wheel will change.
+ *
+ * Sequencer steps deliberately do NOT come through here: a running pattern
+ * would drag the wheel around once per sixteenth, and every track already plays
+ * at its own tuning without anyone pointing at it.
+ */
+window.oaFocusBendPad = function (idx) {
+    if (idx == null) return;
+    const cents = window.oaPadBend(idx);
+    const same = window.OA_BEND_PAD === idx && window.OA_PITCH_BEND === cents;
+    window.OA_BEND_PAD = idx;
+    window.OA_PITCH_BEND = cents;
+    if (!same) window.dispatchEvent(new CustomEvent('oa-pitch-bend', { detail: { cents: cents, idx: idx } }));
+};
 
 // Pre-rendered pitched buffers for Tone Mode (avoids real-time resampling
 // latency). rootIdx -> { semitones -> AudioBuffer }. See oaDrumkitSynth.js for
 // the budget that keeps this from eating the machine.
 window.OA_TONE_CACHE = window.OA_TONE_CACHE || {};
 
-// Set the global pitch-bend (cents) and retune every sounding voice live.
-//
-// The bend LATCHES: it is a standing offset, not a gesture. Whatever is set
-// here stays set — sounding voices are retuned now, and every voice started
-// afterwards opens at the same offset (oaPlayDrumSample / oaPlayDrumVoice) —
-// until something sets it again. The spring on a hardware wheel is handled
-// where the wheel is read (useMidiPads.js), not here.
-window.oaSetPitchBend = function (cents) {
-    window.OA_PITCH_BEND = cents || 0;
+/**
+ * Move the wheel: retune the focused pad, and everything of that pad's that is
+ * sounding right now.
+ *
+ * The bend LATCHES. It is a standing offset, not a gesture: the value stays on
+ * the pad after the wheel is let go, so the next hit — and the one after the
+ * song is reloaded onto the same kit — plays at the pitch it was tuned to. The
+ * spring on a hardware wheel is handled where the wheel is read
+ * (useMidiPads.js), not here.
+ *
+ * `idx` names the pad; left out, it is whichever pad was last played.
+ */
+window.oaSetPitchBend = function (cents, idx) {
+    const pad = (idx != null) ? idx : window.OA_BEND_PAD;
+    const v = cents || 0;
+    if (pad != null) window.OA_PAD_BEND[pad] = v;
+    if (pad === window.OA_BEND_PAD) window.OA_PITCH_BEND = v;
+    // Only this pad's voices — the whole point is that the hats do not follow
+    // the kick down.
     for (let i = 0; i < window.OA_LIVE_VOICES.length; i++) {
         const s = window.OA_LIVE_VOICES[i];
-        try { if (s.detune) s.detune.value = window.OA_PITCH_BEND; } catch (e) {}
+        try { if (s.detune && s.__oaPad === pad) s.detune.value = v; } catch (e) {}
     }
     // The on-screen wheel follows the hardware one, and vice versa; this is how
     // whichever moved tells the other. (PitchWheel.jsx)
-    window.dispatchEvent(new CustomEvent('oa-pitch-bend', { detail: { cents: window.OA_PITCH_BEND } }));
+    window.dispatchEvent(new CustomEvent('oa-pitch-bend', { detail: { cents: v, idx: pad } }));
 };
 
-// The bend as a frequency ratio, for the paths that have no detune AudioParam
-// to hand (the synth voices, which are built from frequencies).
-window.oaBendRatio = function () {
-    return Math.pow(2, (window.OA_PITCH_BEND || 0) / 1200);
+// A pad's bend as a frequency ratio, for the paths that have no detune
+// AudioParam to hand (the synth voices, which are built from frequencies).
+window.oaBendRatio = function (idx) {
+    return Math.pow(2, window.oaPadBend(idx != null ? idx : window.OA_BEND_PAD) / 1200);
 };
 
 // Store/replace a pad's sample. opts: { loop, pitch, fade, name }.

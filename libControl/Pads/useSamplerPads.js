@@ -33,7 +33,13 @@ window.useSamplerPads = (
     const hitPad = (e, idx, explicitPadNum = null) => {
         const velocity = computeVelocity(e);
         setVelocities((prev) => { const n = [...prev]; n[idx] = velocity; return n; });
-        
+        // The wheel under the pads follows the hand: the sounding pad's own
+        // tuning jumps into it, and moving it from here tunes that pad. Before
+        // the trigger, so the voice starts at the pitch the wheel is showing.
+        // In Tone Mode every pad is the root pad's voice, so that is the pad
+        // being tuned however many keys are involved in playing it.
+        if (window.oaFocusBendPad) window.oaFocusBendPad(toneRoot !== null ? toneRoot : idx);
+
         if (toneRoot !== null && explicitPadNum !== null) {
             const entry = window.OA_DRUM_SAMPLES && window.OA_DRUM_SAMPLES[toneRoot];
             let semitones = explicitPadNum - 1;
@@ -64,6 +70,7 @@ window.useSamplerPads = (
     const triggerPadAt = (idx, velocity) => {
         const v = Math.max(1, Math.min(100, Math.round(velocity == null ? 100 : velocity)));
         setVelocities((prev) => { const n = [...prev]; n[idx] = v; return n; });
+        if (window.oaFocusBendPad) window.oaFocusBendPad(idx);
         if (window.oaTriggerDrum) window.oaTriggerDrum(idx, v / 100);
         if (typeof onHit === 'function') onHit(idx + 1, v);
         emitHit(idx, v);
@@ -85,6 +92,7 @@ window.useSamplerPads = (
                 semitones = (midiBaseRef.current + explicitPadNum - 1) - entry.sampleRoot;
             }
             setVelocities((prev) => { const n = [...prev]; n[idx] = v; return n; });
+            if (window.oaFocusBendPad) window.oaFocusBendPad(toneRoot);
             if (window.oaTriggerTone) window.oaTriggerTone(toneRoot, semitones, v / 100);
             window.dispatchEvent(new CustomEvent('oa-tone-hit', { detail: { rootIdx: toneRoot, semitones, velocity: v } }));
             const el = padButtons.current[idx];

@@ -81,6 +81,14 @@ window.useMidiPads = (midiBase, toneRootRef, padButtons, triggerPadAt, setVeloci
                 const idx = note - midiBase;
                 const velocity = Math.max(1, Math.round(vel / 127 * 100));
                 
+                // A note played from the keyboard points the wheel at the pad it
+                // sounds, the same as striking that pad by hand does — so the
+                // bar below the pads reads that pad's tuning before the note
+                // starts, and the wheel tunes what is being played.
+                const bendPad = toneRootRef.current !== null ? toneRootRef.current
+                    : ((idx >= 0 && idx < window.OA_PAD_COUNT) ? idx : null);
+                if (bendPad != null && window.oaFocusBendPad) window.oaFocusBendPad(bendPad);
+
                 if (toneRootRef.current !== null) {
                     // In Tone Mode, map ANY note to a pitch relative to midiBase or sampleRoot
                     const entry = window.OA_DRUM_SAMPLES && window.OA_DRUM_SAMPLES[toneRootRef.current];

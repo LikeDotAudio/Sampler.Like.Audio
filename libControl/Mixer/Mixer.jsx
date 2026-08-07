@@ -35,6 +35,7 @@ const Mixer = () => {
     // Which channel's SYNTH panel is open, and a re-render when samples change
     // so a channel that just got a sample loses its SYNTH button.
     const [synthPad, setSynthPad] = React.useState(null);
+    const [samplerPad, setSamplerPad] = React.useState(null);
     const [drivePad, setDrivePad] = React.useState(null);
     const [compPad, setCompPad] = React.useState(null);
     const [varcUnit, setVarcUnit] = React.useState(null);
@@ -430,7 +431,7 @@ const Mixer = () => {
                         {/* No sample loaded means this voice is synthesized — let them shape it. */}
                         {!hasSample(i) && (
                             <button
-                                onClick={() => { setDrivePad(null); setCompPad(null); setSynthPad(synthPad === i ? null : i); }}
+                                onClick={() => { setDrivePad(null); setCompPad(null); setSamplerPad(null); setSynthPad(synthPad === i ? null : i); }}
                                 title={`Edit the ${track.name || 'Track'} synth voice`}
                                 style={{
                                     width: '100%', padding: '3px 0', textAlign: 'center', borderRadius: '4px',
@@ -445,6 +446,34 @@ const Mixer = () => {
                             </button>
                         )}
 
+                        {/* The sound itself: pick one, chop it, tune it. Every
+                            channel has this, sample or not — a channel with no
+                            sample is one Browse away from having one. */}
+                        {(() => {
+                            const sOpen = samplerPad === i;
+                            const sHas = hasSample(i);
+                            const e = sHas && window.OA_DRUM_SAMPLES[i];
+                            const sChop = !!e && window.oaTrimmed(window.oaTrimOf(e), e.buffer.duration);
+                            return (
+                                <button
+                                    onClick={() => { setSynthPad(null); setDrivePad(null); setCompPad(null); setSamplerPad(sOpen ? null : i); }}
+                                    title={sHas
+                                        ? `${track.name || 'Track'} — ${e.name || 'sample'}${sChop ? ' (chopped)' : ''}\nEdit, chop or replace it`
+                                        : `${track.name || 'Track'} — no sample. Pick one.`}
+                                    style={{
+                                        width: '100%', padding: '3px 0', textAlign: 'center', borderRadius: '4px',
+                                        border: `1px solid ${sOpen || sHas ? 'var(--accent)' : '#444b57'}`,
+                                        background: sOpen ? 'var(--accent-s70)' : (sHas ? 'var(--accent-s80)' : '#2a2f38'),
+                                        color: sOpen || sHas ? 'var(--accent-t60)' : '#9aa3ae',
+                                        cursor: 'pointer', fontSize: '9px', fontWeight: '700', letterSpacing: '.3px',
+                                        marginBottom: '4px', overflow: 'hidden', whiteSpace: 'nowrap'
+                                    }}
+                                >
+                                    SAMPLER{sChop ? ' ✂' : ''}
+                                </button>
+                            );
+                        })()}
+
                         {/* The pedal in front of this channel. Unlit means the
                             mix is at 0 and no distortion is in the graph at all. */}
                         {(() => {
@@ -454,7 +483,7 @@ const Mixer = () => {
                             const dOpen = drivePad === i;
                             return (
                                 <button
-                                    onClick={() => { setSynthPad(null); setCompPad(null); setDrivePad(dOpen ? null : i); }}
+                                    onClick={() => { setSynthPad(null); setCompPad(null); setSamplerPad(null); setDrivePad(dOpen ? null : i); }}
                                     title={`${track.name || 'Track'} — distortion pedal${dOn ? ` (${window.oaDriveMode(dUnit.mode).label}, ${Math.round(dUnit.mix * 100)}% mix)` : ''}`}
                                     style={{
                                         width: '100%', padding: '3px 0', textAlign: 'center', borderRadius: '4px',
@@ -482,7 +511,7 @@ const Mixer = () => {
                             const cColor = window.OA_COMP_COLOR;
                             return (
                                 <button
-                                    onClick={() => { setSynthPad(null); setDrivePad(null); setCompPad(cOpen ? null : i); }}
+                                    onClick={() => { setSynthPad(null); setDrivePad(null); setSamplerPad(null); setCompPad(cOpen ? null : i); }}
                                     title={`${track.name || 'Track'} — limiting amplifier${cOn ? ` (${cRatio.label}${cRatio.key === 'all' ? '' : ':1'})` : ''}`}
                                     style={{
                                         width: '100%', padding: '3px 0', textAlign: 'center', borderRadius: '4px',
@@ -827,6 +856,15 @@ const Mixer = () => {
                     idx={synthPad}
                     name={(tracks[synthPad] && tracks[synthPad].name) || `Track ${synthPad + 1}`}
                     onClose={() => setSynthPad(null)}
+                />,
+                document.body
+            )}
+
+            {samplerPad != null && window.SamplerEditor && ReactDOM.createPortal(
+                <window.SamplerEditor
+                    idx={samplerPad}
+                    name={(tracks[samplerPad] && tracks[samplerPad].name) || `Track ${samplerPad + 1}`}
+                    onClose={() => setSamplerPad(null)}
                 />,
                 document.body
             )}

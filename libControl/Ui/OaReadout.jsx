@@ -36,7 +36,11 @@ let CURRENT = null;
 const SUBS = new Set();
 const publish = () => { SUBS.forEach((fn) => fn(CURRENT)); };
 
-/** Show/replace the reading. `info` is { label, display, pct, color, bipolar, x, y }. */
+/**
+ * Show/replace the reading. `info` is { label, display, pct, color, bipolar, box },
+ * where `box` is the on-screen rectangle of the control being turned — the
+ * reading is placed against that, not against the pointer.
+ */
 window.oaReadoutShow = function (info) { CURRENT = info; publish(); };
 
 /**
@@ -60,41 +64,62 @@ window.oaReadoutHide = function (owner) {
  * has to do is call begin() when its drag starts.
  */
 window.useOaReadout = function (info) {
+    // Where the control being turned is, not where the finger is. The overlay
+    // stands beside the CONTROL: it is the knob's own value written large, and
+    // a panel that slides around under a moving finger is harder to read than
+    // the 8px number it was standing in for.
     const [at, setAt] = React.useState(null);
     // This control's identity, so it can only ever take down its own reading.
     const me = React.useRef({});
+    // The drag is over the moment the pointer comes up — before React has
+    // re-rendered anything. A browser can still deliver a trailing pointermove
+    // after the release, and without this flag that stray event would put the
+    // overlay straight back up a frame after it was told to go.
+    const live = React.useRef(false);
+
+    const stop = React.useCallback(() => {
+        live.current = false;
+        setAt(null);
+        window.oaReadoutHide(me);
+    }, []);
 
     // No dependency array on purpose. While a drag is live the value changes on
     // every render and the overlay has to follow it; the rest of the time `at`
     // is null and this does nothing.
     React.useEffect(() => {
-        if (at) window.oaReadoutShow({ ...info, owner: me, x: at.x, y: at.y });
+        if (at && live.current) window.oaReadoutShow({ ...info, owner: me, box: at });
     });
 
     React.useEffect(() => {
         if (!at) return undefined;
-        const move = (e) => setAt({ x: e.clientX, y: e.clientY });
-        const end = () => { setAt(null); window.oaReadoutHide(me); };
         // Capture phase, on the window: a control that captured the pointer
         // delivers its own pointerup to itself, and one that did not may see the
         // release land on some other element entirely. Listening here catches
         // both, which is what keeps the overlay from sticking.
-        window.addEventListener('pointermove', move, true);
-        window.addEventListener('pointerup', end, true);
-        window.addEventListener('pointercancel', end, true);
+        window.addEventListener('pointerup', stop, true);
+        window.addEventListener('pointercancel', stop, true);
         return () => {
-            window.removeEventListener('pointermove', move, true);
-            window.removeEventListener('pointerup', end, true);
-            window.removeEventListener('pointercancel', end, true);
+            window.removeEventListener('pointerup', stop, true);
+            window.removeEventListener('pointercancel', stop, true);
         };
-    }, [!!at]);
+    }, [!!at, stop]);
 
     // A panel closed under the finger would otherwise leave its reading up.
     React.useEffect(() => () => window.oaReadoutHide(me), []);
 
     return {
-        begin: (e) => setAt({ x: e.clientX, y: e.clientY }),
-        end: () => { setAt(null); window.oaReadoutHide(me); },
+        begin: (e) => {
+            // currentTarget is the control the gesture was hung on — the knob's
+            // svg, the fader's slot, the wheel's track — which is the box the
+            // reading should sit beside.
+            const el = e.currentTarget || e.target;
+            const r = el && el.getBoundingClientRect ? el.getBoundingClientRect() : null;
+            live.current = true;
+            setAt(r && r.width
+                ? { left: r.left, right: r.right, top: r.top, bottom: r.bottom }
+                : { left: e.clientX, right: e.clientX, top: e.clientY, bottom: e.clientY });
+        },
+        end: stop,
     };
 };
 
@@ -120,20 +145,31 @@ window.OaReadout = () => {
         ? { bottom: `${Math.min(50, pct)}%`, height: `${Math.abs(pct - 50)}%` }
         : { bottom: 0, height: `${pct}%` };
 
+    // Beside the CONTROL, on its left, level with its middle — clear of the hand
+    // reaching for it, which comes in from the right on a mouse and covers
+    // everything below on a phone. Against the left edge of the screen there is
+    // nowhere to put it, so it goes to the control's right instead.
+    const W = 108, H = 272, GAP = 12;
+    const vw = window.innerWidth || 1024;
+    const vh = window.innerHeight || 768;
+    const box = info.box || { left: 0, right: 0, top: 0, bottom: 0 };
+    let left = box.left - W - GAP;
+    if (left < 8) left = Math.min(box.right + GAP, vw - W - 8);
+    const top = Math.min(Math.max((box.top + box.bottom) / 2 - H / 2, 8), Math.max(8, vh - H - 8));
+
     const panel = (
         <div style={{
             position: 'fixed', zIndex: 10000, pointerEvents: 'none',
-            // Beside the finger, never under it, and never off the edge.
-            left: Math.min(info.x + 16, window.innerWidth - 108),
-            top: Math.min(Math.max(info.y - 130, 8), window.innerHeight - 260),
-            minWidth: '78px', maxWidth: '150px',
+            left: `${Math.max(8, left)}px`, top: `${top}px`,
+            width: `${W}px`, boxSizing: 'border-box',
             background: '#1c1c1c', border: '1px solid var(--accent)', borderRadius: '6px',
             padding: '10px', boxShadow: '0 8px 30px rgba(0,0,0,0.75)',
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px'
         }}>
             <div style={{
-                fontSize: '20px', fontWeight: 'bold', color, lineHeight: 1,
-                whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums'
+                fontSize: '18px', fontWeight: 'bold', color, lineHeight: 1.1,
+                whiteSpace: 'nowrap', fontVariantNumeric: 'tabular-nums',
+                maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis'
             }}>
                 {info.display}
             </div>

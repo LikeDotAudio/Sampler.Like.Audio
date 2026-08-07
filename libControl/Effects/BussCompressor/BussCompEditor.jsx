@@ -271,9 +271,15 @@ const GrMeter = ({ posRef }) => {
 
     return (
         <div style={{
+            // A LIGHTER bezel than the face it holds. It used to be near-black
+            // around a cream card, which needed no help; around a black card the
+            // same frame disappears into it and the meter reads as a smudge
+            // rather than as glass set into a plate. Machined aluminium, lit from
+            // the top, with the glass sunk behind it.
             padding: '5px', borderRadius: '3px', maxWidth: '100%', minWidth: 0,
-            background: 'linear-gradient(to bottom, #0e0f11 0%, #1d1f23 50%, #0b0c0e 100%)',
-            border: '1px solid #000', boxShadow: 'inset 0 1px 0 #ffffff14, 0 2px 6px rgba(0,0,0,0.65)'
+            background: 'linear-gradient(to bottom, #4a5058 0%, #333940 45%, #22262c 100%)',
+            border: '1px solid #0a0b0d',
+            boxShadow: 'inset 0 1px 0 #ffffff28, inset 0 -1px 0 #00000060, 0 2px 6px rgba(0,0,0,0.7)'
         }}>
             {/* Sized in percent as well as pixels: the meter is the widest thing
                 on the plate, and on a small phone it has to give ground rather
@@ -281,35 +287,48 @@ const GrMeter = ({ posRef }) => {
             <svg width="100%" height="auto" viewBox={`0 0 ${W} ${H}`}
                  style={{ display: 'block', borderRadius: '2px', width: `${W}px`, maxWidth: '100%', height: 'auto' }}>
                 <defs>
+                    {/* The face: near-black, lifted a little through the middle
+                        so it reads as a curved card behind glass rather than a
+                        hole cut in the plate. */}
                     <linearGradient id="bussface" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#fbfbf7" />
-                        <stop offset="55%" stopColor="#eeeee7" />
-                        <stop offset="100%" stopColor="#d9d9cf" />
+                        <stop offset="0%" stopColor="#0a0b0c" />
+                        <stop offset="55%" stopColor="#15171a" />
+                        <stop offset="100%" stopColor="#060708" />
                     </linearGradient>
-                    <radialGradient id="bussglow" cx="50%" cy="14%" r="82%">
-                        <stop offset="0%" stopColor="#ffffff" stopOpacity="0.8" />
-                        <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+                    {/* The lamp behind the card. Kept faint: on a dark face its
+                        job is to say the meter is LIT, not to grey the black. */}
+                    <radialGradient id="bussglow" cx="50%" cy="16%" r="84%">
+                        <stop offset="0%" stopColor="#cfe6f2" stopOpacity="0.16" />
+                        <stop offset="100%" stopColor="#cfe6f2" stopOpacity="0" />
                     </radialGradient>
                 </defs>
                 <rect x={0} y={0} width={W} height={H} fill="url(#bussface)" />
                 <rect x={0} y={0} width={W} height={H} fill="url(#bussglow)" />
 
-                <path d={arcPath(A0, A1)} fill="none" stroke="#1e2024" strokeWidth={1.3} />
+                <path d={arcPath(A0, A1)} fill="none" stroke={FACE_INK} strokeWidth={1.3} />
                 {marks}
                 {minor}
 
-                <text x={W / 2} y={H - 26} fill="#1e2024" fontSize="9" fontWeight="700"
+                <text x={W / 2} y={H - 26} fill={FACE_INK} fontSize="9" fontWeight="700"
                       letterSpacing="1.5" textAnchor="middle">dB</text>
-                <text x={W / 2} y={H - 14} fill="#1e2024" fontSize="8" fontWeight="700"
+                <text x={W / 2} y={H - 14} fill={FACE_INK} fontSize="8" fontWeight="700"
                       letterSpacing="2" textAnchor="middle">COMPRESSION</text>
 
+                {/* The needle, and the only thing on the face allowed to glow.
+                    A moving-coil pointer catches the lamp along its whole length
+                    and is the one mark on the card that is nearer the glass than
+                    the print is. */}
                 <g ref={posRef} style={{ transformOrigin: `${pivotX}px ${pivotY}px` }}>
                     <line x1={pivotX} y1={pivotY} x2={pivotX} y2={pivotY - needleR}
-                          stroke="#15171a" strokeWidth={1.8} strokeLinecap="round" />
+                          stroke={FACE_INK} strokeWidth={1.8} strokeLinecap="round"
+                          style={{ filter: 'drop-shadow(0 0 2px rgba(255,255,255,0.55))' }} />
                 </g>
-                <circle cx={pivotX} cy={pivotY} r={10} fill="#2a2c30" />
-                {/* Glass: a diagonal sheen across the face. */}
-                <path d={`M 0 ${H} L ${W * 0.52} 0 L ${W * 0.72} 0 L ${W * 0.2} ${H} Z`} fill="#ffffff" opacity="0.16" />
+                {/* The hub the pointer is mounted on — machined metal, so it
+                    stays lighter than the card without competing with the print. */}
+                <circle cx={pivotX} cy={pivotY} r={10} fill="#3a3f45" />
+                {/* Glass: a diagonal sheen across the face, weaker than it was on
+                    the cream card — the same white veil over black would fog it. */}
+                <path d={`M 0 ${H} L ${W * 0.52} 0 L ${W * 0.72} 0 L ${W * 0.2} ${H} Z`} fill="#ffffff" opacity="0.05" />
             </svg>
         </div>
     );

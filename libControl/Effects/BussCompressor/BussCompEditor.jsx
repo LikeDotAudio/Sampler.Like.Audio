@@ -285,7 +285,11 @@ const GrMeter = ({ posRef }) => {
                 on the plate, and on a small phone it has to give ground rather
                 than push the faceplate off the line. */}
             <svg width="100%" height="auto" viewBox={`0 0 ${W} ${H}`}
-                 style={{ display: 'block', borderRadius: '2px', width: `${W}px`, maxWidth: '100%', height: 'auto' }}>
+                 style={{
+                     display: 'block', borderRadius: '2px', width: `${W}px`, maxWidth: '100%', height: 'auto',
+                     // The shadow the bezel casts onto the card behind it.
+                     boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.9)',
+                 }}>
                 <defs>
                     {/* The face: near-black, lifted a little through the middle
                         so it reads as a curved card behind glass rather than a

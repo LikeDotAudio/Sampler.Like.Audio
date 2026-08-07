@@ -15,7 +15,7 @@
 // Laid out as the hardware is: a moving-coil GAIN REDUCTION meter across the
 // top, then three rows of three — a large knob at each side and a small one
 // between them — and the three latching buttons along the bottom. The switches
-// The Bus+ added to that faceplate (F/B, LOW THD, Σ S/C, the mix law and the 44K
+// The later revisions added to that faceplate (F/B, LOW THD, Σ S/C, the mix law and the 44K
 // intensity) sit in a column beside the plate rather than crowded onto it,
 // because they are mode switches rather than things a hand reaches for mid-mix.
 //
@@ -173,7 +173,7 @@ const BigButton = ({ label, active, lit, onPress, title, disabled }) => (
     </button>
 );
 
-// A small mode switch, for the row of Bus+ options beside the plate.
+// A small mode switch, for the row of extra options beside the plate.
 const ModeSwitch = ({ label, active, onPress, title, disabled }) => (
     <button
         onClick={onPress}

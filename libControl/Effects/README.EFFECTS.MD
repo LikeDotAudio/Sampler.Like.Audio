@@ -9,11 +9,11 @@ does.
 | [PluginHost](PluginHost/README.PLUGINHOST.MD) | The contract every effect is written against: the binary frame, the pump, the four hooks. **Read this first.** | `oaPlugin.js`, `useOaPlugin.js` |
 | [FxBus](FxBus/README.FXBUS.MD) | How a hit reaches the effects, and how its nodes are let go again. **Read this second.** | `oaFxBus.js` |
 | [Reverb](Reverb/README.REVERB.MD) | Two convolution machines addressed like a VARC 444 — banks, programs, six sliders a page. | `oaReverb.js`, `VarcRemote.jsx` |
-| [TapeDelay](TapeDelay/README.TAPEDELAY.MD) | Four Space Echo buses: a circular buffer as the tape, two playback heads, wow, flutter and saturation in the feedback. | `oaTapeDelay.js`, `TapeDelayEditor.jsx` |
-| [Chorus](Chorus/README.CHORUS.MD) | A Dimension-D width box that sits inside each tape return. Five buttons, no knobs. | `oaChorus.js`, `ChorusEditor.jsx` |
+| [TapeDelay](TapeDelay/README.TAPEDELAY.MD) | Four tape-echo buses: a circular buffer as the tape, two playback heads, wow, flutter and saturation in the feedback. | `oaTapeDelay.js`, `TapeDelayEditor.jsx` |
+| [Chorus](Chorus/README.CHORUS.MD) | A dimensional width box that sits inside each tape return. Five buttons, no knobs. | `oaChorus.js`, `ChorusEditor.jsx` |
 | [Drive](Drive/README.DRIVE.MD) | A distortion pedal per channel — overdrive, tube, fuzz, starve and octave, baked into one WaveShaper table. | `oaDrive.js`, `DriveEditor.jsx` |
 | [Compressor](Compressor/README.COMPRESSOR.MD) | An APK 4476 FET limiting amplifier per channel, with a real VU needle. | `oaCompressor.js`, `CompressorEditor.jsx` |
-| [BussCompressor](BussCompressor/README.BUSSCOMPRESSOR.MD) | **The master bus** — the one node everything sums into — and an SSL-style VCA bus compressor across it. Negative ratios, a two-stage auto release, a side-chain filter and the console fade. | `oaBussComp.js`, `BussCompEditor.jsx` |
+| [BussCompressor](BussCompressor/README.BUSSCOMPRESSOR.MD) | **The master bus** — the one node everything sums into — and a 44K-style VCA bus compressor across it. Negative ratios, a two-stage auto release, a side-chain filter and the console fade. | `oaBussComp.js`, `BussCompEditor.jsx` |
 | [DrumSynth](DrumSynth/README.DRUMSYNTH.MD) | Six synthesis engines building every kit voice from scratch. A source, not an effect, but a plugin like the rest. | `oaDrumSynthEngines.js`, `oaDrumSynthPatches.js`, `DrumSynthEditor.jsx` |
 
 ## The signal path

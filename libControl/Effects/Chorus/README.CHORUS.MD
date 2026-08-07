@@ -1,4 +1,4 @@
-# Chorus — a Dimension-D width box, not a chorus
+# Chorus — a width box, not a chorus
 
 **Files**
 
@@ -16,7 +16,7 @@ not a bus of its own. It sits after the tape and ahead of the return fader — s
 
 ## 1. Why it is not a chorus
 
-The Roland SDD-320 was never really a chorus — it was a width box.
+The box this models was never really a chorus — it was a width box.
 
 A conventional chorus sweeps a delayed copy hard enough that you *hear the pitch
 move*; that warble is what everyone recognises. This does the opposite, on three
@@ -122,7 +122,7 @@ The chorus registers even though it has no bus of its own, because a panel shoul
 not have to know that. It asks for chorus unit 2 and gets chorus unit 2.
 
 ```
-id 'chorus' · label 'Dimension' · event 'oa-delay-changed'   // it IS a delay change
+id 'chorus' · label 'Width' · event 'oa-delay-changed'   // it IS a delay change
 units = OA_DELAY_COUNT                                       // one per tape machine
 state(i) = { chorus: delayUnit(i).chorus }
 set(i, 'chorus', v) = oaSetDelayChorus(i, v)

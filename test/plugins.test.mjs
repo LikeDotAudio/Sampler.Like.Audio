@@ -425,7 +425,7 @@ describe('buss compressor', () => {
         assert.ok(fb.proc.gr > 1, 'F/B stopped compressing altogether');
     });
 
-    test('4K mode colours the signal without a runaway or an offset', async () => {
+    test('44K mode colours the signal without a runaway or an offset', async () => {
         const w = await createWarmWorld();
         const Processor = w.processors.get('oa-buss-comp');
 
@@ -442,9 +442,9 @@ describe('buss compressor', () => {
         for (let i = 0; i < input.length; i++) {
             if (Math.abs(clean.out[i] - dirty.out[i]) > 1e-4) { changed = true; break; }
         }
-        assert.ok(changed, '4K mode at full distortion changed nothing');
+        assert.ok(changed, '44K mode at full distortion changed nothing');
 
-        assert.ok(peak(dirty.out) <= 1.0001, `4K mode reached ${peak(dirty.out)}`);
+        assert.ok(peak(dirty.out) <= 1.0001, `44K mode reached ${peak(dirty.out)}`);
         dirty.out.forEach((v, i) => assert.ok(Number.isFinite(v), `sample ${i} is ${v}`));
 
         // The asymmetric shaper is what makes the even harmonics, and an
@@ -455,7 +455,7 @@ describe('buss compressor', () => {
         // 400 samples a cycle, so the last 8000 are exactly twenty of them.
         assert.ok(
             Math.abs(meanTail(dirty.out, 8000)) < 0.005,
-            `4K mode left a DC offset of ${meanTail(dirty.out, 8000).toFixed(5)}`,
+            `44K mode left a DC offset of ${meanTail(dirty.out, 8000).toFixed(5)}`,
         );
     });
 
@@ -1199,7 +1199,7 @@ describe('save and restore', () => {
         assert.equal(window.oaReverbUnit(0).rtMid, 4.25, 'the reverb time did not come back');
         assert.equal(window.oaReverbUnit(0).sends[2], 0.6, 'the reverb send did not come back');
         assert.equal(window.oaDelayUnit(1).feedback, 0.77, 'the tape feedback did not come back');
-        assert.equal(window.oaDelayUnit(1).chorus, 7, 'the Dimension mode did not come back');
+        assert.equal(window.oaDelayUnit(1).chorus, 7, 'the width mode did not come back');
         assert.equal(window.oaDriveUnit(3).mode, 'fuzz', 'the pedal voicing did not come back');
         assert.equal(window.oaDriveUnit(3).mix, 0.7, 'the pedal blend did not come back');
         assert.equal(window.oaCompUnit(2).input, 14, 'the compressor input did not come back');
@@ -1207,7 +1207,7 @@ describe('save and restore', () => {
         assert.equal(window.oaBussUnit().thresh, -7, 'the buss threshold did not come back');
         assert.equal(window.oaBussUnit().ratio, 6, 'the buss ratio did not come back');
         assert.equal(window.oaBussUnit().sc, 90, 'the buss side-chain filter did not come back');
-        assert.equal(window.oaBussUnit().fourK, true, 'the buss came back without 4K mode');
+        assert.equal(window.oaBussUnit().fourK, true, 'the buss came back without 44K mode');
         assert.equal(window.oaBussUnit().on, true, 'the buss came back out of circuit');
     });
 

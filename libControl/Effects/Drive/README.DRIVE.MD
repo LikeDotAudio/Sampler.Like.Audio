@@ -39,7 +39,7 @@ Two more tricks sit on top of the clipper:
   pass small signals, so the tail of every note sputters and gates out. Modelled
   as a **dead zone** around silence.
 - **Octave** — full-wave rectification folds the negative half up. The wave then
-  repeats twice as often, so the pitch doubles: the Octavia trick.
+  repeats twice as often, so the pitch doubles: the octave-up trick.
 
 ---
 
@@ -244,7 +244,7 @@ sound. This is the case that motivated the whole curve channel; see
 | Console Push | tube | 2.2 | — | — | 16 k | 22% |
 | Big Fuzz | fuzz | 18 | — | — | 5.2 k | 85% |
 | Dying Battery | fuzz | 26 | 55% | — | 4.2 k | 100% |
-| Octavia | fuzz | 20 | 12% | 90% | 6 k | 90% |
+| Octave Fuzz | fuzz | 20 | 12% | 90% | 6 k | 90% |
 | Clean (bypass) | od | 1 | — | — | Open | 0% |
 
 `drive` and `tone` are marked `log: true`. A drive knob that spends half its travel

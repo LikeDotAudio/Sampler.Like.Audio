@@ -48,7 +48,7 @@
  *
  *     OCTAVE      Full-wave rectification — fold the negative half of the wave
  *                 up into the positive. The wave now repeats twice as often as
- *                 it used to, so the pitch doubles: the Octavia trick.
+ *                 it used to, so the pitch doubles: the octave-up trick.
  *
  *   THE IMPLEMENTATION TRICK: every one of those stages is MEMORYLESS. The
  *   output for a sample depends only on that sample's value — never on the one

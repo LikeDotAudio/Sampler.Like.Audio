@@ -117,7 +117,7 @@ const Pads = ({ label = "Drum Pads", centerVelocity = 100, edgeVelocity = 10, on
                 {layout.map((padNum) => {
                     const idx = padNum - 1;
                     const name = (KIT[idx] && KIT[idx].name) || `Pad ${padNum}`;
-                    const midiNote = midiBase + idx;   // MPC Chromatic C1: pad 1 = 36
+                    const midiNote = midiBase + idx;   // Chromatic C1: pad 1 = 36
                     const hasSample = !!(window.OA_DRUM_SAMPLES && window.OA_DRUM_SAMPLES[idx] && window.OA_DRUM_SAMPLES[idx].buffer);
                     const remembered = kitMeta[idx];        // known from MQTT but not (yet) loaded
                     const vel = velocities[idx];            // side-car value (0-100)

@@ -56,7 +56,7 @@ window.oaExportSong = function (library, song, name, mixer) {
 
         // EVERY effect, asked rather than listed. Each plugin declares its own
         // save() next to the state it owns, so a song carries the reverbs, the
-        // tapes, the Dimension inserts, the drum synth AND the per-channel
+        // tapes, the width inserts, the drum synth AND the per-channel
         // pedals and compressors — the last two of which were missing from
         // every export before this, because nothing here named them.
         //

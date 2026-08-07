@@ -63,14 +63,15 @@ the engine and two analysers, built once per context**. Not per hit —
 
 ## 2. What it is
 
-The SSL bus compressor: the one in the centre section of a 44K-series desk, and
-the reason a stack of thirty tracks stops sounding like a stack. A **VCA** design
-— fast, predictable, and much more about *cohesion* than about level control.
+The bus compressor from the centre section of a 44K-series desk, and the reason a
+stack of thirty tracks stops sounding like a stack. A **VCA** design — fast,
+predictable, and much more about *cohesion* than about level control.
 
-The feature set is **The Bus+**'s, which is SSL's own most recent version of that
-circuit, so what is modelled here is theirs rather than invented. The faceplate is
-laid out the way that class of unit always is: meter across the top, then three
-rows of three knobs, then three latching buttons.
+The feature set follows the **current** version of that circuit rather than the
+original: the side-chain filter, the mix law, the two detection modes and the
+negative ratios are all later additions. The faceplate is laid out the way that
+class of unit always is: meter across the top, then three rows of three knobs,
+then three latching buttons.
 
 **On a bus, less is more.** Two or three dB on the meter is what "glue" costs. A
 needle that goes down and never comes back up is a threshold set too low, not a
@@ -277,7 +278,7 @@ mix keeps every bit of it.
 `plugins.test.mjs` sends 50 Hz and 2 kHz at the same level through a 200 Hz
 setting and asserts the low tone pulls less than a third of the reduction.
 
-The two detection modes are the Bus+'s:
+The two detection modes are the later revisions':
 
 ```
 CLASSIC   det = max(|L|, |R|)          the louder side decides for both

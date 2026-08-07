@@ -66,7 +66,7 @@ window.oaFxSendArray = function (saved) {
 };
 
 /**
- * Pad numbers in display order — an MPC grid counts from the BOTTOM left, so
+ * Pad numbers in display order — a classic pad grid counts from the BOTTOM left, so
  * the top row is drawn first and pad 1 sits under your left thumb.
  */
 window.oaPadNumbers = function () {

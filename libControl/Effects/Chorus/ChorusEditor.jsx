@@ -9,7 +9,7 @@
 // interfaces, and every name they are known by remains the property of its owner.
 // ─────────────────────────────────────────────────────────────────────────────
 
-// The front panel of an SDD-320: a bypass switch, four latching buttons, and
+// The front panel of the width box: a bypass switch, four latching buttons, and
 // nothing else. The original had no rate, depth or mix control — choosing a
 // combination IS the whole interface, and that constraint is the reason the box
 // is so hard to make sound bad.
@@ -29,7 +29,7 @@ const DimButton = ({ label, off, active, color, onPress }) => {
     return (
         <button
             onClick={onPress}
-            title={off ? 'Chorus off' : `Dimension button ${label} — combines with the others`}
+            title={off ? 'Chorus off' : `Width button ${label} — combines with the others`}
             style={{
                 width: '38px', height: '30px', borderRadius: '2px', cursor: 'pointer',
                 background: active
@@ -98,7 +98,7 @@ window.ChorusEditor = ({ u, onClose }) => {
                     fontSize: '8px', color: '#8f9299', letterSpacing: '2px',
                     textAlign: 'center', marginBottom: '8px'
                 }}>
-                    DIMENSION MODE
+                    WIDTH MODE
                 </div>
 
                 <div style={{ display: 'flex', gap: '6px', justifyContent: 'center', alignItems: 'flex-end' }}>

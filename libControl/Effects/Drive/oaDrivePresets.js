@@ -84,7 +84,7 @@ window.OA_DRIVE_PRESETS = {
     speaker:  { label: 'Broken Speaker',   mode: 'fuzz', drive: 24,   starve: 0.35, rect: 0,    tone: 2600,  level: 0.85, mix: 1 },
     // OCTAVE folds the wave. At 0.5 it is half-wave rectification — fundamental
     // still there with the octave over it; at 1 the original pitch has gone.
-    octavia:  { label: 'Octavia',          mode: 'fuzz', drive: 20,   starve: 0.12, rect: 0.9,  tone: 6000,  level: 0.85, mix: 0.90 },
+    octfuzz:  { label: 'Octave Fuzz',          mode: 'fuzz', drive: 20,   starve: 0.12, rect: 0.9,  tone: 6000,  level: 0.85, mix: 0.90 },
     ring:     { label: 'Ring Octave',      mode: 'fuzz', drive: 16,   starve: 0,    rect: 0.55, tone: 7000,  level: 0.85, mix: 0.80 },
     full8ve:  { label: 'Full Octave Up',   mode: 'fuzz', drive: 18,   starve: 0,    rect: 1,    tone: 6500,  level: 0.85, mix: 0.90 },
 

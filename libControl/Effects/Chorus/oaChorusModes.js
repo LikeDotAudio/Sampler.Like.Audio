@@ -11,7 +11,7 @@
 
 /**
  * Header: oaChorusModes.js
- * Purpose: Every setting the Dimension box has, and nothing else.
+ * Purpose: Every setting the width box has, and nothing else.
  * Description: Data, lifted out of oaChorus.js.
  *
  *   WHY THERE ARE TWELVE OF THEM AND STILL ONLY FOUR BUTTONS. The original has

@@ -33,12 +33,13 @@
  *   fade need it whether or not the compressor is in circuit. What IS optional
  *   is the compression: with IN out, the unit is a wire, sample for sample.
  *
- *   WHAT IT IS. The SSL bus compressor — the one in the centre section of a
- *   44K-series desk, the sound of the last forty years of records glued
- *   together. A VCA design: fast, predictable, and famous for making a mix
- *   sound like one thing instead of thirty things. Modelled on The Bus+, which
- *   is SSL's own most recent version of that circuit, so the feature set here
- *   is theirs rather than invented:
+ *   WHAT IT IS. The bus compressor from the centre section of a 44K-series
+ *   desk — the sound of the last forty years of records glued together. A VCA
+ *   design: fast, predictable, and famous for making a mix sound like one thing
+ *   instead of thirty things. The feature set follows the current version of
+ *   that circuit rather than the original, which is where the side-chain
+ *   filter, the mix law, the two detection modes and the negative ratios come
+ *   from:
  *
  *     THRESHOLD   Where compression starts. Everything else on the panel is
  *                 about HOW it happens; this is about how often.
@@ -918,7 +919,7 @@ window.oaBussGR = function () {
 };
 
 /**
- * Is the FULL Bus+ DSP running, or the native fallback? The panel asks so it
+ * Is the FULL per-sample DSP running, or the native fallback? The panel asks so it
  * can grey out the four switches that a native chain cannot honour, rather than
  * offering controls that quietly do nothing.
  */

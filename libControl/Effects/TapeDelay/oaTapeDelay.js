@@ -11,7 +11,7 @@
 
 /**
  * Header: oaTapeDelay.js
- * Purpose: Four shared tape-echo buses, modelled on a Space Echo.
+ * Purpose: Four shared tape-echo buses, modelled on a three-head tape echo.
  * Description: Each unit is a mechanical tape loop simulated in digital memory.
  *   A circular buffer IS the tape; the write index is the record head, and two
  *   read points trailing behind it are the stereo playback heads. An LFO
@@ -29,8 +29,8 @@
  *   channel's own path in oaFxBus.js. Each unit can also feed the reverb buses,
  *   so a repeat can be thrown into a room.
  *
- *   Downstream of the tape and ahead of the return fader sits a Dimension-D
- *   style chorus (oaChorus.js) — an insert, silent until one of its buttons is
+ *   Downstream of the tape and ahead of the return fader sits a dimensional
+ *   width-box chorus (oaChorus.js) — an insert, silent until one of its buttons is
  *   pressed, so the repeats can be spread across the stereo field.
  */
 
@@ -84,7 +84,7 @@ const dlUnit = function (saved, i) {
         // 16ths each head is locked to; 0 means it is set free in milliseconds.
         syncL: Math.max(0, Math.min(64, Number(s.syncL) || 0)),
         syncR: Math.max(0, Math.min(64, Number(s.syncR) || 0)),
-        // Dimension-mode button, 0 = OFF. See oaChorus.js.
+        // width-mode button, 0 = OFF. See oaChorus.js.
         chorus: Math.max(0, Math.min(window.OA_CHORUS_COUNT - 1, Number(s.chorus) || 0)),
     };
     window.OA_DELAY_PARAMS.forEach((p) => {
@@ -598,7 +598,7 @@ window.oaSetDelaySend = function (u, idx, value) {
     window.dispatchEvent(new CustomEvent('oa-delay-changed', { detail: { unit: u, idx: idx } }));
 };
 
-// Punch a Dimension-mode button. The buttons interlock — one mode at a time,
+// Punch a width-mode button. The buttons interlock — one mode at a time,
 // and pressing the lit one drops back to OFF.
 window.oaSetDelayChorus = function (u, mode) {
     const unit = window.oaDelayUnit(u);
@@ -700,7 +700,7 @@ window.oaRegisterPlugin({
          * what it says — a panel wants to light that up, not hide it.
          */
         REGEN: window.OA_SLOT.USER,
-        /** Which Dimension button is lit, 0 = OFF. */
+        /** Which width button is lit, 0 = OFF. */
         CHORUS: window.OA_SLOT.USER + 1,
     },
 

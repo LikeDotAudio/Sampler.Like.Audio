@@ -51,7 +51,7 @@
  *     whole mix ducks in time with it. Every setting here that expects bass has
  *     `sc` up around 60–120 Hz.
  *
- *     NEGATIVE RATIOS are the Bus+ addition. `pump` and `slam` use them: at
+ *     NEGATIVE RATIOS are the modern addition. `pump` and `slam` use them: at
  *     -1.5:1 a signal over the threshold is pushed BELOW it, so loud material
  *     digs a hole in the mix and everything else swells into it. Musical on a
  *     dance record, a disaster on a ballad.
@@ -79,7 +79,7 @@ window.OA_BUSS_PRESETS = {
     parallel:  { label: 'Parallel Squash',        on: true,  thresh: -16, ratio: 7,  attack: 0, release: 0,  makeup: 0,   sc: 120, mix: 0.4,  trim: 0, rate: 20, dist: 5, parallel: true },
     nypar:     { label: 'New York Blend',         on: true,  thresh: -14, ratio: 6,  attack: 1, release: 1,  makeup: 2,   sc: 90,  mix: 0.55, trim: 0, rate: 20, dist: 5, parallel: true },
 
-    // ---- character: the two switches the Bus+ added to the faceplate --------
+    // ---- character: the two switches the later revisions added -------------
     grit:      { label: '44K Grit',                on: true,  thresh: -5,  ratio: 4,  attack: 5, release: 10, makeup: 2,   sc: 50,  mix: 1,    trim: 0, rate: 20, dist: 7, fourK: true },
     thick:     { label: '44K Thickener',           on: true,  thresh: -3,  ratio: 3,  attack: 6, release: 9,  makeup: 1.5, sc: 60,  mix: 1,    trim: 0, rate: 20, dist: 4, fourK: true },
     relaxed:   { label: 'Relaxed (F/B)',          on: true,  thresh: -6,  ratio: 3,  attack: 6, release: 9,  makeup: 2,   sc: 70,  mix: 1,    trim: 0, rate: 20, dist: 5, fb: true, lowThd: true },

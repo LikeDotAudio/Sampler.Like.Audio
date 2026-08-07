@@ -559,7 +559,7 @@ const Mixer = () => {
                 );
             })}
 
-            {/* Tape Delay Returns — a Space Echo per strip. TAPE opens the heads. */}
+            {/* Tape Delay Returns — a tape echo per strip. TAPE opens the heads. */}
             {window.OA_DELAY_UNITS.map((meta, u) => {
                 const fx = FX[window.OA_REVERB_COUNT + u];
                 const unit = window.oaDelayUnit(u);
@@ -591,11 +591,11 @@ const Mixer = () => {
                             TAPE
                         </button>
 
-                        {/* Next box in the chain. Lit means a Dimension mode is
+                        {/* Next box in the chain. Lit means a width mode is
                             in — the number says which. */}
                         <button
                             onClick={() => { setTapeUnit(null); setChorusUnit(chOpen ? null : u); }}
-                            title={`${meta.name} — Dimension chorus after the tape${chMode ? `, mode ${chMode}` : ''}`}
+                            title={`${meta.name} — Width chorus after the tape${chMode ? `, mode ${chMode}` : ''}`}
                             style={{
                                 width: '100%', padding: '3px 0', textAlign: 'center', borderRadius: '4px',
                                 border: `1px solid ${chOpen || chMode ? meta.color : '#444b57'}`,

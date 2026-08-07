@@ -64,7 +64,7 @@ window.UiPanel = ({ title, tint, sub, width = 420, actions, onClose, children, s
  * The faceplate a panel's controls are screwed to. `finish` picks the material:
  *
  *   'paint'    a painted rack plate, top-lit — the compressor and the pedal
- *   'brushed'  dark brushed metal — the Dimension box
+ *   'brushed'  dark brushed metal — the width box
  *   'glass'    an LED display window
  *
  * A panel that wants something else entirely (tolex, a tape lid) passes its own

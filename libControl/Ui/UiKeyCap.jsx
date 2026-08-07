@@ -13,7 +13,7 @@
  * Header: UiKeyCap.jsx
  * Purpose: Every pressable cap in the rack, in one place.
  * Description: Three panels had three implementations of the same object: the
- *   remote's `Key`, the Dimension box's `DimButton` and the limiter's
+ *   remote's `Key`, the width box's `DimButton` and the limiter's
  *   `PushButton`. All three are a moulded cap that goes DOWN when it is engaged
  *   rather than changing colour — which is the whole reason they read as
  *   switches instead of as web buttons — and all three drew it with the same
@@ -32,7 +32,7 @@
 /**
  * `tone` is the material, not the state:
  *
- *   cream   ivory plastic — the remote's keypad and the Dimension buttons
+ *   cream   ivory plastic — the remote's keypad and the width-box buttons
  *   blue    the machine-select caps, which are blue on the original
  *   panel    aluminium-white, for a plate that is already painted (the limiter)
  *   red     the bypass cap, which is red everywhere it appears

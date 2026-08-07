@@ -1,4 +1,4 @@
-# Tape Delay — four Space Echo buses, tape and all
+# Tape Delay — four tape-echo buses, tape and all
 
 **Files**
 
@@ -6,13 +6,13 @@
 |---|---|---|
 | `oaTapeDelay.js` | audio | Parameters, presets, the AudioWorklet tape machine, a native fallback, the buses, grid sync, plugin registration. Also `oaPrepareFx()` — the one place worklet modules are registered. |
 | `oaTapeDelayPresets.js` | data | The 22 factory tapes. |
-| `TapeDelayEditor.jsx` | display | The tape panel: head faders, sync buttons, Dimension row, reverb throws. |
+| `TapeDelayEditor.jsx` | display | The tape panel: head faders, sync buttons, width row, reverb throws. |
 
 Four shared buses, `DLY 1`–`DLY 4`. These are **send effects: the node outputs wet
 only.** Dry comes from each channel's own path in
 [`../FxBus/`](../FxBus/README.FXBUS.MD). Each unit can also throw its repeats into
 either reverb, and each carries a
-[Dimension-D chorus](../Chorus/README.CHORUS.MD) insert after the tape.
+[width-box chorus](../Chorus/README.CHORUS.MD) insert after the tape.
 
 ---
 
@@ -320,7 +320,7 @@ slots  = USER + 2
 layout REGEN  = unit.feedback, 0..1.1 — how close the loop is to running away.
                 Above 1 it IS adding energy every pass; the panel lights that
                 up rather than hiding it, because it is a setting, not a fault.
-       CHORUS = which Dimension button is lit, 0 = OFF
+       CHORUS = which width button is lit, 0 = OFF
 
 read(ctx, i, frame):
     frame[ACTIVE] = bus exists AND ret > 0.0005
@@ -400,7 +400,7 @@ arrangement), and two that are broken on purpose.
 ```
 save() -> { units: [all four, whole] }   // sends, throws, grid locks, the insert
 load(data, { bpm }) -> sends, reverb throws, every tape parameter, ret,
-                       THEN the grid locks, then the Dimension mode
+                       THEN the grid locks, then the width mode
 ```
 
 Two orderings matter:

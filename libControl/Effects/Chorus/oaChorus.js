@@ -11,8 +11,8 @@
 
 /**
  * Header: oaChorus.js
- * Purpose: A Dimension-D style stereo chorus, sat after each tape echo.
- * Description: The Roland SDD-320 was never really a chorus — it was a width
+ * Purpose: A dimensional stereo chorus, sat after each tape echo.
+ * Description: The box this models was never really a chorus — it was a width
  *   box. A conventional chorus sweeps a delayed copy hard enough that you hear
  *   the pitch move, which is the warble everyone recognises. This does the
  *   opposite: the sweep is kept so shallow it is almost inaudible on its own,
@@ -168,7 +168,7 @@ window.oaChorusNode = function (ctx, mode) {
 };
 
 // ---------------------------------------------------------------------------
-// The back end, as the Dimension panel sees it.
+// The back end, as the width panel sees it.
 //
 // The chorus is the odd one out: it is an INSERT inside each tape delay rather
 // than a bus of its own, so its "units" are the delays it sits in and its only
@@ -178,7 +178,7 @@ window.oaChorusNode = function (ctx, mode) {
 
 window.oaRegisterPlugin({
     id: 'chorus',
-    label: 'Dimension',
+    label: 'Width',
     event: 'oa-delay-changed',
     units: function () { return window.OA_DELAY_COUNT || 0; },
 

@@ -2,21 +2,21 @@
 
 A fully-featured, standalone, open-source drum sampler and sequencer that runs entirely in your web browser. 
 
-Designed to mimic classic 16-pad MPC workflows, this project leverages modern web APIs to deliver a professional music production experience without needing any backend server, installation, or build tools. Just open `index.html` and start making beats.
+Designed to mimic the classic 16-pad sampler workflow, this project leverages modern web APIs to deliver a professional music production experience without needing any backend server, installation, or build tools. Just open `index.html` and start making beats.
 
 ## Features
 
 - **Standalone Execution**: Zero dependencies. No Node.js, no Webpack, no server required. The app is entirely static HTML, CSS, and client-side JavaScript, running React natively in the browser via standalone Babel.
-- **MPC-Style Drum Pads**: A classic 4x4 pad layout of 16 voices, switchable to 5x5 / 25 in the ⚙ Config panel — the pad grid, the mixer channels and the sequencer tracks all resize together. Supports velocity sensitivity (center vs. edge click) and triggers realistic glow animations.
+- **Classic Drum Pads**: A classic 4x4 pad layout of 16 voices, switchable to 5x5 / 25 in the ⚙ Config panel — the pad grid, the mixer channels and the sequencer tracks all resize together. Supports velocity sensitivity (center vs. edge click) and triggers realistic glow animations.
 - **Advanced Step Sequencer**: A multi-track sequencer offering granular control over step velocity, per-track volume/pan/pitch, and swing (shuffle). Pattern options include 4, 8, 16, 32, and 64 steps.
 - **Local File System Integration**: Utilizes the modern **File System Access API** (Chromium-based browsers) to let you select a local folder of samples. It recursively scans your files and builds a visual, searchable thumbnail grid directly in the browser—without uploading any of your files to a server.
 - **Broad Audio Format Support**: Easily loads and decodes WAV, MP3, OGG, FLAC, and AAC files via the native Web Audio API. Also includes a custom pure-JavaScript AIFF/AIFC decoder for classic sample libraries.
-- **Web MIDI Support**: Plug in any class-compliant USB MIDI controller (like an Akai MPD or Novation Launchpad) and start finger-drumming immediately. The app automatically maps incoming MIDI notes to the pads and captures velocity data.
+- **Web MIDI Support**: Plug in any class-compliant USB MIDI controller (any class-compliant pad controller) and start finger-drumming immediately. The app automatically maps incoming MIDI notes to the pads and captures velocity data.
 - **Offline Persistence**: Drum kit presets, sequencer patterns, and favored samples are saved locally in the browser using `localStorage` and `IndexedDB`.
 - **Tone Mode (Chromatic Pitching)**: Hold `CTRL` and click a pad to enter Tone Mode, mapping a single sample chromatically across every pad to play melodies and basslines.
-- **A Full Effects Rack**: Every channel has a distortion pedal (overdrive, tube, fuzz, transistor starve and an octave-up rectifier) in front of the fader and a FET limiting amplifier after it, and feeds two convolution reverbs and four tape-echo delays. Everything sums into a master bus with an SSL-style VCA buss compressor across it — negative ratios, a two-stage auto release, a side-chain filter and a timed console fade.
-- **Mixer Sends**: The delays are Space Echo models — a circular buffer as the tape, two stereo playback heads, wow and flutter from an LFO on the head spacing, and tape saturation folded into the feedback. Each head can be dialled in milliseconds or locked to the grid (1/16 up to bars), in which case it follows the tempo. Delay returns can feed either reverb, and each carries a Dimension-D style width box.
-- **Deep Preset Libraries**: 110 reverb programs in eleven banks, 22 tape settings, 28 distortion pedals, 27 channel-compressor settings, 12 Dimension combinations and a 76-voice drum synth library — all of it plain data in its own file per effect, so a fork can replace the lot without touching a line of DSP.
+- **A Full Effects Rack**: Every channel has a distortion pedal (overdrive, tube, fuzz, transistor starve and an octave-up rectifier) in front of the fader and a FET limiting amplifier after it, and feeds two convolution reverbs and four tape-echo delays. Everything sums into a master bus with a console-style VCA buss compressor across it — negative ratios, a two-stage auto release, a side-chain filter and a timed console fade.
+- **Mixer Sends**: The delays are tape-echo models — a circular buffer as the tape, two stereo playback heads, wow and flutter from an LFO on the head spacing, and tape saturation folded into the feedback. Each head can be dialled in milliseconds or locked to the grid (1/16 up to bars), in which case it follows the tempo. Delay returns can feed either reverb, and each carries a dimensional width box.
+- **Deep Preset Libraries**: 110 reverb programs in eleven banks, 22 tape settings, 28 distortion pedals, 27 channel-compressor settings, 12 width-box combinations and a 76-voice drum synth library — all of it plain data in its own file per effect, so a fork can replace the lot without touching a line of DSP.
 - **Songs Carry Everything**: An exported `.json` holds the patterns, the arrangement, the kit, the mixer levels *and* every effect's settings — each effect declares its own save/load next to the state it owns, so nothing gets left out of a song by being forgotten.
 
 ## How to Use

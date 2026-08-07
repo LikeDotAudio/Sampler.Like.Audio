@@ -348,3 +348,23 @@ engine *and* every parameter at once, while picking a bare engine leaves you at
 its defaults with every knob still to set. `oaSetSynthVoice()` goes through
 `oaSetSynthPatch()`, so a library entry is clamped on the way in like any other
 data — it gets no special trust.
+
+---
+
+## 11. Saved with the song
+
+```
+save() -> { patches: { padIndex: patch } }    // for the LARGEST grid, not the
+                                              // current one
+load() -> oaSetSynthPatch per pad, which runs each through oaSynthPatch()
+```
+
+Saved for `OA_PAD_MAX` so a song cut on a 5x5 keeps its ninth tom when imported
+on a 4x4, and gets it back the moment the grid is grown again.
+
+Loading through `oaSetSynthPatch` is what makes an old file safe: a patch from a
+build whose engine had a different range is held to what the engine can do now,
+instead of reaching an AudioParam and throwing mid-voice.
+
+`load()` also accepts a bare map of patches — the shape the `synth` key of a v1
+and v2 song file carried, and those files are still out there.

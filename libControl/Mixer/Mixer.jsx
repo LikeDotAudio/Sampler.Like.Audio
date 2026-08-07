@@ -508,10 +508,10 @@ const Mixer = () => {
                             </div>
                         </div>
 
-                        <div style={{ display: 'flex', gap: '3px', alignItems: 'stretch', height: '140px', justifyContent: 'center' }}>
+                        <div style={{ display: 'flex', gap: '3px', alignItems: 'stretch', height: '210px', justifyContent: 'center' }}>
                             {fxMeters(fx)}
                             <SvgFader
-                                value={unit.ret} color={meta.color} width={36} height={140}
+                                value={unit.ret} color={meta.color} width={36} height={210}
                                 onChange={(v) => window.oaSetReverb(u, 'ret', v)}
                             />
                         </div>
@@ -576,10 +576,10 @@ const Mixer = () => {
                             {Math.round(unit.timeL * 1000)}/{Math.round(unit.timeR * 1000)} ms
                         </div>
 
-                        <div style={{ display: 'flex', gap: '3px', alignItems: 'stretch', height: '140px', justifyContent: 'center' }}>
+                        <div style={{ display: 'flex', gap: '3px', alignItems: 'stretch', height: '210px', justifyContent: 'center' }}>
                             {fxMeters(fx)}
                             <SvgFader
-                                value={unit.ret} color={meta.color} width={36} height={140}
+                                value={unit.ret} color={meta.color} width={36} height={210}
                                 onChange={(v) => window.oaPluginSet('delay', u, 'ret', v)}
                             />
                         </div>
@@ -603,7 +603,7 @@ const Mixer = () => {
             }}>
                 <div style={{ fontSize: '10px', color: '#aaa', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '8px' }}>Master</div>
 
-                <div style={{ display: 'flex', gap: '4px', alignItems: 'stretch', height: '180px' }}>
+                <div style={{ display: 'flex', gap: '4px', alignItems: 'stretch', height: '270px' }}>
                     {/* L Meter */}
                     <div style={{
                         width: '6px', borderRadius: '2px', position: 'relative', overflow: 'hidden', border: '1px solid #0008',
@@ -612,7 +612,7 @@ const Mixer = () => {
                         <i ref={el => masterRefs.current[0] = el} style={{ position: 'absolute', left: 0, right: 0, top: 0, height: '100%', background: '#15171b', transition: 'height 0.05s linear' }}></i>
                     </div>
                     {/* Master Fader */}
-                    <SvgFader value={masterVol} color="#aaa" width={36} height={180} onChange={(v) => setMasterVol(v)} />
+                    <SvgFader value={masterVol} color="#aaa" width={36} height={270} onChange={(v) => setMasterVol(v)} />
                     {/* R Meter */}
                     <div style={{
                         width: '6px', borderRadius: '2px', position: 'relative', overflow: 'hidden', border: '1px solid #0008',

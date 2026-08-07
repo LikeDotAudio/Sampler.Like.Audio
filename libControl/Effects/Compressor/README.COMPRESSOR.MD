@@ -358,3 +358,18 @@ Two fields do not mean what they look like, and the presets are built around it:
 The classic vocal setting — 4:1 with the attack about a quarter of its travel and
 the release around 60% — is `vocaltex`. It flatters almost anything, which is why
 it is famous.
+
+---
+
+## 11. Saved with the song
+
+```
+save() -> { units: [every channel's strip, including the ones switched off] }
+load() -> ratio, meter, every parameter … and `on` LAST
+```
+
+`on` goes last because every other setter pushes at the running engine. Loading
+a strip that is already in circuit half-way means the channel is briefly
+compressed by a mixture of the old settings and the new ones — audible if the
+import happens while the sequencer is running, which is exactly when someone
+would notice and have no idea why.

@@ -282,10 +282,17 @@ window.oaSaveBuss = function () {
     } catch (e) {}
 };
 
-/** Is the compressor doing anything at all, or is the bus a wire? */
+/**
+ * Is the compressor doing anything at all, or is the bus a wire?
+ *
+ * MIX is the wet fader under both laws — classic only changes what the DRY side
+ * does with the rest of the travel — so this one test covers both, and a unit
+ * switched in with the blend fully counter-clockwise reports itself inactive
+ * because that is exactly what it is.
+ */
 window.oaBussActive = function () {
     const u = window.OA_BUSS;
-    return !!u.on && (u.parallel || u.mix > 0.0005);
+    return !!u.on && u.mix > 0.0005;
 };
 
 // ---------------------------------------------------------------------------
@@ -897,7 +904,10 @@ window.oaBussFade = function () {
  * the level back up — the fade fights itself and never quite ends.
  */
 const applyFade = function (ctx, down, seconds) {
-    const bus = ctx && ctx.__oaBuss;
+    // Build the bus rather than give up on it. FADE is reachable from the mixer
+    // before a note has been played, and a button that lights but does nothing
+    // is worse than one that does not light.
+    const bus = masterBus(ctx);
     if (!bus) return;
     const now = ctx.currentTime;
     const from = fadeAt(bus, now);
@@ -1065,6 +1075,43 @@ window.oaRegisterPlugin({
         window.oaWritePeak(frame, S.PEAK_R, a ? window.oaAnalyserPeak(a[1]) : 0);
         frame[S.USER] = window.oaBussGR();
         frame[S.USER + 1] = fadeAt(bus, ctx.currentTime);
+    },
+
+    /**
+     * Everything on the faceplate, as one flat object. There is one master, so
+     * unlike the per-channel units this is not an array.
+     *
+     * The FADE is not here on purpose: it is a transport action, not a setting.
+     * A song that reloaded with the master already half way to silence, and no
+     * control on screen admitting why, is the worst kind of bug — inaudible to
+     * describe and instantly audible to suffer.
+     */
+    save: function () {
+        const u = window.oaBussUnit();
+        const o = {};
+        BUSS_FLAGS.forEach(function (k) { o[k] = u[k]; });
+        window.OA_BUSS_PARAMS.forEach(function (p) { o[p.key] = u[p.key]; });
+        return o;
+    },
+
+    /**
+     * Put them back through oaSetBuss(), which clamps, persists, pushes at
+     * whichever engine is running and fires the change event.
+     *
+     * `on` goes LAST, for the reason the channel strip's loader gives and more
+     * so: every other setter pushes to the bus, and pushing a half-loaded
+     * compressor that is already in circuit means the WHOLE MIX is briefly
+     * squashed by a mixture of the old settings and the new ones.
+     */
+    load: function (data) {
+        if (!data || typeof data !== 'object') return;
+        window.OA_BUSS_PARAMS.forEach(function (p) {
+            if (data[p.key] !== undefined) window.oaSetBuss(p.key, data[p.key]);
+        });
+        BUSS_FLAGS.forEach(function (k) {
+            if (k !== 'on') window.oaSetBuss(k, !!data[k]);
+        });
+        window.oaSetBuss('on', !!data.on);
     },
 
     dispose: window.oaDisposeBuss,

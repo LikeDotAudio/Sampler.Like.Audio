@@ -1086,7 +1086,7 @@ describe('save and restore', () => {
         const saveable = window.oaSaveablePlugins();
         // Everything that has settings. The voice counter is the one plugin
         // with nothing to remember, and it is deliberately not in this list.
-        ['reverb', 'delay', 'chorus', 'drive', 'comp', 'drumsynth'].forEach((id) => {
+        ['reverb', 'delay', 'chorus', 'drive', 'comp', 'buss', 'drumsynth'].forEach((id) => {
             assert.ok(saveable.includes(id), `${id} cannot be saved — it would be missing from every song`);
         });
         assert.ok(!saveable.includes('voices'), 'the voice counter is saving state it does not have');
@@ -1105,6 +1105,11 @@ describe('save and restore', () => {
         window.oaSetDrive(3, 'mix', 0.7);
         window.oaSetComp(2, 'input', 14);
         window.oaSetComp(2, 'on', true);
+        window.oaSetBuss('thresh', -7);
+        window.oaSetBuss('ratio', 6);
+        window.oaSetBuss('sc', 90);
+        window.oaSetBuss('fourK', true);
+        window.oaSetBuss('on', true);
 
         // Through JSON, because that is what a song file is — a save() that
         // hands back something JSON cannot carry would pass a naive comparison
@@ -1120,10 +1125,16 @@ describe('save and restore', () => {
         window.oaSetDrive(3, 'mix', 0);
         window.oaSetComp(2, 'input', 0);
         window.oaSetComp(2, 'on', false);
+        window.oaSetBuss('thresh', 12);
+        window.oaSetBuss('ratio', 0);
+        window.oaSetBuss('sc', 0);
+        window.oaSetBuss('fourK', false);
+        window.oaSetBuss('on', false);
 
         const loaded = window.oaLoadPlugins(saved, { bpm: 120 });
         assert.ok(loaded.includes('reverb') && loaded.includes('delay')
-            && loaded.includes('drive') && loaded.includes('comp'),
+            && loaded.includes('drive') && loaded.includes('comp')
+            && loaded.includes('buss'),
             `only ${loaded.join(', ')} restored`);
 
         assert.equal(window.oaReverbUnit(0).rtMid, 4.25, 'the reverb time did not come back');
@@ -1134,6 +1145,11 @@ describe('save and restore', () => {
         assert.equal(window.oaDriveUnit(3).mix, 0.7, 'the pedal blend did not come back');
         assert.equal(window.oaCompUnit(2).input, 14, 'the compressor input did not come back');
         assert.equal(window.oaCompUnit(2).on, true, 'the compressor came back switched off');
+        assert.equal(window.oaBussUnit().thresh, -7, 'the buss threshold did not come back');
+        assert.equal(window.oaBussUnit().ratio, 6, 'the buss ratio did not come back');
+        assert.equal(window.oaBussUnit().sc, 90, 'the buss side-chain filter did not come back');
+        assert.equal(window.oaBussUnit().fourK, true, 'the buss came back without 4K mode');
+        assert.equal(window.oaBussUnit().on, true, 'the buss came back out of circuit');
     });
 
     test('a grid-locked tape head is re-derived at the new song\'s tempo', async () => {

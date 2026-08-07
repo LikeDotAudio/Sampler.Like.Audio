@@ -14,7 +14,10 @@ Designed to mimic classic 16-pad MPC workflows, this project leverages modern we
 - **Web MIDI Support**: Plug in any class-compliant USB MIDI controller (like an Akai MPD or Novation Launchpad) and start finger-drumming immediately. The app automatically maps incoming MIDI notes to the pads and captures velocity data.
 - **Offline Persistence**: Drum kit presets, sequencer patterns, and favored samples are saved locally in the browser using `localStorage` and `IndexedDB`.
 - **Tone Mode (Chromatic Pitching)**: Hold `CTRL` and click a pad to enter Tone Mode, mapping a single sample chromatically across every pad to play melodies and basslines.
-- **Mixer Sends**: Every channel feeds two convolution reverbs and four tape-echo delays. The delays are Space Echo models — a circular buffer as the tape, two stereo playback heads, wow and flutter from an LFO on the head spacing, and tape saturation folded into the feedback. Each head can be dialled in milliseconds or locked to the grid (1/16 up to bars), in which case it follows the tempo. Delay returns can feed either reverb.
+- **A Full Effects Rack**: Every channel has a distortion pedal (overdrive, tube, fuzz, transistor starve and an octave-up rectifier) in front of the fader and a FET limiting amplifier after it, and feeds two convolution reverbs and four tape-echo delays. Everything sums into a master bus with an SSL-style VCA buss compressor across it — negative ratios, a two-stage auto release, a side-chain filter and a timed console fade.
+- **Mixer Sends**: The delays are Space Echo models — a circular buffer as the tape, two stereo playback heads, wow and flutter from an LFO on the head spacing, and tape saturation folded into the feedback. Each head can be dialled in milliseconds or locked to the grid (1/16 up to bars), in which case it follows the tempo. Delay returns can feed either reverb, and each carries a Dimension-D style width box.
+- **Deep Preset Libraries**: 110 reverb programs in eleven banks, 22 tape settings, 28 distortion pedals, 27 channel-compressor settings, 12 Dimension combinations and a 76-voice drum synth library — all of it plain data in its own file per effect, so a fork can replace the lot without touching a line of DSP.
+- **Songs Carry Everything**: An exported `.json` holds the patterns, the arrangement, the kit, the mixer levels *and* every effect's settings — each effect declares its own save/load next to the state it owns, so nothing gets left out of a song by being forgotten.
 
 ## How to Use
 
@@ -23,6 +26,13 @@ Designed to mimic classic 16-pad MPC workflows, this project leverages modern we
 3. **Load Samples**: Click the `🎛 Pad Browser` or `ALT+Click` any pad to choose a folder on your computer containing audio samples. The app will quickly scan them. 
 4. **Assign Sounds**: Click on audio files in the browser to map them to your drum pads.
 5. **Sequence Beats**: Open the Sequencer panel, set your BPM, and click steps on the grid to create a drum pattern. Press **Play**.
+
+## Architecture Docs
+
+Every effect lives in its own folder under `libControl/Effects/`, with its DSP, its
+front panel, its preset data and a README that walks the code in pseudocode and
+explains *why* it works the way it does. Start at
+[libControl/Effects/README.EFFECTS.MD](libControl/Effects/README.EFFECTS.MD).
 
 ## Philosophy & Architecture
 

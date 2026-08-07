@@ -91,6 +91,8 @@ oaRegisterPlugin({
     layout,   // { NAME: slotIndex } for everything past the shared four
     read,     // (ctx, i, frame) => void — fill the frame. BACK END ONLY.
     dispose,  // (ctx) => void — tear out every node this plugin built
+    save,     // () => plain JSON — everything this effect needs to come back
+    load,     // (data, opts) => void — put it back
 })
 ```
 
@@ -295,7 +297,7 @@ draws, and the test above is what keeps that true.
 
 ---
 
-## 9. The other two rules a module is held to
+## 9. The other rules a module is held to
 
 The frame contract above is about what a **display** may know. Two more, enforced
 by the same test file, are about what a **module** may know.
@@ -321,6 +323,33 @@ the analysers with it, so re-plumbing a machine meant re-plumbing its callers.
 
 `ctx.__oaReverbs`, `ctx.__oaDelays` and `ctx.__oaComps` are private to their own
 file, and `boundary.test.mjs` fails the build if another file names one.
+
+### One node in, one way out of the file, one way onto disk
+
+A module that owns settings also declares how they are carried:
+
+```
+save() -> plain JSON, everything it would need to come back
+load(data, opts) -> put it back, through its own setters
+```
+
+Through the SETTERS, not by assignment — they clamp, persist and fire the change
+event, and a song file is exactly the untrusted input those three exist for.
+
+Two ordering rules keep turning up, and both are in the code for a reason:
+
+- **A reverb loads its program FIRST, then its saved parameters on top.** A
+  program load overwrites every slider, so the other order silently restores an
+  edited machine as the stock program it started from.
+- **`on` goes LAST on anything with an in/out switch.** Every other setter pushes
+  at the running engine, so half-loading a strip that is already in circuit means
+  the channel — or, on the master, the whole mix — is briefly compressed by a
+  mixture of the old settings and the new ones.
+
+`oaSavePlugins()` / `oaLoadPlugins(data, opts)` do the round trip for every
+registered plugin at once. `test/plugins.test.mjs` enumerates the registry rather
+than a list, because a list here would rot exactly the way the song exporter's
+did — see [the index](../README.EFFECTS.MD#saved-with-the-song).
 
 ### One sample rate
 

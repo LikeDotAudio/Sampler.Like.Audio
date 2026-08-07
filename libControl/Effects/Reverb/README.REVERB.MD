@@ -427,3 +427,22 @@ program), and a song file, a saved unit and the `LEGACY` table all store those
 two numbers — so new programs are appended to the end of their bank and new banks
 to the end of the list. Reordering silently repoints every saved session at a
 different room.
+
+---
+
+## 11. Saved with the song
+
+```
+save() -> { units: [both machines, whole] }
+load() -> per machine: sends, THEN the program, THEN every saved parameter on
+          top of it, then ret and standby
+```
+
+**The order is the whole of it.** `oaLoadReverbProgram` overwrites every slider,
+so loading the program after the parameters would restore an edited machine as
+the stock program it started from and lose every edit — silently, since the
+result is a perfectly good reverb.
+
+A v1 song carried one flat reverb rather than a list; it lands on machine A. A
+pre-VARC song carries `size`/`tone` as strings, and `oaSetReverb` maps that pair
+onto the nearest program.

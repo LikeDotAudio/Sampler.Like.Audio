@@ -25,7 +25,7 @@ actually feeds, and — on a driven channel — a whole distortion pedal.
  source ──▶ [DRIVE pedal] ──▶ [pan] ──┬──▶ send ────────┼──▶ send ──▶ reverb B bus
             (only if driven)          │                 └──▶ send ──▶ delay 1..4 bus
                                       │
-                                      └──▶ [COMPRESSOR strip] ──▶ destination
+                                      └──▶ [COMPRESSOR strip] ──▶ MASTER BUS
                                              ↑ built ONCE per channel, shared
 ```
 
@@ -60,7 +60,7 @@ FUNCTION oaVoiceOut(ctx, idx, pan):
     chain.push(node)                        // unsupported — same shape either way
 
     compIn = oaCompInput(ctx, idx)          // an INPUT PORT, or null if this
-    node.connect(compIn OR ctx.destination) // channel is uncompressed
+    node.connect(compIn OR oaMasterInput(ctx))   // channel is uncompressed
 
     FUNCTION tap(amount, target):
         IF amount <= SEND_EPSILON: RETURN   // 0.001 — below this, build NOTHING
@@ -140,6 +140,7 @@ drain to zero instead of assuming it does.
 ```
 ASYNC FUNCTION oaWarmFx(ctx):
     AWAIT oaPrepareFx(ctx)          // registers the worklet modules
+    oaMasterWarm(ctx)               // the one bus everything sums into
     oaCompWarm(ctx)                 // every switched-on strip
     oaReverbWarm(ctx)               // every room anything sends to
     oaDelayWarm(ctx)                // every tape anything sends to
@@ -233,10 +234,17 @@ allowed to say about another effect:
 | `oaCompInput(ctx, idx)` | `../Compressor/oaCompressor.js` | a node, or **null** meaning "no compressor here" |
 | `oaCompWarm(ctx)` / `oaCompStripCount(ctx)` | `../Compressor/oaCompressor.js` | build every switched-on strip / how many exist |
 | `oaDriveNode(ctx, idx, dest, chain)` | `../Drive/oaDrive.js` | a node to play into, or **null** on a clean channel |
+| `oaMasterInput(ctx)` / `oaMasterWarm` / `oaMasterBusCount` | `../BussCompressor/oaBussComp.js` | the node the whole mix sums into — **never null**, because everything has to sum somewhere |
 
 Null is a real answer from both optional inserts, which is why the router can
 treat the pedal and the compressor identically: *if there is a node, use it;
 otherwise carry on to where you were going.*
+
+The master is the exception, and deliberately so. It never returns null: there is
+only one of it, everything has to sum somewhere, and the meters and the fade need
+it whether or not the compressor is in circuit. So the phrase "carry on to where
+you were going" now means the master bus rather than `ctx.destination` — nothing
+in the app reaches the output any other way.
 
 What it may **not** say: `ctx.__oaReverbs`, `ctx.__oaDelays`, `ctx.__oaComps`, or
 `.input` on anything it did not build. `test/boundary.test.mjs` fails the build

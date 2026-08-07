@@ -392,3 +392,23 @@ times, and the ratio is the thing worth copying:
 Grouped as: the four the units boot with, the head combinations, short
 (doubling/slap), mid (the working echoes), long (the ones that become the
 arrangement), and two that are broken on purpose.
+
+---
+
+## 12. Saved with the song
+
+```
+save() -> { units: [all four, whole] }   // sends, throws, grid locks, the insert
+load(data, { bpm }) -> sends, reverb throws, every tape parameter, ret,
+                       THEN the grid locks, then the Dimension mode
+```
+
+Two orderings matter:
+
+- **Head times go in before the grid locks.** Setting a time in milliseconds is
+  what takes a head *off* the grid, so a lock applied first would be cleared by
+  the very next line.
+- **Locks are re-derived at the imported song's tempo**, not the one it was cut
+  at. An eighth saved at 120 bpm becomes 333 ms in a song at 90, not the 250 ms
+  it was — which is the whole point of storing a count of 16ths rather than a
+  time. `test/plugins.test.mjs` asserts exactly that.

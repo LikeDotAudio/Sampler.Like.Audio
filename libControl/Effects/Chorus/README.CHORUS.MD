@@ -206,3 +206,18 @@ whichever button is deeper.
 **Order is load-bearing:** `unit.chorus` is stored per delay as an index into the
 table, so entries 0–4 keep the meaning they shipped with and every combination is
 appended after them.
+
+---
+
+## 8. Saved with the song
+
+```
+save() -> { modes: [one per tape return] }
+load() -> oaSetDelayChorus per return
+```
+
+This is the one plugin whose state is **also** carried by another: the mode lives
+on the delay unit, so a song file holds it twice. That is deliberate — the
+duplicate is a few bytes, applying it twice is idempotent, and the alternative is
+a plugin that silently has no `save()` and an export whose completeness depends
+on load order.

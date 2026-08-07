@@ -288,3 +288,17 @@ symmetric it is**:
   hard-clipper) get their character from a bandpass this pedal does not have —
   it has a single lowpass. So those two are named for what they *do*, and land
   the energy in the same place with voicing plus tone.
+
+---
+
+## 10. Saved with the song
+
+```
+save() -> { units: [every channel's pedal] }   // fields only
+load() -> mode FIRST, then every parameter, through oaSetDrive()
+```
+
+The cached 4096-point curve hanging off each unit is derived data: it would
+treble the size of the song file and is rebuilt on load anyway, so only the
+fields go. `mode` leads because it decides which clipper the drive figure is
+driving — setting it afterwards would bake the table twice for nothing.

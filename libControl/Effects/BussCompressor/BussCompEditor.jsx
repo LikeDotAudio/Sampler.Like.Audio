@@ -215,6 +215,20 @@ const bScrew = (
  * onto it sixty times a second. Routing a needle angle through React state
  * would re-render the whole faceplate for every frame of a moving needle.
  */
+// A BLACK-FACED movement, everything printed on it in white.
+//
+// The cream-and-black VU on the channel limiter is the older instrument — a
+// painted card lit from in front. This one is the later kind: a dark face with
+// the scale screened on in white and a lamp behind it, which is what the
+// gain-reduction meters in a console centre section are. It also stops the one
+// bright rectangle on the plate from being the thing the eye lands on first;
+// what should catch the eye here is the NEEDLE, and a white needle on black is
+// the highest contrast either layout can offer it.
+//
+// One colour for every mark, label and pointer, so the face cannot drift into
+// two whites that are nearly but not quite the same.
+const FACE_INK = '#ffffff';
+
 const GrMeter = ({ posRef }) => {
     const W = 250, H = 106;
     const pivotX = W / 2, pivotY = H * 1.78;
@@ -235,8 +249,8 @@ const GrMeter = ({ posRef }) => {
         const [lx, ly] = pt(scaleR - 15, a);
         return (
             <React.Fragment key={db}>
-                <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="#1e2024" strokeWidth={1.3} />
-                <text x={lx} y={ly + 3} fill="#1e2024" fontSize="8" fontWeight="700" textAnchor="middle">{db}</text>
+                <line x1={x1} y1={y1} x2={x2} y2={y2} stroke={FACE_INK} strokeWidth={1.3} />
+                <text x={lx} y={ly + 3} fill={FACE_INK} fontSize="8" fontWeight="700" textAnchor="middle">{db}</text>
             </React.Fragment>
         );
     });
@@ -247,7 +261,7 @@ const GrMeter = ({ posRef }) => {
         const a = A0 + (db / GR_FULL) * (A1 - A0);
         const [x1, y1] = pt(scaleR, a);
         const [x2, y2] = pt(scaleR - 3.5, a);
-        return <line key={db} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#1e2024" strokeWidth={0.8} />;
+        return <line key={db} x1={x1} y1={y1} x2={x2} y2={y2} stroke={FACE_INK} strokeWidth={0.8} />;
     });
 
     const arcPath = (a0, a1) => {
@@ -417,14 +431,25 @@ window.BussCompEditor = ({ onClose }) => {
             position: 'fixed', bottom: '46px', left: '50%', transform: 'translateX(-50%)',
             background: 'var(--panel)', border: '1px solid #444', borderRadius: '8px',
             boxShadow: '0 -4px 24px rgba(0,0,0,0.7)', zIndex: 1200,
-            padding: '10px 12px', width: 'min(700px, 97vw)', maxHeight: '86vh', overflowY: 'auto'
+            // WIDE ENOUGH FOR THE CONTENTS AND NO WIDER. Both columns below are
+            // capped — the faceplate at 340 and the switch column at 168 — so
+            // anything past 340 + 10 + 168 + the padding was dead panel, and at
+            // 700 there were nearly 180px of it sitting to the right of the
+            // switches. A dialog that is bigger than what is in it reads as
+            // something failing to load.
+            padding: '10px 12px', width: 'min(552px, 97vw)', maxHeight: '86vh', overflowY: 'auto'
         }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '12px', color: window.OA_BUSS_COLOR, fontWeight: 'bold', letterSpacing: '1px' }}>
                     MASTER BUSS — COMPRESSOR
                 </span>
-                <span style={{ fontSize: '9px', color: '#666' }}>
-                    across the whole mix: channels, strips, reverbs and tapes
+                {/* Four words, not a sentence. The long version — "channels,
+                    strips, reverbs and tapes" — was competing with the title AND
+                    three buttons for one line, and lost: it ended up crushed
+                    under the Help button. What it was listing is in the help
+                    text, which is where a list belongs. */}
+                <span style={{ fontSize: '9px', color: '#666', whiteSpace: 'nowrap' }}>
+                    across the whole mix
                 </span>
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: '6px' }}>
                     {/* Help is a BUTTON rather than a standing paragraph: it is
@@ -505,7 +530,7 @@ window.BussCompEditor = ({ onClose }) => {
                     </div>
 
                     <div style={{ textAlign: 'center', marginTop: '2px' }}>
-                        <Cut size={10} style={{ letterSpacing: '3px' }}>G-BUSS</Cut>
+                        <Cut size={10} style={{ letterSpacing: '3px' }}>44 BUSS</Cut>
                         <Cut size={6} style={{ letterSpacing: '1.6px', opacity: 0.75, marginTop: '1px' }}>
                             MASTER BUSS COMPRESSOR
                         </Cut>
@@ -591,31 +616,53 @@ window.BussCompEditor = ({ onClose }) => {
                             </div>
                         </div>
                     </div>
+
+                    {/* THE SETTINGS PICKER LIVES HERE, not on a row of its own
+                        under both columns.
+
+                        The faceplate is portrait and the switch column is short,
+                        so this column ran out of content about half way down and
+                        left a tall empty rectangle beside the knobs — while the
+                        picker sat below in a full-width strip, making the panel
+                        taller still. Putting it in the gap costs no height at
+                        all and the gap stops being a gap. */}
+                    <div style={{
+                        border: '1px solid #333840', borderRadius: '5px', padding: '8px',
+                        background: '#1b1e23', display: 'flex', flexDirection: 'column', gap: '6px'
+                    }}>
+                        <div style={{ fontSize: '8px', color: '#7d848d', letterSpacing: '1.6px', fontWeight: '700' }}>
+                            SETTING
+                        </div>
+                        <select
+                            value=""
+                            onChange={(e) => { if (e.target.value) window.oaPluginPreset('buss', 0, e.target.value); }}
+                            style={{
+                                width: '100%', minWidth: 0, background: '#222', color: window.OA_BUSS_COLOR,
+                                border: '1px solid #444', borderRadius: '3px', fontSize: '10px', padding: '3px 4px'
+                            }}
+                        >
+                            <option value="">Load a setting…</option>
+                            {Object.keys(window.OA_BUSS_PRESETS).map((k) => (
+                                <option key={k} value={k}>{window.OA_BUSS_PRESETS[k].label}</option>
+                            ))}
+                        </select>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <span style={{
+                                width: '7px', height: '7px', borderRadius: '50%', display: 'inline-block', flex: '0 0 auto',
+                                background: on ? window.OA_BUSS_COLOR : '#26343a',
+                                boxShadow: on ? `0 0 6px ${window.OA_BUSS_COLOR}` : 'inset 0 1px 2px #000'
+                            }}></span>
+                            <span style={{ fontSize: '8.5px', color: '#8f9299', letterSpacing: '.8px', lineHeight: 1.35 }}>
+                                {on
+                                    ? `${P('ratio').fmt(unit.ratio)} · ${P('attack').fmt(unit.attack)} · ${P('release').fmt(unit.release)}`
+                                    : 'OUT OF CIRCUIT'}
+                            </span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
-                <span style={{ fontSize: '10px', color: '#aaa' }}>Setting</span>
-                <select
-                    value=""
-                    onChange={(e) => { if (e.target.value) window.oaPluginPreset('buss', 0, e.target.value); }}
-                    style={{ background: '#222', color: window.OA_BUSS_COLOR, border: '1px solid #444', borderRadius: '3px', fontSize: '11px', padding: '3px 6px' }}
-                >
-                    <option value="">Load a setting…</option>
-                    {Object.keys(window.OA_BUSS_PRESETS).map((k) => (
-                        <option key={k} value={k}>{window.OA_BUSS_PRESETS[k].label}</option>
-                    ))}
-                </select>
-                <span style={{
-                    width: '7px', height: '7px', borderRadius: '50%', display: 'inline-block',
-                    background: on ? window.OA_BUSS_COLOR : '#26343a',
-                    boxShadow: on ? `0 0 6px ${window.OA_BUSS_COLOR}` : 'inset 0 1px 2px #000'
-                }}></span>
-                <span style={{ fontSize: '9px', color: '#8f9299', letterSpacing: '1.5px' }}>
-                    {on
-                        ? `IN — ${P('ratio').fmt(unit.ratio)} · ${P('attack').fmt(unit.attack)} · ${P('release').fmt(unit.release)}`
-                        : 'OUT OF CIRCUIT'}
-                </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
                 {!full && (
                     <span style={{ fontSize: '9px', color: '#c98a2e', fontStyle: 'italic' }}>
                         native fallback chain — F/B, LOW THD, Σ S/C, 44K and the negative ratios are unavailable
@@ -628,14 +675,15 @@ window.BussCompEditor = ({ onClose }) => {
                 fontSize: '9px', color: '#8f9299', marginTop: '10px', lineHeight: 1.6,
                 border: '1px solid #333840', borderRadius: '5px', background: '#1b1e23', padding: '8px 10px'
             }}>
-                This one sits across the whole mix, so a little goes a long way: two or three dB
-                on the meter is what "glue" costs, and a needle that never comes back up is a
-                threshold set too low rather than a compressor working hard. Start at 4:1 with
-                RELEASE on AUTO, pull THRESHOLD down until the needle breathes in time with the
-                music, then put the level back with MAKE-UP. If every kick drum ducks the record,
-                that is not the threshold — bring SC FILTER up to 60–100 Hz and the detector stops
-                hearing the bottom end while the mix keeps it. MIX below 100% holds the peaks
-                without flattening the transients underneath.
+                Everything audible goes through this one: every channel, every channel strip,
+                both reverb returns and all four tape returns sum into the master bus, and this
+                sits across it. So a little goes a long way — two or three dB on the meter is
+                what "glue" costs, and a needle that never comes back up is a threshold set too
+                low rather than a compressor working hard. Start at 4:1 with RELEASE on AUTO,
+                pull THRESHOLD down until the needle breathes in time with the music, then put
+                the level back with MAKE-UP. If every kick drum ducks the record, that is not the
+                threshold — bring SC FILTER up to 60–100 Hz and the detector stops hearing the
+                bottom end while the mix keeps it.
             </div>
             )}
         </div>

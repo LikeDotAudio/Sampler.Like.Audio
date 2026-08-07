@@ -14,7 +14,7 @@ const Footer = () => {
             <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                 {!isMobile && (
                     <a
-                        href="https://github.com/LikeDotAudio/Web-Sampler-Sequencer"
+                        href="https://github.com/LikeDotAudio/Sampler.Like.Audio"
                         target="_blank"
                         rel="noopener noreferrer"
                         title="View the source on GitHub"

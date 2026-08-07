@@ -42,7 +42,7 @@ def generate_icon(size, output_path):
     img.save(output_path)
     print(f"Saved {output_path}")
 
-os.chdir("/home/anthony/Documents/GitProjects/Web-Sampler-Sequencer/ICON and LOGO")
+os.chdir("/home/anthony/Documents/GitProjects/Sampler.Like.Audio/ICON and LOGO")
 generate_icon(16, "favicon.ico")
 generate_icon(192, "icon-192.png")
 generate_icon(512, "icon-512.png")

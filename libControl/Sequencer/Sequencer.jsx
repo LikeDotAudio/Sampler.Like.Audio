@@ -54,7 +54,7 @@ const Sequencer = ({ activeTabs = ['SEQ'], label = "Pattern Sequencer" }) => {
         recordedNotes, setRecordedNotes,
         writeStepVel, previewVoice, getAudioCtx, currentStepRef,
         setSeqRef,
-        library, setLibraryItems, song, setSongItems, songItemsRef, libraryRef, songRef, songPos, setSongPos
+        library, setLibraryItems, song, setSongItems, songItemsRef, libraryRef, songRef, nextPatternRef, songPos, setSongPos
     } = window.useSeqState(label, DEFAULT_STEPS, TRACKS);
 
     const { trackMenu, setTrackMenu, browseTrack, setBrowseTrack, trackVer, setTrackVer, loadTrackSample } = window.useSeqMenus();

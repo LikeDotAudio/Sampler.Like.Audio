@@ -58,7 +58,14 @@ window.SeqSong = ({ songPos, song, togglePlayback, playSong, setSongItems, setSo
             const { library: merged, renamed } = window.oaMergePatterns(library, parsed.patterns);
             setLibraryItems(merged);
             // The imported arrangement follows its patterns' new names.
-            if (parsed.song.length) setSongItems(parsed.song.map((n) => renamed[n] || n));
+            if (parsed.song.length) {
+                setSongItems(parsed.song.map((item) => {
+                    if (item && typeof item === 'object') {
+                        return { ...item, name: renamed[item.name] || item.name };
+                    }
+                    return renamed[item] || item;
+                }));
+            }
             applyMixer(parsed.mixer);
 
             let state = { synth: 0, samples: 0, sampleNote: '', reverb: false, delay: false, pads: '' };
@@ -159,7 +166,9 @@ window.SeqSong = ({ songPos, song, togglePlayback, playSong, setSongItems, setSo
                 </div>
             ) : (
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
-                    {song.map((name, i) => {
+                    {song.map((item, i) => {
+                        const name = (item && typeof item === 'object') ? item.name : item;
+                        const repeatCount = (item && typeof item === 'object' && item.repeat != null) ? item.repeat : 0;
                         const isActive = songPos === i;
                         const isQueued = queuedPos === i;
 
@@ -176,6 +185,14 @@ window.SeqSong = ({ songPos, song, togglePlayback, playSong, setSongItems, setSo
                             borderColor = '#ffb300';
                         }
 
+                        const updateRepeat = (newVal) => {
+                            const next = [...song];
+                            const cur = next[i];
+                            const curName = (cur && typeof cur === 'object') ? cur.name : cur;
+                            next[i] = { name: curName, repeat: newVal };
+                            setSongItems(next);
+                        };
+
                         return (
                             <React.Fragment key={i}>
                                 {i > 0 && <span style={{ color: '#555', fontSize: '14px' }}>→</span>}
@@ -186,7 +203,7 @@ window.SeqSong = ({ songPos, song, togglePlayback, playSong, setSongItems, setSo
                                     borderRadius: '6px',
                                     border: `2px solid ${borderColor}`,
                                     boxShadow: isActive ? '0 0 10px rgba(100, 181, 246, 0.5)' : (isQueued ? '0 0 8px rgba(255, 179, 0, 0.6)' : 'none'),
-                                    minWidth: '95px',
+                                    minWidth: '105px',
                                     overflow: 'hidden',
                                     transition: 'all 0.15s ease'
                                 }}>
@@ -234,7 +251,7 @@ window.SeqSong = ({ songPos, song, togglePlayback, playSong, setSongItems, setSo
                                             background: 'transparent',
                                             color: textColor,
                                             border: 'none',
-                                            padding: '10px 12px',
+                                            padding: '8px 10px 4px 10px',
                                             cursor: 'pointer',
                                             fontSize: '13px',
                                             fontWeight: 'bold',
@@ -243,11 +260,48 @@ window.SeqSong = ({ songPos, song, togglePlayback, playSong, setSongItems, setSo
                                             display: 'flex',
                                             flexDirection: 'column',
                                             alignItems: 'center',
-                                            gap: '4px'
+                                            gap: '2px'
                                         }}
                                     >
                                         <span>{name}</span>
                                     </button>
+                                    <div style={{
+                                        padding: '4px 6px 8px 6px',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'center',
+                                        background: 'rgba(0,0,0,0.15)',
+                                        borderTop: '1px solid rgba(255,255,255,0.05)'
+                                    }}>
+                                        {window.SeqKnob ? (
+                                            <window.SeqKnob
+                                                value={repeatCount}
+                                                min={0}
+                                                max={16}
+                                                step={1}
+                                                def={0}
+                                                size={38}
+                                                color={isActive ? '#64b5f6' : 'var(--accent)'}
+                                                label="REPEAT"
+                                                display={repeatCount}
+                                                onChange={updateRepeat}
+                                                title={`Repeat pattern "${name}" ${repeatCount} extra time(s)`}
+                                            />
+                                        ) : (
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                                                <input
+                                                    type="range"
+                                                    min={0}
+                                                    max={16}
+                                                    step={1}
+                                                    value={repeatCount}
+                                                    onChange={(e) => updateRepeat(Number(e.target.value))}
+                                                    style={{ width: '60px', accentColor: 'var(--accent)', cursor: 'pointer' }}
+                                                />
+                                                <span style={{ fontSize: '9px', color: '#aaa', fontWeight: 'bold' }}>REPEAT {repeatCount}</span>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </React.Fragment>
                         );

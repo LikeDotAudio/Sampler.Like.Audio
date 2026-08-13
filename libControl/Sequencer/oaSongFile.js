@@ -119,7 +119,7 @@ window.oaParseSongFile = function (text) {
     if (!clean.length && !hasState) throw new Error('No usable patterns found in that file.');
     return {
         patterns: clean,
-        song: song.filter((n) => typeof n === 'string'),
+        song: song.filter((item) => typeof item === 'string' || (item && typeof item === 'object' && typeof item.name === 'string')),
         // Absent in a v1 file — every consumer treats these as optional.
         kit: Array.isArray(doc.kit) ? doc.kit : null,
         mixer: doc.mixer && typeof doc.mixer === 'object' ? doc.mixer : null,

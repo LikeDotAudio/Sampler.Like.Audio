@@ -75,15 +75,16 @@ window.useSeqLibrary = (
     };
 
     const playSong = () => {
-        const names = songItemsRef.current || [];
-        const startIdx = names.findIndex((n) => (libraryRef.current || []).some((p) => p.name === n));
+        const items = songItemsRef.current || [];
+        const getName = (item) => (item && typeof item === 'object') ? item.name : item;
+        const startIdx = items.findIndex((item) => (libraryRef.current || []).some((p) => p.name === getName(item)));
         if (startIdx === -1) return;
         const ctx = getAudioCtx();
         if (ctx.state === 'suspended') ctx.resume();
         if (isPlaying) stopScheduler();
-        songRef.current = { idx: startIdx };
+        songRef.current = { idx: startIdx, repeated: 0 };
         setSongPos(startIdx);
-        applySongEntry(libraryRef.current.find((p) => p.name === names[startIdx]));
+        applySongEntry(libraryRef.current.find((p) => p.name === getName(items[startIdx])));
         setIsPlaying(true);
         currentStepRef.current = 0;
         nextNoteTimeRef.current = ctx.currentTime + 0.05;

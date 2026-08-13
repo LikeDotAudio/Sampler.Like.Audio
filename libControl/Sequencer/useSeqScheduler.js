@@ -58,7 +58,7 @@ window.useSeqScheduler = (
                 const target = nextPatternRef.current;
                 nextPatternRef.current = null;
                 if (songRef.current) {
-                    songRef.current = { idx: target.idx };
+                    songRef.current = { idx: target.idx, repeated: 0 };
                     setSongPos(target.idx);
                 }
                 applySongEntry(target.entry);
@@ -69,12 +69,36 @@ window.useSeqScheduler = (
     };
 
     const advanceSong = (songRef, setSongPos, applySongEntry, songItemsRef, libraryRef) => {
-        const names = songItemsRef.current || [];
+        const items = songItemsRef.current || [];
         const libItems = libraryRef.current || [];
-        for (let hop = 1; hop <= names.length; hop++) {
-            const idx = (songRef.current.idx + hop) % names.length;
-            const entry = libItems.find((p) => p.name === names[idx]);
-            if (entry) { songRef.current = { idx }; setSongPos(idx); applySongEntry(entry); return; }
+        if (!items.length) {
+            songRef.current = null; setSongPos(null);
+            return;
+        }
+
+        const currentIdx = songRef.current.idx;
+        const currentItem = items[currentIdx];
+        const currentRepeated = songRef.current.repeated || 0;
+        const currentRepeatTarget = (currentItem && typeof currentItem === 'object') ? (currentItem.repeat || 0) : 0;
+
+        if (currentRepeated < currentRepeatTarget) {
+            // Repeat current pattern
+            songRef.current = { idx: currentIdx, repeated: currentRepeated + 1 };
+            const entry = libItems.find((p) => p.name === ((currentItem && typeof currentItem === 'object') ? currentItem.name : currentItem));
+            if (entry) { applySongEntry(entry); return; }
+        }
+
+        for (let hop = 1; hop <= items.length; hop++) {
+            const idx = (currentIdx + hop) % items.length;
+            const item = items[idx];
+            const name = (item && typeof item === 'object') ? item.name : item;
+            const entry = libItems.find((p) => p.name === name);
+            if (entry) {
+                songRef.current = { idx, repeated: 0 };
+                setSongPos(idx);
+                applySongEntry(entry);
+                return;
+            }
         }
         songRef.current = null; setSongPos(null);   // nothing playable left
     };

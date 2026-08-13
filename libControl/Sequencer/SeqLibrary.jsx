@@ -10,7 +10,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 window.SeqLibrary = ({ library, loadPattern, deletePattern, setSongItems, song,
-                       steps, setSteps, doubleTo, rendering, renderLoop, clearPattern }) => {
+                       steps, setSteps, doubleTo, rendering, renderLoop, renderStems, clearPattern }) => {
     const SeqButton = window.SeqButton;
     const STEP_OPTIONS = [4, 8, 16, 32, 64];
     return (
@@ -53,6 +53,14 @@ window.SeqLibrary = ({ library, loadPattern, deletePattern, setSongItems, song,
                     disabled={rendering}
                     color="#4a148c" textColor="#fff"
                     title="Render eight passes of this pattern to a WAV file"
+                    style={{ padding: '6px 12px', border: 'none', cursor: rendering ? 'wait' : 'pointer' }}
+                />
+                <SeqButton
+                    label={rendering ? '…rendering' : '📦 RENDER STEMS'}
+                    onClick={() => renderStems && renderStems(1)}
+                    disabled={rendering}
+                    color="#00695c" textColor="#fff"
+                    title="Export every track as isolated WAV stem files in a .zip archive (includes compression and drive, excludes reverb/delay)"
                     style={{ padding: '6px 12px', border: 'none', cursor: rendering ? 'wait' : 'pointer' }}
                 />
                 <SeqButton

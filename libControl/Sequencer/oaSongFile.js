@@ -37,8 +37,7 @@ window.OA_SONG_FILE_VERSION = 3;
 window.oaStamp = function () {
     const d = new Date();
     const p2 = (v) => String(v).padStart(2, '0');
-    return `${d.getFullYear()}${p2(d.getMonth() + 1)}${p2(d.getDate())}`
-         + `${p2(d.getHours())}${p2(d.getMinutes())}`;
+    return `${d.getFullYear()}${p2(d.getMonth() + 1)}${p2(d.getDate())}.${p2(d.getHours())}${p2(d.getMinutes())}`;
 };
 
 // The per-track sample fields worth carrying. Deliberately excludes `buffer` and

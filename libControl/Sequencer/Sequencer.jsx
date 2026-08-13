@@ -103,7 +103,7 @@ const Sequencer = ({ activeTabs = ['SEQ'], label = "Pattern Sequencer" }) => {
     // after togglePlayback so it is not read before it exists.
     window.useSeqTransportKeys(isPlaying, togglePlayback, recording, toggleRecording);
 
-    const { rendering, renderLoop } = window.useSeqRenderer(pattern, steps, mutes, bpm, safeLabel);
+    const { rendering, renderLoop, renderStems } = window.useSeqRenderer(pattern, steps, mutes, bpm, safeLabel);
 
     const [configOpen, setConfigOpen] = React.useState(false);
     const configRef = React.useRef(null);
@@ -215,6 +215,7 @@ const Sequencer = ({ activeTabs = ['SEQ'], label = "Pattern Sequencer" }) => {
                     doubleTo={doubleTo}
                     rendering={rendering}
                     renderLoop={renderLoop}
+                    renderStems={renderStems}
                     clearPattern={clearPattern}
                 />
 

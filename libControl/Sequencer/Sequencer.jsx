@@ -73,7 +73,7 @@ const Sequencer = ({ activeTabs = ['SEQ'], label = "Pattern Sequencer" }) => {
         setSeq, DEFAULT_STEPS, getAudioCtx, isPlaying, timerIDRef, songRef, setSongPos,
         currentStepRef, nextNoteTimeRef, scheduler, stopScheduler, songItemsRef, libraryRef,
         setCurrentStep, setIsPlaying,
-        patternRef, stepsRef, bpmRef, toneTrackRef, toneRootRef, setSeqRef
+        patternRef, stepsRef, bpmRef, toneTrackRef, toneRootRef, setSeqRef, nextPatternRef
     );
 
     const { onStepPointerDown } = window.useSeqPointer(patternRef, writeStepVel, recordingRef, setRecordedNotes, previewVoice, setActiveFader);
@@ -93,7 +93,7 @@ const Sequencer = ({ activeTabs = ['SEQ'], label = "Pattern Sequencer" }) => {
             setIsPlaying(true);
             currentStepRef.current = 0;
             nextNoteTimeRef.current = ctx.currentTime + 0.05;
-            scheduler(setCurrentStep, songRef, setSongPos, applySongEntry, songItemsRef, libraryRef);
+            scheduler(setCurrentStep, songRef, setSongPos, applySongEntry, songItemsRef, libraryRef, nextPatternRef);
         }
     };
 
@@ -227,6 +227,9 @@ const Sequencer = ({ activeTabs = ['SEQ'], label = "Pattern Sequencer" }) => {
                     setSongPos={setSongPos}
                     mixer={{ trackVol, trackPan, mutes, solos, masterVol, clickVol, bpm, steps }}
                     setMixer={{ setTrackVol, setTrackPan, setMutes, setSolos, setMasterVol, setClickVol, setBpm, setSteps }}
+                    nextPatternRef={nextPatternRef}
+                    loadPattern={loadPattern}
+                    isPlaying={isPlaying}
                 />
                 </div>
             )}

@@ -285,6 +285,7 @@ window.useSeqState = (label, DEFAULT_STEPS, TRACKS) => {
     const songItemsRef = React.useRef(song); songItemsRef.current = song;
     const libraryRef = React.useRef(library); libraryRef.current = library;
     const songRef = React.useRef(null);
+    const nextPatternRef = React.useRef(null);
     const [songPos, setSongPos] = React.useState(null);
     return {
         safeLabel, isPlaying, setIsPlaying, currentStep, setCurrentStep,
@@ -300,6 +301,6 @@ window.useSeqState = (label, DEFAULT_STEPS, TRACKS) => {
         recordedNotes, setRecordedNotes,
         writeStepVel, previewVoice, getAudioCtx, currentStepRef,
         setSeqRef,
-        library, setLibraryItems, song, setSongItems, songItemsRef, libraryRef, songRef, songPos, setSongPos
+        library, setLibraryItems, song, setSongItems, songItemsRef, libraryRef, songRef, nextPatternRef, songPos, setSongPos
     };
 };

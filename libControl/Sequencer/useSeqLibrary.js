@@ -14,7 +14,7 @@ window.useSeqLibrary = (
     setSeq, DEFAULT_STEPS, getAudioCtx, isPlaying, timerIDRef, songRef, setSongPos,
     currentStepRef, nextNoteTimeRef, scheduler, stopScheduler, songItemsRef, libraryRef,
     setCurrentStep, setIsPlaying,
-    patternRef, stepsRef, bpmRef, toneTrackRef, toneRootRef, setSeqRef
+    patternRef, stepsRef, bpmRef, toneTrackRef, toneRootRef, setSeqRef, nextPatternRef
 ) => {
     const clonePattern = (p) => p.map((row) => [...row]);
 
@@ -87,7 +87,7 @@ window.useSeqLibrary = (
         setIsPlaying(true);
         currentStepRef.current = 0;
         nextNoteTimeRef.current = ctx.currentTime + 0.05;
-        scheduler(setCurrentStep, songRef, setSongPos, applySongEntry, songItemsRef, libraryRef);
+        scheduler(setCurrentStep, songRef, setSongPos, applySongEntry, songItemsRef, libraryRef, nextPatternRef);
     };
 
     return { savePattern, loadPattern, deletePattern, playSong, applySongEntry };

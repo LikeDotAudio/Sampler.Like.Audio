@@ -9,9 +9,20 @@
 // interfaces, and every name they are known by remains the property of its owner.
 // ─────────────────────────────────────────────────────────────────────────────
 
-window.SeqSong = ({ songPos, song, togglePlayback, playSong, setSongItems, setSongPos, library, setLibraryItems, mixer, setMixer }) => {
+window.SeqSong = ({ songPos, song, togglePlayback, playSong, setSongItems, setSongPos, library, setLibraryItems, mixer, setMixer, nextPatternRef, loadPattern, isPlaying }) => {
     const SeqButton = window.SeqButton;
     const fileRef = React.useRef(null);
+    const [queuedPos, setQueuedPos] = React.useState(null);
+
+    // Keep queued indicator in sync with nextPatternRef
+    React.useEffect(() => {
+        const interval = setInterval(() => {
+            if (!nextPatternRef || !nextPatternRef.current) {
+                setQueuedPos(null);
+            }
+        }, 50);
+        return () => clearInterval(interval);
+    }, [nextPatternRef]);
 
     const exportSong = () => {
         const name = (window.prompt('Name this export:', 'My Song') || '').trim();
@@ -83,10 +94,21 @@ window.SeqSong = ({ songPos, song, togglePlayback, playSong, setSongItems, setSo
         if (songPos === i) setSongPos(j);
         else if (songPos === j) setSongPos(i);
     };
-    const arrowStyle = (enabled) => ({
-        background: 'transparent', color: enabled ? '#8bc34a' : '#555', border: 'none',
-        padding: '4px 4px', cursor: enabled ? 'pointer' : 'default', fontSize: '11px', lineHeight: 1
-    });
+
+    const handlePadClick = (name, i) => {
+        const entry = library.find((p) => p.name === name);
+        if (isPlaying) {
+            // Queue transition on next loop handoff
+            if (nextPatternRef) {
+                nextPatternRef.current = { idx: i, entry };
+                setQueuedPos(i);
+            }
+        } else {
+            if (entry && loadPattern) loadPattern(entry);
+            setSongPos(i);
+            playSong();
+        }
+    };
 
     return (
         <div style={{ marginTop: '10px', borderTop: '1px solid #333', paddingTop: '8px' }}>
@@ -136,44 +158,100 @@ window.SeqSong = ({ songPos, song, togglePlayback, playSong, setSongItems, setSo
                     A song chains patterns together. Click ＋ on patterns above to build one.
                 </div>
             ) : (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', alignItems: 'center' }}>
-                    {song.map((name, i) => (
-                        <React.Fragment key={i}>
-                            {i > 0 && <span style={{ color: '#555', fontSize: '14px' }}>→</span>}
-                            <div style={{ display: 'flex', alignItems: 'center', background: songPos === i ? '#1565c0' : '#222', borderRadius: '3px', border: songPos === i ? '1px solid #64b5f6' : '1px solid #444', overflow: 'hidden' }}>
-                                <button
-                                    onClick={() => move(i, -1)}
-                                    disabled={i === 0}
-                                    title="Move earlier in the song"
-                                    style={arrowStyle(i > 0)}
-                                >
-                                    ◀
-                                </button>
-                                <span
-                                    title={`Play from this pattern`}
-                                    onClick={() => { setSongPos(i); if (songPos === null) playSong(); }}
-                                    style={{ padding: '4px 8px', fontSize: '12px', color: songPos === i ? '#fff' : '#ccc', cursor: 'pointer' }}
-                                >
-                                    {name}
-                                </span>
-                                <button
-                                    onClick={() => move(i, 1)}
-                                    disabled={i === song.length - 1}
-                                    title="Move later in the song"
-                                    style={arrowStyle(i < song.length - 1)}
-                                >
-                                    ▶
-                                </button>
-                                <button
-                                    onClick={() => setSongItems(song.filter((_, idx) => idx !== i))}
-                                    title={`Remove from song`}
-                                    style={{ background: 'transparent', color: '#ff8a80', border: 'none', borderLeft: songPos === i ? '1px solid #1976d2' : '1px solid #444', padding: '4px 6px', cursor: 'pointer', fontSize: '12px', opacity: 0.8 }}
-                                >
-                                    ×
-                                </button>
-                            </div>
-                        </React.Fragment>
-                    ))}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                    {song.map((name, i) => {
+                        const isActive = songPos === i;
+                        const isQueued = queuedPos === i;
+
+                        let padBg = '#222';
+                        let borderColor = '#444';
+                        let textColor = '#ccc';
+
+                        if (isActive) {
+                            padBg = '#1565c0';
+                            borderColor = '#64b5f6';
+                            textColor = '#fff';
+                        }
+                        if (isQueued) {
+                            borderColor = '#ffb300';
+                        }
+
+                        return (
+                            <React.Fragment key={i}>
+                                {i > 0 && <span style={{ color: '#555', fontSize: '14px' }}>→</span>}
+                                <div style={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    background: padBg,
+                                    borderRadius: '6px',
+                                    border: `2px solid ${borderColor}`,
+                                    boxShadow: isActive ? '0 0 10px rgba(100, 181, 246, 0.5)' : (isQueued ? '0 0 8px rgba(255, 179, 0, 0.6)' : 'none'),
+                                    minWidth: '95px',
+                                    overflow: 'hidden',
+                                    transition: 'all 0.15s ease'
+                                }}>
+                                    <div style={{
+                                        display: 'flex',
+                                        justify: 'space-between',
+                                        alignItems: 'center',
+                                        background: 'rgba(0,0,0,0.3)',
+                                        padding: '2px 4px',
+                                        borderBottom: '1px solid rgba(255,255,255,0.08)'
+                                    }}>
+                                        <div style={{ display: 'flex', gap: '2px' }}>
+                                            <button
+                                                onClick={() => move(i, -1)}
+                                                disabled={i === 0}
+                                                title="Move earlier"
+                                                style={{ background: 'transparent', color: i > 0 ? '#8bc34a' : '#444', border: 'none', padding: '1px 3px', cursor: i > 0 ? 'pointer' : 'default', fontSize: '10px' }}
+                                            >
+                                                ◀
+                                            </button>
+                                            <button
+                                                onClick={() => move(i, 1)}
+                                                disabled={i === song.length - 1}
+                                                title="Move later"
+                                                style={{ background: 'transparent', color: i < song.length - 1 ? '#8bc34a' : '#444', border: 'none', padding: '1px 3px', cursor: i < song.length - 1 ? 'pointer' : 'default', fontSize: '10px' }}
+                                            >
+                                                ▶
+                                            </button>
+                                        </div>
+                                        <span style={{ fontSize: '10px', color: isQueued ? '#ffb300' : (isActive ? '#90caf9' : '#888'), fontWeight: 'bold' }}>
+                                            {isQueued ? 'NEXT' : (isActive ? 'PLAYING' : `PAD ${i + 1}`)}
+                                        </span>
+                                        <button
+                                            onClick={() => setSongItems(song.filter((_, idx) => idx !== i))}
+                                            title="Remove pattern"
+                                            style={{ background: 'transparent', color: '#ff8a80', border: 'none', padding: '1px 4px', cursor: 'pointer', fontSize: '12px' }}
+                                        >
+                                            ×
+                                        </button>
+                                    </div>
+                                    <button
+                                        onClick={() => handlePadClick(name, i)}
+                                        title={isPlaying ? `Queue pattern "${name}" to play on next loop handoff` : `Play from "${name}"`}
+                                        style={{
+                                            background: 'transparent',
+                                            color: textColor,
+                                            border: 'none',
+                                            padding: '10px 12px',
+                                            cursor: 'pointer',
+                                            fontSize: '13px',
+                                            fontWeight: 'bold',
+                                            textAlign: 'center',
+                                            wordBreak: 'break-word',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'center',
+                                            gap: '4px'
+                                        }}
+                                    >
+                                        <span>{name}</span>
+                                    </button>
+                                </div>
+                            </React.Fragment>
+                        );
+                    })}
                 </div>
             )}
         </div>

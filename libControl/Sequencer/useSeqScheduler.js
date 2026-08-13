@@ -43,11 +43,23 @@ window.useSeqScheduler = (
     window.OA_SEQ_TIMES = window.OA_SEQ_TIMES || [];
     window.OA_SEQ_SKIP = window.OA_SEQ_SKIP || new Set();
 
-    const nextNote = (songRef, setSongPos, applySongEntry, songItemsRef, libraryRef) => {
+    const nextNote = (songRef, setSongPos, applySongEntry, songItemsRef, libraryRef, nextPatternRef) => {
         const secondsPerBeat = 60.0 / bpmRef.current;
         nextNoteTimeRef.current += 0.25 * secondsPerBeat; // 16th note
         currentStepRef.current = (currentStepRef.current + 1) % stepsRef.current;
-        if (currentStepRef.current === 0 && songRef.current) advanceSong(songRef, setSongPos, applySongEntry, songItemsRef, libraryRef);
+        if (currentStepRef.current === 0) {
+            if (nextPatternRef && nextPatternRef.current) {
+                const target = nextPatternRef.current;
+                nextPatternRef.current = null;
+                if (songRef.current) {
+                    songRef.current = { idx: target.idx };
+                    setSongPos(target.idx);
+                }
+                applySongEntry(target.entry);
+            } else if (songRef.current) {
+                advanceSong(songRef, setSongPos, applySongEntry, songItemsRef, libraryRef);
+            }
+        }
     };
 
     const advanceSong = (songRef, setSongPos, applySongEntry, songItemsRef, libraryRef) => {
@@ -149,7 +161,7 @@ window.useSeqScheduler = (
     };
 
     // One scheduling pass: book every note that falls inside the lookahead.
-    const pass = (setCurrentStep, songRef, setSongPos, applySongEntry, songItemsRef, libraryRef) => {
+    const pass = (setCurrentStep, songRef, setSongPos, applySongEntry, songItemsRef, libraryRef, nextPatternRef) => {
         const ctx = getAudioCtx();
 
         // The context can be suspended out from under us (tab backgrounded, OS
@@ -166,12 +178,12 @@ window.useSeqScheduler = (
         let guard = 0;
         while (nextNoteTimeRef.current < ctx.currentTime + scheduleAheadTime && guard++ < 128) {
             scheduleNote(currentStepRef.current, nextNoteTimeRef.current, setCurrentStep);
-            nextNote(songRef, setSongPos, applySongEntry, songItemsRef, libraryRef);
+            nextNote(songRef, setSongPos, applySongEntry, songItemsRef, libraryRef, nextPatternRef);
         }
     };
 
-    const scheduler = (setCurrentStep, songRef, setSongPos, applySongEntry, songItemsRef, libraryRef) => {
-        const tick = () => pass(setCurrentStep, songRef, setSongPos, applySongEntry, songItemsRef, libraryRef);
+    const scheduler = (setCurrentStep, songRef, setSongPos, applySongEntry, songItemsRef, libraryRef, nextPatternRef) => {
+        const tick = () => pass(setCurrentStep, songRef, setSongPos, applySongEntry, songItemsRef, libraryRef, nextPatternRef);
         tick();   // book the first notes immediately
 
         if (typeof Worker !== 'undefined') {

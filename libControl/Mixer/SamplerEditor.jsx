@@ -143,6 +143,10 @@ window.SamplerEditor = ({ idx, name, onClose, oaPopped }) => {
                     <input type="checkbox" checked={looping} disabled={!buffer}
                         onChange={(e) => { window.oaUpdateDrumSample(idx, { loop: e.target.checked }); bump(); }} /> Loop
                 </label>
+                <label title="Break: stop any currently playing instance of this sample and restart it on new hits" style={{ fontSize: '11px', color: '#ccc', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <input type="checkbox" checked={!!(entry && entry.break)} disabled={!buffer}
+                        onChange={(e) => { window.oaUpdateDrumSample(idx, { break: e.target.checked }); bump(); }} /> Break
+                </label>
                 <span style={{ fontSize: '11px', color: chopped ? 'var(--accent)' : '#666', fontVariantNumeric: 'tabular-nums' }}
                     title="IN → OUT, and the fade at each end. Drag the handles on the waveform.">
                     ✂ {secs(trim.in)} → {secs(trim.out)}s ({secs(trim.out - trim.in)}s)

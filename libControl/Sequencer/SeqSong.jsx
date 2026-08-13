@@ -119,53 +119,15 @@ window.SeqSong = ({ songPos, song, togglePlayback, playSong, setSongItems, setSo
 
     return (
         <div style={{ marginTop: '10px', borderTop: '1px solid #333', paddingTop: '8px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-                <span style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                    Song
-                </span>
-                <SeqButton
-                    label={songPos !== null ? '■ Stop Song' : '► Play Song'}
-                    onClick={songPos !== null ? togglePlayback : playSong}
-                    color={songPos !== null ? '#ffb300' : '#388e3c'} textColor="#fff"
-                    disabled={songPos === null && song.length === 0}
-                    title="Play the song: each pattern in order, looping the whole song"
-                    style={{ padding: '4px 12px', border: 'none' }}
-                />
-                <SeqButton
-                    label="Clear"
-                    onClick={() => { setSongItems([]); if (songPos !== null) togglePlayback(); }}
-                    disabled={song.length === 0}
-                    style={{ padding: '4px 10px', border: 'none' }}
-                />
-
-                <span style={{ width: '1px', height: '18px', background: '#444', margin: '0 4px' }} />
-
-                <SeqButton
-                    label="⭳ Export"
-                    onClick={exportSong}
-                    title="Download every saved pattern, the arrangement, the kit, mixer levels and synth settings as a .json file"
-                    style={{ padding: '4px 10px', border: 'none' }}
-                />
-                <SeqButton
-                    label="⭱ Import"
-                    onClick={() => fileRef.current && fileRef.current.click()}
-                    title="Load patterns and a song from a .json export"
-                    style={{ padding: '4px 10px', border: 'none' }}
-                />
-                <input
-                    ref={fileRef}
-                    type="file"
-                    accept="application/json,.json"
-                    style={{ display: 'none' }}
-                    onChange={(e) => { importFile(e.target.files && e.target.files[0]); e.target.value = ''; }}
-                />
+            <div style={{ fontSize: '11px', color: '#888', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>
+                Song
             </div>
             {song.length === 0 ? (
-                <div style={{ fontSize: '12px', color: '#666', fontStyle: 'italic' }}>
+                <div style={{ fontSize: '12px', color: '#666', fontStyle: 'italic', marginBottom: '10px' }}>
                     A song chains patterns together. Click ＋ on patterns above to build one.
                 </div>
             ) : (
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center', marginBottom: '10px' }}>
                     {song.map((item, i) => {
                         const name = (item && typeof item === 'object') ? item.name : item;
                         const repeatCount = (item && typeof item === 'object' && item.repeat != null) ? item.repeat : 0;
@@ -293,6 +255,45 @@ window.SeqSong = ({ songPos, song, togglePlayback, playSong, setSongItems, setSo
                     })}
                 </div>
             )}
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '6px' }}>
+                <SeqButton
+                    label={songPos !== null ? '■ Stop Song' : '► Play Song'}
+                    onClick={songPos !== null ? togglePlayback : playSong}
+                    color={songPos !== null ? '#ffb300' : '#388e3c'} textColor="#fff"
+                    disabled={songPos === null && song.length === 0}
+                    title="Play the song: each pattern in order, looping the whole song"
+                    style={{ padding: '4px 12px', border: 'none' }}
+                />
+                <SeqButton
+                    label="Clear"
+                    onClick={() => { setSongItems([]); if (songPos !== null) togglePlayback(); }}
+                    disabled={song.length === 0}
+                    style={{ padding: '4px 10px', border: 'none' }}
+                />
+
+                <span style={{ width: '1px', height: '18px', background: '#444', margin: '0 4px' }} />
+
+                <SeqButton
+                    label="⭳ Export"
+                    onClick={exportSong}
+                    title="Download every saved pattern, the arrangement, the kit, mixer levels and synth settings as a .json file"
+                    style={{ padding: '4px 10px', border: 'none' }}
+                />
+                <SeqButton
+                    label="⭱ Import"
+                    onClick={() => fileRef.current && fileRef.current.click()}
+                    title="Load patterns and a song from a .json export"
+                    style={{ padding: '4px 10px', border: 'none' }}
+                />
+                <input
+                    ref={fileRef}
+                    type="file"
+                    accept="application/json,.json"
+                    style={{ display: 'none' }}
+                    onChange={(e) => { importFile(e.target.files && e.target.files[0]); e.target.value = ''; }}
+                />
+            </div>
         </div>
     );
 };

@@ -54,6 +54,17 @@ window.oaPlayDrumSample = function (ctx, entry, time, volume, pan) {
     src.buffer = entry.cachedBuffer || entry.buffer;
     src.playbackRate.value = useCache ? 1 : pitch;
     src.loop = !!entry.loop;
+
+    // Break mode (mono/retrigger): stop any currently playing voice instance on this pad
+    if (entry.break) {
+        for (let i = window.OA_LIVE_VOICES.length - 1; i >= 0; i--) {
+            const live = window.OA_LIVE_VOICES[i];
+            if (live && live.__oaPad === entry.idx) {
+                try { live.stop(); } catch (e) {}
+                window.OA_LIVE_VOICES.splice(i, 1);
+            }
+        }
+    }
     
     const origDur = entry.buffer.duration;
     let offset = Math.max(0, Math.min(entry.offset || 0, origDur - 0.001));

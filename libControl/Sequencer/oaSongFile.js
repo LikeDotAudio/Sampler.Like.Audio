@@ -42,7 +42,7 @@ window.oaStamp = function () {
 
 // The per-track sample fields worth carrying. Deliberately excludes `buffer` and
 // `cachedBuffer` (decoded audio — not JSON) and `idx` (implied by position).
-const SAMPLE_FIELDS = ['name', 'folder', 'pitch', 'sampleRoot', 'offset', 'end', 'loop', 'fade'];
+const SAMPLE_FIELDS = ['name', 'folder', 'pitch', 'sampleRoot', 'offset', 'end', 'loop', 'break', 'fade'];
 
 // idx -> serializable sample meta, or null for a track running the synth.
 // Walks the largest grid, not the current one: a pad parked outside a 4 x 4
@@ -190,7 +190,7 @@ window.oaApplySongState = async function (parsed) {
             parsed.kit.forEach((e, i) => {
                 if (!e || !window.OA_DRUM_SAMPLES[i]) return;
                 const patch = {};
-                ['pitch', 'sampleRoot', 'offset', 'end', 'loop', 'fade'].forEach((k) => {
+                ['pitch', 'sampleRoot', 'offset', 'end', 'loop', 'break', 'fade'].forEach((k) => {
                     if (e[k] !== undefined) patch[k] = e[k];
                 });
                 window.oaUpdateDrumSample(i, patch);

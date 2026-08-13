@@ -204,21 +204,6 @@ const Sequencer = ({ activeTabs = ['SEQ'], label = "Pattern Sequencer" }) => {
             {showSong && (
                 <div style={{ order: songOrder }}>
                 {showSeq && !songOnTop && divider}
-                <window.SeqLibrary
-                    library={library}
-                    loadPattern={loadPattern}
-                    deletePattern={deletePattern}
-                    setSongItems={setSongItems}
-                    song={song}
-                    steps={steps}
-                    setSteps={setSteps}
-                    doubleTo={doubleTo}
-                    rendering={rendering}
-                    renderLoop={renderLoop}
-                    renderStems={renderStems}
-                    clearPattern={clearPattern}
-                />
-
                 <window.SeqSong
                     library={library}
                     setLibraryItems={setLibraryItems}
@@ -233,6 +218,21 @@ const Sequencer = ({ activeTabs = ['SEQ'], label = "Pattern Sequencer" }) => {
                     nextPatternRef={nextPatternRef}
                     loadPattern={loadPattern}
                     isPlaying={isPlaying}
+                />
+
+                <window.SeqLibrary
+                    library={library}
+                    loadPattern={loadPattern}
+                    deletePattern={deletePattern}
+                    setSongItems={setSongItems}
+                    song={song}
+                    steps={steps}
+                    setSteps={setSteps}
+                    doubleTo={doubleTo}
+                    rendering={rendering}
+                    renderLoop={renderLoop}
+                    renderStems={renderStems}
+                    clearPattern={clearPattern}
                 />
                 </div>
             )}

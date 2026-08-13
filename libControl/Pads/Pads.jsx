@@ -99,6 +99,17 @@ const Pads = ({ label = "Drum Pads", centerVelocity = 100, edgeVelocity = 10, on
         window.addEventListener('keydown', onEsc);
         return () => window.removeEventListener('keydown', onEsc);
     }, [pendingAssign]);
+    const holdTimerRef = React.useRef(null);
+    const holdTriggeredRef = React.useRef(false);
+    const [samplerEditorPad, setSamplerEditorPad] = React.useState(null);
+
+    const clearHold = () => {
+        if (holdTimerRef.current) {
+            clearTimeout(holdTimerRef.current);
+            holdTimerRef.current = null;
+        }
+    };
+
     return (
         <div ref={rootRef} style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', boxSizing: 'border-box' }}>
             {/* Velocity glow: bright on strike (scaled by --gi), fades over the sound's length. */}
@@ -153,7 +164,22 @@ const Pads = ({ label = "Drum Pads", centerVelocity = 100, edgeVelocity = 10, on
                                 PadWave={window.PadWave}
                                 setPadButtonRef={(el) => { padButtons.current[idx] = el; }}
                                 onPointerDown={(e) => {
+                                    clearHold();
+                                    holdTriggeredRef.current = false;
+                                    const eventRef = { clientX: e.clientX, clientY: e.clientY, currentTarget: e.currentTarget };
+
+                                    holdTimerRef.current = setTimeout(() => {
+                                        holdTriggeredRef.current = true;
+                                        setSamplerEditorPad(idx);
+                                        const el = eventRef.currentTarget;
+                                        if (el) {
+                                            el.style.transform = 'scale(1)';
+                                            el.style.filter = 'none';
+                                        }
+                                    }, 400);
+
                                     if (e.ctrlKey) {
+                                        clearHold();
                                         e.preventDefault();
                                         const newRoot = toneRoot === idx ? null : idx;
                                         setToneRoot(newRoot);
@@ -162,12 +188,14 @@ const Pads = ({ label = "Drum Pads", centerVelocity = 100, edgeVelocity = 10, on
                                         return;
                                     }
                                     if (pendingAssign) {
+                                        clearHold();
                                         e.preventDefault();
                                         handleFile(idx, pendingAssign.file, pendingAssign.meta);
                                         setPendingAssign(null);
                                         return;
                                     }
                                     if (e.altKey) {
+                                        clearHold();
                                         e.preventDefault();
                                         if (window.SoundBrowser) setBrowsePad(idx);
                                         else { const input = fileInputs.current[idx]; if (input) input.click(); }
@@ -181,10 +209,12 @@ const Pads = ({ label = "Drum Pads", centerVelocity = 100, edgeVelocity = 10, on
                                     startGlow(el, idx, i);
                                 }}
                                 onPointerUp={(e) => {
+                                    clearHold();
                                     e.currentTarget.style.transform = 'scale(1)';
                                     e.currentTarget.style.filter = 'none';
                                 }}
                                 onPointerLeave={(e) => {
+                                    clearHold();
                                     e.currentTarget.style.transform = 'scale(1)';
                                     e.currentTarget.style.filter = 'none';
                                 }}
@@ -301,6 +331,14 @@ const Pads = ({ label = "Drum Pads", centerVelocity = 100, edgeVelocity = 10, on
                 <div style={{ position: 'fixed', top: '12px', left: '50%', transform: 'translateX(-50%)', zIndex: 10001, background: 'var(--accent-t15)', color: '#111', padding: '8px 16px', borderRadius: '4px', fontSize: '13px', fontWeight: 'bold', boxShadow: '0 4px 16px rgba(0,0,0,0.5)' }}>
                     👆 Click a pad to assign "{pendingAssign.meta && pendingAssign.meta.name}" — Esc to cancel
                 </div>
+            )}
+            {samplerEditorPad != null && window.SamplerEditor && ReactDOM.createPortal(
+                <window.SamplerEditor
+                    idx={samplerEditorPad}
+                    name={(KIT[samplerEditorPad] && KIT[samplerEditorPad].name) || `Pad ${samplerEditorPad + 1}`}
+                    onClose={() => setSamplerEditorPad(null)}
+                />,
+                document.body
             )}
         </div>
     );

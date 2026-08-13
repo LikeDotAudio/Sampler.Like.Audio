@@ -174,14 +174,17 @@ window.useSeqRenderer = (pattern, steps, mutes, bpm, safeLabel) => {
 
             const zipFiles = [];
 
+            const numTracks = (pattern && pattern.length) || TRACKS.length || 16;
+
             // Render each active track individually into an isolated stem WAV
-            for (let trkIdx = 0; trkIdx < TRACKS.length; trkIdx++) {
+            for (let trkIdx = 0; trkIdx < numTracks; trkIdx++) {
+                if (!pattern[trkIdx]) continue;
                 // Check if track has any notes
                 let hasNotes = false;
                 for (let step = 0; step < steps; step++) {
                     if (velOf(pattern[trkIdx][step]) > 0) { hasNotes = true; break; }
                 }
-                if (!hasNotes || mutes[trkIdx]) continue;
+                if (!hasNotes || (mutes && mutes[trkIdx])) continue;
 
                 // Offline Context for this isolated stem (no reverb/delay sends)
                 const offline = window.oaOfflineContext(2, dur + 0.1, rate);

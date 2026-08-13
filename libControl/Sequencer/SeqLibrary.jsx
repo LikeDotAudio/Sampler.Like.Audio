@@ -44,6 +44,7 @@ window.SeqLibrary = ({ library, loadPattern, deletePattern, setSongItems, song,
                     steps={steps}
                     setSteps={setSteps}
                     doubleTo={doubleTo}
+                    clearPattern={clearPattern}
                 />
             )}
         </div>

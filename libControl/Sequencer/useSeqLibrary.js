@@ -35,8 +35,10 @@ window.useSeqLibrary = (
      * to save — you keep the take you just heard.
      */
     const savePattern = () => {
-        const stamp = window.oaStamp ? window.oaStamp() : '';
-        const name = `${stamp}_Pattern ${library.length + 1}`;
+        const defaultName = `Pattern ${library.length + 1}`;
+        const input = window.prompt('Name this pattern:', defaultName);
+        if (input === null) return; // User cancelled
+        const name = input.trim() || defaultName;
         const entry = { name, bpm, steps, data: clonePattern(pattern), toneTrack, toneRoot };
         const idx = library.findIndex((p) => p.name === name);
         let next;

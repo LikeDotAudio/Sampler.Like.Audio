@@ -273,34 +273,19 @@ window.SeqSong = ({ songPos, song, togglePlayback, playSong, setSongItems, setSo
                                         background: 'rgba(0,0,0,0.15)',
                                         borderTop: '1px solid rgba(255,255,255,0.05)'
                                     }}>
-                                        {window.SeqKnob ? (
-                                            <window.SeqKnob
-                                                value={repeatCount}
-                                                min={0}
-                                                max={16}
-                                                step={1}
-                                                def={0}
-                                                size={38}
-                                                color={isActive ? '#64b5f6' : 'var(--accent)'}
-                                                label="REPEAT"
-                                                display={repeatCount}
-                                                onChange={updateRepeat}
-                                                title={`Repeat pattern "${name}" ${repeatCount} extra time(s)`}
-                                            />
-                                        ) : (
-                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-                                                <input
-                                                    type="range"
-                                                    min={0}
-                                                    max={16}
-                                                    step={1}
-                                                    value={repeatCount}
-                                                    onChange={(e) => updateRepeat(Number(e.target.value))}
-                                                    style={{ width: '60px', accentColor: 'var(--accent)', cursor: 'pointer' }}
-                                                />
-                                                <span style={{ fontSize: '9px', color: '#aaa', fontWeight: 'bold' }}>REPEAT {repeatCount}</span>
-                                            </div>
-                                        )}
+                                        <window.SeqKnob
+                                            value={repeatCount}
+                                            min={0}
+                                            max={16}
+                                            step={1}
+                                            def={0}
+                                            size={42}
+                                            color={isActive ? '#64b5f6' : 'var(--accent)'}
+                                            label="REPEAT"
+                                            display={repeatCount}
+                                            onChange={updateRepeat}
+                                            title={`Repeat pattern "${name}" ${repeatCount} extra time(s)`}
+                                        />
                                     </div>
                                 </div>
                             </React.Fragment>

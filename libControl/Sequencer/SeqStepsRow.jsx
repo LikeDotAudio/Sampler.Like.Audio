@@ -10,7 +10,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Dedicated row component for Pattern steps / extensions
-window.SeqStepsRow = ({ steps, setSteps, doubleTo }) => {
+window.SeqStepsRow = ({ steps, setSteps, doubleTo, clearPattern }) => {
     const SeqButton = window.SeqButton;
     const STEP_OPTIONS = [4, 8, 16, 32, 64];
 
@@ -31,6 +31,17 @@ window.SeqStepsRow = ({ steps, setSteps, doubleTo }) => {
                     )}
                 </div>
             ))}
+            <div style={{ marginLeft: 'auto' }}>
+                <SeqButton
+                    label="Clear"
+                    onClick={() => {
+                        if (window.confirm("Are you sure you want to clear the entire pattern?")) {
+                            clearPattern();
+                        }
+                    }}
+                    style={{ padding: '6px 12px', border: 'none' }}
+                />
+            </div>
         </div>
     );
 };

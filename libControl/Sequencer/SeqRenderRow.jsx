@@ -10,43 +10,47 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Dedicated row component for Render loops/stems and clear pattern buttons
-window.SeqRenderRow = ({ rendering, renderLoop, renderStems, clearPattern }) => {
+window.SeqRenderRow = ({ rendering, renderLoop, renderStems }) => {
     const SeqButton = window.SeqButton;
+    const [renderMode, setRenderMode] = React.useState('mix'); // 'mix' | 'stems'
+
+    const handleRender = (loops) => {
+        if (renderMode === 'stems') {
+            if (renderStems) renderStems(loops);
+        } else {
+            if (renderLoop) renderLoop(loops);
+        }
+    };
 
     return (
-        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginBottom: '10px' }}>
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '10px' }}>
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: '#ccc', cursor: 'pointer', userSelect: 'none', background: '#222', padding: '5px 10px', borderRadius: '4px', border: '1px solid #444' }}>
+                <input
+                    type="checkbox"
+                    checked={renderMode === 'stems'}
+                    onChange={(e) => setRenderMode(e.target.checked ? 'stems' : 'mix')}
+                    style={{ accentColor: 'var(--accent)', cursor: 'pointer' }}
+                />
+                <span style={{ fontWeight: 'bold', color: renderMode === 'stems' ? 'var(--accent)' : '#aaa' }}>
+                    Render Stems (ZIP)
+                </span>
+            </label>
+
             <SeqButton
-                label={rendering ? '…rendering' : '⭳ RENDER 1 LOOP'}
-                onClick={() => renderLoop(1)}
+                label={rendering ? '…rendering' : (renderMode === 'stems' ? '📦 RENDER 1 LOOP STEMS' : '⭳ RENDER 1 LOOP MIX')}
+                onClick={() => handleRender(1)}
                 disabled={rendering}
-                color="#7b1fa2" textColor="#fff"
-                title="Render one pass of this pattern to a loopable WAV file"
+                color={renderMode === 'stems' ? '#00695c' : '#7b1fa2'} textColor="#fff"
+                title={renderMode === 'stems' ? "Render 1 pass of stems to a ZIP archive" : "Render 1 pass of the mix to a WAV file"}
                 style={{ padding: '6px 12px', border: 'none', cursor: rendering ? 'wait' : 'pointer' }}
             />
             <SeqButton
-                label={rendering ? '…rendering' : '⭳ RENDER 8 LOOPS'}
-                onClick={() => renderLoop(8)}
+                label={rendering ? '…rendering' : (renderMode === 'stems' ? '📦 RENDER 8 LOOPS STEMS' : '⭳ RENDER 8 LOOPS MIX')}
+                onClick={() => handleRender(8)}
                 disabled={rendering}
-                color="#4a148c" textColor="#fff"
-                title="Render eight passes of this pattern to a WAV file"
+                color={renderMode === 'stems' ? '#004d40' : '#4a148c'} textColor="#fff"
+                title={renderMode === 'stems' ? "Render 8 passes of stems to a ZIP archive" : "Render 8 passes of the mix to a WAV file"}
                 style={{ padding: '6px 12px', border: 'none', cursor: rendering ? 'wait' : 'pointer' }}
-            />
-            <SeqButton
-                label={rendering ? '…rendering' : '📦 RENDER STEMS'}
-                onClick={() => renderStems && renderStems(1)}
-                disabled={rendering}
-                color="#00695c" textColor="#fff"
-                title="Export every track as isolated WAV stem files in a .zip archive (includes compression and drive, excludes reverb/delay)"
-                style={{ padding: '6px 12px', border: 'none', cursor: rendering ? 'wait' : 'pointer' }}
-            />
-            <SeqButton
-                label="Clear"
-                onClick={() => {
-                    if (window.confirm("Are you sure you want to clear the entire pattern?")) {
-                        clearPattern();
-                    }
-                }}
-                style={{ padding: '6px 12px', border: 'none' }}
             />
         </div>
     );

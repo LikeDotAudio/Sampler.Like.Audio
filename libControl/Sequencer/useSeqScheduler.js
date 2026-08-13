@@ -13,7 +13,7 @@ window.useSeqScheduler = (
     bpmRef, stepsRef, mutesRef, trackVolRef, trackPanRef, 
     recordingRef, clickVolRef, toneTrackRef, toneRootRef,
     patternRef, currentStepRef, setRecordedNotes, setSeqRef, getAudioCtx,
-    solosRef, masterVolRef
+    solosRef, masterVolRef, swingRef
 ) => {
     const nextNoteTimeRef = React.useRef(0);
     const timerIDRef = React.useRef(null);
@@ -45,7 +45,13 @@ window.useSeqScheduler = (
 
     const nextNote = (songRef, setSongPos, applySongEntry, songItemsRef, libraryRef, nextPatternRef) => {
         const secondsPerBeat = 60.0 / bpmRef.current;
-        nextNoteTimeRef.current += 0.25 * secondsPerBeat; // 16th note
+        // Swing (50% = straight equal 16th notes).
+        // For off-beat 16th notes (odd step index), step duration is proportional to swing / 50.
+        // On even steps (downbeats), step duration is proportional to (100 - swing) / 50.
+        const currentSwing = (swingRef && swingRef.current != null) ? swingRef.current : 50;
+        const isOdd = (currentStepRef.current % 2) !== 0;
+        const factor = isOdd ? (currentSwing / 50.0) : ((100.0 - currentSwing) / 50.0);
+        nextNoteTimeRef.current += 0.25 * secondsPerBeat * factor; // 16th note with swing factor
         currentStepRef.current = (currentStepRef.current + 1) % stepsRef.current;
         if (currentStepRef.current === 0) {
             if (nextPatternRef && nextPatternRef.current) {

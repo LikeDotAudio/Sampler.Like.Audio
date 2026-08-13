@@ -17,7 +17,7 @@ window.useSeqState = (label, DEFAULT_STEPS, TRACKS) => {
     const patternTopic = `OpenAir/Gui/Sequencer/${safeLabel}/pattern`;
     
     const emptyPattern = (steps) => Array(TRACKS.length).fill().map(() => Array(steps).fill(0));
-    const [seq, setSeq] = window.useMqttState(patternTopic, { grid: emptyPattern(DEFAULT_STEPS), bpm: 120, steps: DEFAULT_STEPS, toneTrack: [], toneRoot: null });
+    const [seq, setSeq] = window.useMqttState(patternTopic, { grid: emptyPattern(DEFAULT_STEPS), bpm: 120, swing: 50, steps: DEFAULT_STEPS, toneTrack: [], toneRoot: null });
     const steps = (seq && seq.steps) || DEFAULT_STEPS;
     // A pattern saved on a 4 x 4 has 16 rows; on a 5 x 5 the last nine tracks
     // would index into nothing. Fit the grid to the kit on the way out, and
@@ -32,15 +32,18 @@ window.useSeqState = (label, DEFAULT_STEPS, TRACKS) => {
     };
     const pattern = fitRows(seq && seq.grid);
     const bpm = (seq && seq.bpm) || 120;
+    const swing = (seq && seq.swing != null) ? seq.swing : 50;
     const toneTrack = (seq && seq.toneTrack) || [];
     const toneRoot = (seq && seq.toneRoot !== undefined) ? seq.toneRoot : null;
     const stepsRef = React.useRef(steps); stepsRef.current = steps;
     const patternRef = React.useRef(pattern); patternRef.current = pattern;
     const bpmRef = React.useRef(bpm); bpmRef.current = bpm;
+    const swingRef = React.useRef(swing); swingRef.current = swing;
     const toneTrackRef = React.useRef(toneTrack); toneTrackRef.current = toneTrack;
     const toneRootRef = React.useRef(toneRoot); toneRootRef.current = toneRoot;
-    const setPattern = (grid) => setSeq({ grid, bpm, steps, toneTrack, toneRoot });
-    const setBpm = (nextBpm) => setSeq({ grid: pattern, bpm: nextBpm, steps, toneTrack, toneRoot });
+    const setPattern = (grid) => setSeq({ grid, bpm, swing, steps, toneTrack, toneRoot });
+    const setBpm = (nextBpm) => setSeq({ grid: pattern, bpm: nextBpm, swing, steps, toneTrack, toneRoot });
+    const setSwing = (nextSwing) => setSeq({ grid: pattern, bpm, swing: nextSwing, steps, toneTrack, toneRoot });
     const tapTimesRef = React.useRef([]);
     const tapFlashRef = React.useRef(null);
     const [tapping, setTapping] = React.useState(false);
@@ -289,9 +292,9 @@ window.useSeqState = (label, DEFAULT_STEPS, TRACKS) => {
     const [songPos, setSongPos] = React.useState(null);
     return {
         safeLabel, isPlaying, setIsPlaying, currentStep, setCurrentStep,
-        seq, setSeq, steps, pattern, bpm, toneTrack, toneRoot,
-        stepsRef, patternRef, bpmRef, toneTrackRef, toneRootRef,
-        setPattern, setBpm, tapping, tapTempo, setSteps, doubleTo,
+        seq, setSeq, steps, pattern, bpm, swing, toneTrack, toneRoot,
+        stepsRef, patternRef, bpmRef, swingRef, toneTrackRef, toneRootRef,
+        setPattern, setBpm, setSwing, tapping, tapTempo, setSteps, doubleTo,
         clickVol, setClickVol, clickVolRef,
         mutes, mutesRef, toggleMute, setMutes,
         solos, solosRef, toggleSolo, clearSolos, setSolos,

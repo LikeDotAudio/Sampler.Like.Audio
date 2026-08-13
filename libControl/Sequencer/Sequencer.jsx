@@ -42,9 +42,9 @@ const Sequencer = ({ activeTabs = ['SEQ'], label = "Pattern Sequencer" }) => {
     window.useOaPadGrid();
     const {
         safeLabel, isPlaying, setIsPlaying, currentStep, setCurrentStep,
-        seq, setSeq, steps, pattern, bpm, toneTrack, toneRoot,
-        stepsRef, patternRef, bpmRef, toneTrackRef, toneRootRef,
-        setPattern, setBpm, tapping, tapTempo, setSteps, doubleTo,
+        seq, setSeq, steps, pattern, bpm, swing, toneTrack, toneRoot,
+        stepsRef, patternRef, bpmRef, swingRef, toneTrackRef, toneRootRef,
+        setPattern, setBpm, setSwing, tapping, tapTempo, setSteps, doubleTo,
         clickVol, setClickVol, clickVolRef,
         mutes, mutesRef, toggleMute, setMutes,
         solos, solosRef, toggleSolo, clearSolos, setSolos,
@@ -63,7 +63,7 @@ const Sequencer = ({ activeTabs = ['SEQ'], label = "Pattern Sequencer" }) => {
         bpmRef, stepsRef, mutesRef, trackVolRef, trackPanRef, 
         recordingRef, clickVolRef, toneTrackRef, toneRootRef,
         patternRef, currentStepRef, setRecordedNotes, setSeqRef, getAudioCtx,
-        solosRef, masterVolRef
+        solosRef, masterVolRef, swingRef
     );
 
     const [activeFader, setActiveFader] = React.useState(null);
@@ -182,6 +182,8 @@ const Sequencer = ({ activeTabs = ['SEQ'], label = "Pattern Sequencer" }) => {
                         togglePlayback={togglePlayback}
                         bpm={bpm}
                         setBpm={setBpm}
+                        swing={swing}
+                        setSwing={setSwing}
                         tapping={tapping}
                         tapTempo={tapTempo}
                         steps={steps}

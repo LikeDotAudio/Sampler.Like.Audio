@@ -219,12 +219,12 @@
                             {window.Mixer ? <window.Mixer /> : <div>Loading MIXER...</div>}
                         </div>
 
-                        <div style={{ ...panelStyle('SCANALYZER'), display: activeTabs.includes('SCANALYZER') ? 'flex' : 'none', justifyContent: 'center' }}>
-                            {window.ScanalyzerView ? (
+                        <div style={{ ...panelStyle('LENSES', 'SCANALYZER'), display: (activeTabs.includes('LENSES') || activeTabs.includes('SCANALYZER')) ? 'flex' : 'none', justifyContent: 'center' }}>
+                            {window.LensesView ? (
                                 <div style={{ width: '100%', maxWidth: '1100px' }}>
-                                    <window.ScanalyzerView padIdx={0} />
+                                    <window.LensesView padIdx={0} />
                                 </div>
-                            ) : <div>Loading SCANALYZER...</div>}
+                            ) : <div>Loading LENSES...</div>}
                         </div>
                     </main>
 

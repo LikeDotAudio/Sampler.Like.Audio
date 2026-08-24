@@ -94,5 +94,6 @@
   "libControl/MusicChart/oaDeepScanner.js",
   "libControl/MusicChart/MusicChartOverlay.jsx",
   "libControl/MusicChart/ScanalyzerView.jsx",
+  "libControl/MusicChart/LensesView.jsx",
   "libControl/App/App.jsx"
 ]

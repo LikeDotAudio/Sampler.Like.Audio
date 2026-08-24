@@ -10,7 +10,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 window.gatherMatching = async (handle, prefix, out, term, depth) => {
-    const AUDIO_RE = /\.(mp3|wav|wave|aif|aiff|aac|m4a|ogg|oga|flac|opus)$/i;
+    const AUDIO_RE = /\.(mp3|wav|wave|aif|aiff|aac|m4a|mp4|mov|mkv|webm|avi|m4v|3gp|flv|ogg|oga|flac|opus)$/i;
     const DEEP_MAX = 20000;
     if (depth > 12 || out.length >= DEEP_MAX) return;
     const subdirs = [];

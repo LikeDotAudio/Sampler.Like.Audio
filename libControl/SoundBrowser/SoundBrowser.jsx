@@ -20,7 +20,7 @@
  * Folder tree uses the File System Access API (Chromium); elsewhere it falls
  * back to a flat multi-file picker shown in the grid.
  */
-const AUDIO_RE = /\.(mp3|wav|wave|aif|aiff|aac|m4a|ogg|oga|flac|opus)$/i;
+const AUDIO_RE = /\.(mp3|wav|wave|aif|aiff|aac|m4a|mp4|mov|mkv|webm|avi|m4v|3gp|flv|ogg|oga|flac|opus)$/i;
 const COLS = 4;   // grid columns (drives arrow up/down)
 
 const WaveThumb = window.WaveThumb;

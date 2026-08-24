@@ -10,7 +10,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 
 window.gatherAll = async (handle, prefix, files, names, builder, onEmit, depth) => {
-    const AUDIO_RE = /\.(mp3|wav|wave|aif|aiff|aac|m4a|ogg|oga|flac|opus)$/i;
+    const AUDIO_RE = /\.(mp3|wav|wave|aif|aiff|aac|m4a|mp4|mov|mkv|webm|avi|m4v|3gp|flv|ogg|oga|flac|opus)$/i;
     const MAX_FILES = 4000;
     const NAME_MAX = 60000;
     if (depth > 12 || names.length >= NAME_MAX) return;

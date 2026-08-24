@@ -9,7 +9,7 @@
 // interfaces, and every name they are known by remains the property of its owner.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const AUDIO_RE = /\.(mp3|wav|wave|aif|aiff|aac|m4a|ogg|oga|flac|opus)$/i;
+const AUDIO_RE = /\.(mp3|wav|wave|aif|aiff|aac|m4a|mp4|mov|mkv|webm|avi|m4v|3gp|flv|ogg|oga|flac|opus)$/i;
 const MAX_FILES = 4000;
 const NAME_MAX = 60000;
 
@@ -20,8 +20,10 @@ window.useSoundBrowseState = () => {
     const [selectedFolderPath, setSelectedFolderPath] = React.useState('');
     const [folderFiles, setFolderFiles] = React.useState([]);
     const DEFAULT_SAMPLES = [
-        { name: '01 Track 01.wav', url: './SampleLibrary/01 Track 01.wav', folder: 'SampleLibrary' },
-        { name: '02 Track 02.wav', url: './SampleLibrary/02 Track 02.wav', folder: 'SampleLibrary' },
+        { name: '01 Track 01.m4a (Downloads)', url: './SampleLibrary/01 Track 01.wav', folder: 'Downloads' },
+        { name: '01 Track 01.wav (Downloads)', url: './SampleLibrary/01 Track 01.wav', folder: 'Downloads' },
+        { name: '02 Track 02.m4a (Downloads)', url: './SampleLibrary/02 Track 02.wav', folder: 'Downloads' },
+        { name: '02 Track 02.wav (Downloads)', url: './SampleLibrary/02 Track 02.wav', folder: 'Downloads' },
         { name: 'Bassdrum.wav', url: './SampleLibrary/APK 404/Bassdrum.wav', folder: 'SampleLibrary/APK 404' },
         { name: 'Snare (SD).wav', url: './SampleLibrary/APK 404/SD.wav', folder: 'SampleLibrary/APK 404' },
         { name: 'Clap.wav', url: './SampleLibrary/APK 404/Clap.wav', folder: 'SampleLibrary/APK 404' },

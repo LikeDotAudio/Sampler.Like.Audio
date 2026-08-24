@@ -161,7 +161,21 @@ window.SoundBrowser = ({ onClose, onChoose, onChooseOther, targetLabel, inline }
                                 {filter && <button onClick={() => setFilter('')} style={{ background: 'none', border: 'none', color: '#888', fontSize: '11px', cursor: 'pointer' }}>clear</button>}
                             </div>
                         )}
-                        <div ref={gridScrollRef} style={{ flex: 1, overflowY: 'auto', padding: '10px' }}>
+                        <div ref={gridScrollRef}
+                            onDragOver={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                e.dataTransfer.dropEffect = 'copy';
+                            }}
+                            onDrop={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                const files = e.dataTransfer ? Array.from(e.dataTransfer.files) : [];
+                                if (files.length > 0 && onPlainFiles) {
+                                    onPlainFiles(files);
+                                }
+                            }}
+                            style={{ flex: 1, overflowY: 'auto', padding: '10px' }}>
                             {shown.length > 0 ? (
                                 <div style={{ display: 'grid', gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))`, gap: '8px' }}>
                                     {shown.map((entry, i) => (

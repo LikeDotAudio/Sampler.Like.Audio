@@ -374,12 +374,28 @@ const Mixer = () => {
                 const mutedBySolo = isAnySolo && !isSolo;
 
                 return (
-                    <div key={i} style={{
-                        // Strips butt up against each other — a single rule line is the only separator.
-                        background: 'var(--strip)', border: 'none', borderRight: '1px solid #3a3f49', borderRadius: 0,
-                        width: '76px', flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center',
-                        padding: '0 3px 8px', overflow: 'hidden'
-                    }}>
+                    <div key={i}
+                        onDragOver={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.dataTransfer.dropEffect = 'copy';
+                        }}
+                        onDrop={async (e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            const files = e.dataTransfer ? e.dataTransfer.files : [];
+                            if (files && files.length > 0 && window.oaLoadSampleToPad) {
+                                await window.oaLoadSampleToPad(i, files[0]);
+                                setSamplerPad(i);
+                                window.dispatchEvent(new CustomEvent('oa-sample-changed', { detail: { idx: i } }));
+                            }
+                        }}
+                        style={{
+                            // Strips butt up against each other — a single rule line is the only separator.
+                            background: 'var(--strip)', border: 'none', borderRight: '1px solid #3a3f49', borderRadius: 0,
+                            width: '76px', flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center',
+                            padding: '0 3px 8px', overflow: 'hidden'
+                        }}>
 
                         {/* The channel name IS the ON button — lit means the track is live. Solo sits under it. */}
                         <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: '3px', marginTop: '6px', marginBottom: '8px' }}>

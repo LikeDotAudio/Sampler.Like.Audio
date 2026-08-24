@@ -28,7 +28,22 @@ window.SeqTrack = ({
     };
 
     return (
-        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+        <div
+            onDragOver={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.dataTransfer.dropEffect = 'copy';
+            }}
+            onDrop={async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const files = e.dataTransfer ? e.dataTransfer.files : [];
+                if (files && files.length > 0 && window.oaLoadSampleToPad) {
+                    await window.oaLoadSampleToPad(trkIdx, files[0]);
+                    window.dispatchEvent(new CustomEvent('oa-sample-changed', { detail: { idx: trkIdx } }));
+                }
+            }}
+            style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
             <div style={{ width: '70px', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '5px', paddingRight: '6px', position: 'sticky', left: 0, background: '#161616', zIndex: 2 }}>
                 <span
                     onClick={onNameClick}

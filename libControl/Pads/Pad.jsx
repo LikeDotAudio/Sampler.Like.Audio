@@ -40,14 +40,27 @@ window.Pad = ({
             onDrop={async (e) => {
                 e.preventDefault();
                 e.stopPropagation();
-                const files = e.dataTransfer.files;
-                if (files && files.length > 0) {
-                    const file = files[0];
-                    if (window.oaLoadSampleToPad) {
-                        await window.oaLoadSampleToPad(idx, file);
-                        window.dispatchEvent(new CustomEvent('oa-sample-changed', { detail: { idx } }));
+                const files = e.dataTransfer ? Array.from(e.dataTransfer.files) : [];
+                const peakFile = files.find(f => /\.(peak|json)$/i.test(f.name));
+                const audioFile = files.find(f => f.type.startsWith('audio/') || /\.(wav|mp3|m4a|aac|flac|aif|aiff|ogg|mp4|mov|mkv|webm)$/i.test(f.name));
+
+                if (audioFile && window.oaLoadSampleToPad) {
+                    await window.oaLoadSampleToPad(idx, audioFile);
+                }
+                if (peakFile) {
+                    try {
+                        const text = await peakFile.text();
+                        const peakData = JSON.parse(text);
+                        if (window.OA_DRUM_SAMPLES && window.OA_DRUM_SAMPLES[idx]) {
+                            window.OA_DRUM_SAMPLES[idx].noteMap = peakData.note_root_key_beat_marker_map || peakData.musicality;
+                            window.OA_DRUM_SAMPLES[idx].beatMarkers = peakData.beat_markers;
+                            window.OA_DRUM_SAMPLES[idx].chartData = peakData;
+                        }
+                    } catch (err) {
+                        console.error("Could not parse sidecar on pad drop:", err);
                     }
                 }
+                window.dispatchEvent(new CustomEvent('oa-sample-changed', { detail: { idx } }));
             }}
             className="oa-pad"
             style={{

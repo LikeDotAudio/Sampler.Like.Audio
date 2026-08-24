@@ -56,7 +56,19 @@
                     setIsDragging(false);
 
                     const files = e.dataTransfer ? Array.from(e.dataTransfer.files) : [];
-                    const audioFiles = files.filter(f => f.type.startsWith('audio/') || /\.(wav|mp3|m4a|aac|flac|aif|aiff|ogg)$/i.test(f.name));
+                    const peakFiles = files.filter(f => /\.(peak|json)$/i.test(f.name));
+                    const audioFiles = files.filter(f => f.type.startsWith('audio/') || /\.(wav|mp3|m4a|aac|flac|aif|aiff|ogg|mp4|mov|mkv|webm)$/i.test(f.name));
+
+                    let peakData = null;
+                    if (peakFiles.length > 0) {
+                        try {
+                            const text = await peakFiles[0].text();
+                            peakData = JSON.parse(text);
+                            console.log(`[+] Loaded .PEAK sidecar metadata: ${peakFiles[0].name}`, peakData);
+                        } catch (err) {
+                            console.error("Could not parse .PEAK sidecar:", err);
+                        }
+                    }
 
                     if (audioFiles.length > 0) {
                         const file = audioFiles[0];
@@ -69,12 +81,18 @@
                             
                             // 1. Slice across pads as sample bank
                             if (window.oaChopSongToPads) {
-                                window.oaChopSongToPads(buffer, file.name);
+                                window.oaChopSongToPads(buffer, file.name, peakData);
                             }
                             
                             // 2. Load into Pad 0 for primary editor inspection
                             if (window.oaLoadSampleToPad) {
                                 await window.oaLoadSampleToPad(0, file);
+                                if (peakData && window.OA_DRUM_SAMPLES && window.OA_DRUM_SAMPLES[0]) {
+                                    window.OA_DRUM_SAMPLES[0].noteMap = peakData.note_root_key_beat_marker_map || peakData.musicality;
+                                    window.OA_DRUM_SAMPLES[0].beatMarkers = peakData.beat_markers;
+                                    window.OA_DRUM_SAMPLES[0].chartData = peakData;
+                                    window.dispatchEvent(new CustomEvent('oa-sample-changed', { detail: { idx: 0 } }));
+                                }
                             }
 
                             // 3. Promote PADS & MIXER tabs to view pads and sampler editor
@@ -82,6 +100,13 @@
                         } catch (err) {
                             console.error("Global drop audio decode error:", err);
                         }
+                    } else if (peakData && window.OA_DRUM_SAMPLES && window.OA_DRUM_SAMPLES[0]) {
+                        // Sidecar dropped alone: attach to active pad 0
+                        window.OA_DRUM_SAMPLES[0].noteMap = peakData.note_root_key_beat_marker_map || peakData.musicality;
+                        window.OA_DRUM_SAMPLES[0].beatMarkers = peakData.beat_markers;
+                        window.OA_DRUM_SAMPLES[0].chartData = peakData;
+                        window.dispatchEvent(new CustomEvent('oa-sample-changed', { detail: { idx: 0 } }));
+                        setActiveTabs(['PADS', 'MIXER']);
                     }
                 };
 

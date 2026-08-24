@@ -20,15 +20,18 @@ window.useSoundBrowseState = () => {
     const [selectedFolderPath, setSelectedFolderPath] = React.useState('');
     const [folderFiles, setFolderFiles] = React.useState([]);
     const DEFAULT_SAMPLES = [
-        { name: '01 Track 01.m4a (Downloads)', url: './SampleLibrary/01 Track 01.wav', folder: 'Downloads' },
-        { name: '01 Track 01.wav (Downloads)', url: './SampleLibrary/01 Track 01.wav', folder: 'Downloads' },
-        { name: '02 Track 02.m4a (Downloads)', url: './SampleLibrary/02 Track 02.wav', folder: 'Downloads' },
-        { name: '02 Track 02.wav (Downloads)', url: './SampleLibrary/02 Track 02.wav', folder: 'Downloads' },
+        { name: '01 Track 01.m4a', url: './SampleLibrary/01 Track 01.wav', folder: 'Downloads' },
+        { name: '01 Track 01.wav', url: './SampleLibrary/01 Track 01.wav', folder: 'Downloads' },
+        { name: '02 Track 02.m4a', url: './SampleLibrary/02 Track 02.wav', folder: 'Downloads' },
+        { name: '02 Track 02.wav', url: './SampleLibrary/02 Track 02.wav', folder: 'Downloads' },
         { name: 'Bassdrum.wav', url: './SampleLibrary/APK 404/Bassdrum.wav', folder: 'SampleLibrary/APK 404' },
         { name: 'Snare (SD).wav', url: './SampleLibrary/APK 404/SD.wav', folder: 'SampleLibrary/APK 404' },
         { name: 'Clap.wav', url: './SampleLibrary/APK 404/Clap.wav', folder: 'SampleLibrary/APK 404' },
         { name: 'Closed Hat.wav', url: './SampleLibrary/APK 404/Closed Hat.wav', folder: 'SampleLibrary/APK 404' },
-        { name: 'Open Hat.wav', url: './SampleLibrary/APK 404/Open Hat.wav', folder: 'SampleLibrary/APK 404' }
+        { name: 'Open Hat.wav', url: './SampleLibrary/APK 404/Open Hat.wav', folder: 'SampleLibrary/APK 404' },
+        { name: 'Tambourine.wav', url: './SampleLibrary/APK 404/Tambourin.wav', folder: 'SampleLibrary/APK 404' },
+        { name: 'Tom High.wav', url: './SampleLibrary/APK 404/Tom H.wav', folder: 'SampleLibrary/APK 404' },
+        { name: 'Tom Low.wav', url: './SampleLibrary/APK 404/Tom L.wav', folder: 'SampleLibrary/APK 404' }
     ];
 
     const [flatEntries, setFlatEntries] = React.useState(DEFAULT_SAMPLES);
@@ -117,7 +120,7 @@ window.useSoundBrowseState = () => {
     }, [view, favState]);
 
     const [filter, setFilter] = React.useState('');
-    const files = supportsFS ? folderFiles : flatEntries;
+    const files = (supportsFS && folderFiles.length > 0) ? folderFiles : flatEntries;
     const baseList = view === 'favorites' ? favEntries : (view === 'recorder' ? recEntries : files);
     
     const shown = filter.trim()

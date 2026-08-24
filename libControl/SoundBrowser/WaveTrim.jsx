@@ -20,7 +20,7 @@
  *
  * Clicking anywhere else on the waveform still scrubs, as it always did.
  */
-window.WaveTrim = ({ buffer, trim, setTrimPoint, pos, onScrub, active }) => {
+window.WaveTrim = ({ buffer, trim, setTrimPoint, pos, onScrub, active, beatMarkers, chunkMaps }) => {
     const canvasRef = React.useRef(null);
     const boxRef = React.useRef(null);
     const dragRef = React.useRef(null);
@@ -111,9 +111,45 @@ window.WaveTrim = ({ buffer, trim, setTrimPoint, pos, onScrub, active }) => {
                         <div style={{ position: 'absolute', top: '2px', left: '4px', width: '6px', height: '6px', background: '#e57373', transform: 'rotate(45deg)' }} />
                     </div>
 
+                    {/* BEAT MARKERS OVERLAY */}
+                    {beatMarkers && beatMarkers.length > 0 && (
+                        <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', pointerEvents: 'none', zIndex: 1 }}>
+                            {beatMarkers.map((bm, bIdx) => {
+                                const bx = pc(bm.timestamp_seconds);
+                                return (
+                                    <line key={bIdx} x1={bx} y1="0" x2={bx} y2="100"
+                                        stroke={bm.is_downbeat ? 'var(--accent)' : 'rgba(255,255,255,0.25)'}
+                                        strokeWidth={bm.is_downbeat ? '1.5' : '0.8'}
+                                        strokeDasharray={bm.is_downbeat ? 'none' : '2,2'}
+                                        vectorEffect="non-scaling-stroke" />
+                                );
+                            })}
+                        </svg>
+                    )}
+
+                    {/* CHUNK NOTE TAGS OVERLAY */}
+                    {chunkMaps && chunkMaps.length > 0 && (
+                        <div style={{ position: 'absolute', bottom: '2px', left: 0, right: 0, height: '18px', pointerEvents: 'none', zIndex: 2 }}>
+                            {chunkMaps.map((cm, cIdx) => {
+                                const cx0 = pc(cm.start_seconds);
+                                return (
+                                    <span key={cIdx} style={{
+                                        position: 'absolute', left: `${cx0}%`, bottom: '2px',
+                                        fontSize: '9px', fontWeight: 'bold', padding: '1px 4px',
+                                        background: 'rgba(20,20,20,0.85)', color: 'var(--accent)',
+                                        border: '1px solid var(--accent)', borderRadius: '3px',
+                                        whiteSpace: 'nowrap'
+                                    }}>
+                                        🎵 {cm.root_note_name}
+                                    </span>
+                                );
+                            })}
+                        </div>
+                    )}
+
                     {/* No playhead where there is nothing playing to follow —
                         the SAMPLER panel edits a pad that fires and is gone. */}
-                    {pos != null && <div style={{ position: 'absolute', top: 0, bottom: 0, left: `${pos * 100}%`, width: '2px', background: '#fff', pointerEvents: 'none' }} />}
+                    {pos != null && <div style={{ position: 'absolute', top: 0, bottom: 0, left: `${pos * 100}%`, width: '2px', background: '#fff', pointerEvents: 'none', zIndex: 3 }} />}
                 </React.Fragment>
             )}
         </div>

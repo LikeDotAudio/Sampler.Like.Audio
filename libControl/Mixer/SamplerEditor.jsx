@@ -134,7 +134,45 @@ window.SamplerEditor = ({ idx, name, onClose, oaPopped }) => {
 
             {/* The chopper — the browser's waveform and handles, on the sound
                 that is already loaded. */}
-            <window.WaveTrim buffer={buffer} trim={trim} setTrimPoint={setTrimPoint} pos={head} onScrub={() => {}} active={!!buffer} />
+            <window.WaveTrim
+                buffer={buffer}
+                trim={trim}
+                setTrimPoint={setTrimPoint}
+                pos={head}
+                onScrub={() => {}}
+                active={!!buffer}
+                beatMarkers={entry && entry.noteMap ? entry.noteMap.beat_markers : null}
+                chunkMaps={entry && entry.noteMap ? entry.noteMap.chunk_maps : null}
+            />
+
+            {/* Note Root Key & Beat Marker Map Control Bar */}
+            {entry && entry.noteMap && (
+                <div style={{ marginTop: '8px', padding: '8px', background: '#181818', border: '1px solid #333', borderRadius: '4px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '11px', color: 'var(--accent)', fontWeight: 'bold' }}>
+                            🎵 KEY: {entry.noteMap.global_root_note} · {entry.noteMap.global_bpm} BPM · {entry.noteMap.total_beats} BEATS
+                        </span>
+                        <span style={{ fontSize: '10px', color: '#888' }}>
+                            {entry.noteMap.total_chunks} note chunks detected
+                        </span>
+                    </div>
+                    {entry.noteMap.chunk_maps && entry.noteMap.chunk_maps.length > 0 && (
+                        <div style={{ display: 'flex', gap: '4px', overflowX: 'auto', paddingTop: '4px' }}>
+                            {entry.noteMap.chunk_maps.map((cm, cIdx) => (
+                                <button key={cIdx} onClick={() => {
+                                    setTrimPoint('in', cm.start_seconds);
+                                    setTrimPoint('out', cm.end_seconds);
+                                }} style={{
+                                    fontSize: '10px', padding: '3px 6px', background: '#262626', color: 'var(--accent)',
+                                    border: '1px solid #444', borderRadius: '3px', cursor: 'pointer', whiteSpace: 'nowrap'
+                                }} title={`Snap chop to Chunk ${cIdx}: ${cm.root_note_name} (${cm.start_seconds}s - ${cm.end_seconds}s)`}>
+                                    Chop {cIdx + 1}: {cm.root_note_name}
+                                </button>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '8px', flexWrap: 'wrap' }}>
                 <button onClick={preview} disabled={!buffer && !window.OA_DRUM_KIT[idx]}
@@ -167,10 +205,16 @@ window.SamplerEditor = ({ idx, name, onClose, oaPopped }) => {
                     onChange={(e) => setSemis(Number(e.target.value))} style={{ width: '100%' }} />
             </div>
 
-            <div style={{ fontSize: '10px', color: '#666', marginTop: '8px' }}>
-                Drag <b style={{ color: 'var(--accent)' }}>I</b> and <b style={{ color: '#e57373' }}>O</b> to set where the sound starts and stops;
-                the diamonds inside them are the fades. In the browser, I and O drop the same marks on the playhead.
-            </div>
+            {/* Music Chart & Lyric Deep Scan Overlay */}
+            {window.MusicChartOverlay && (
+                <window.MusicChartOverlay
+                    audioBuffer={buffer}
+                    trim={trim}
+                    setTrimPoint={setTrimPoint}
+                    headPos={head}
+                    chartData={entry && entry.chartData ? entry.chartData : null}
+                />
+            )}
 
             {browsing && window.SoundBrowser && ReactDOM.createPortal(
                 <window.SoundBrowser

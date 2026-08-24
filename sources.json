@@ -91,5 +91,7 @@
   "libControl/SoundBrowser/useSoundBrowseAudio.js",
   "libControl/SoundBrowser/useSoundBrowseKeys.js",
   "libControl/SoundBrowser/SoundBrowser.jsx",
+  "libControl/MusicChart/oaDeepScanner.js",
+  "libControl/MusicChart/MusicChartOverlay.jsx",
   "libControl/App/App.jsx"
 ]

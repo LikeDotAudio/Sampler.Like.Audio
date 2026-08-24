@@ -45,5 +45,16 @@ All notable changes to the Sampler.Like.Audio software, extractor engine, and mu
   - Created `UCS_AES_Metadata_Harmonization_Roadmap.md` establishing a 30-step architectural roadmap for AES SC-03-06 (Digital Library & Archive Systems) and AES SC-03-07 (Audio Metadata).
   - Created `Audio_Media_Lenses_Framework.md` defining the 6 multidimensional audio metadata lenses.
 
+- **`🔭 LENSES` Primary Header Tab (`Header.jsx`, `App.jsx`)**:
+  - Promoted and registered **`🔭 LENSES`** as a top-level primary navigation tab in the main application header alongside `PADS`, `SEQ`, `SONG`, `EDITOR`, and `MIXER`.
+
+- **Multidimensional Audio Lenses Component (`LensesView.jsx`)**:
+  - Created standalone `LensesView` inspector component presenting 6 multidimensional metadata lenses: *UCS Taxonomy*, *Pitch & Beats*, *Lyrics VAD*, *EBU R128 Loudness*, *AES Archival Preservation*, and *AES69 3D Spatial Audio*.
+
+- **Interactive Performance Data Over Time Timeline (`LensesView.jsx`)**:
+  - Rendered a multi-layer performance timeline canvas showing 4 real-time curves over time: Waveform Peak Envelope, Pitch Contour (Hz), Beat Grid Markers, and Vocal VAD Subtitle Bursts.
+  - Added interactive timeline click scrubbing to seek audio playback (`window.oaSeekAudio`).
+  - Added **`📊 Export .PERF JSON`** to export time-series telemetry performance traces.
+
 ### Fixed & Tested
 - Passed full Web Audio test suite (111/111 tests) and verified bundle compilation in `dist/app.js`.

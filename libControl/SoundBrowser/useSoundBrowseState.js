@@ -19,7 +19,17 @@ window.useSoundBrowseState = () => {
     const [selectedFolder, setSelectedFolder] = React.useState(null);
     const [selectedFolderPath, setSelectedFolderPath] = React.useState('');
     const [folderFiles, setFolderFiles] = React.useState([]);
-    const [flatEntries, setFlatEntries] = React.useState([]);
+    const DEFAULT_SAMPLES = [
+        { name: '01 Track 01.wav', url: './SampleLibrary/01 Track 01.wav', folder: 'SampleLibrary' },
+        { name: '02 Track 02.wav', url: './SampleLibrary/02 Track 02.wav', folder: 'SampleLibrary' },
+        { name: 'Bassdrum.wav', url: './SampleLibrary/APK 404/Bassdrum.wav', folder: 'SampleLibrary/APK 404' },
+        { name: 'Snare (SD).wav', url: './SampleLibrary/APK 404/SD.wav', folder: 'SampleLibrary/APK 404' },
+        { name: 'Clap.wav', url: './SampleLibrary/APK 404/Clap.wav', folder: 'SampleLibrary/APK 404' },
+        { name: 'Closed Hat.wav', url: './SampleLibrary/APK 404/Closed Hat.wav', folder: 'SampleLibrary/APK 404' },
+        { name: 'Open Hat.wav', url: './SampleLibrary/APK 404/Open Hat.wav', folder: 'SampleLibrary/APK 404' }
+    ];
+
+    const [flatEntries, setFlatEntries] = React.useState(DEFAULT_SAMPLES);
     const [selectedIndex, setSelectedIndex] = React.useState(-1);
     const [selected, setSelected] = React.useState(null);   // {name, file, folder}
     const [err, setErr] = React.useState('');
@@ -161,7 +171,12 @@ window.useSoundBrowseState = () => {
         setSelectedIndex(idx);
         const entry = shown[idx];
         try {
-            const file = entry.file || (entry.handle && await entry.handle.getFile());
+            let file = entry.file || (entry.handle && await entry.handle.getFile());
+            if (!file && entry.url) {
+                const res = await fetch(entry.url);
+                const blob = await res.blob();
+                file = new File([blob], entry.name, { type: 'audio/wav' });
+            }
             if (!file) { setErr('File unavailable — grant folder access or re-pick the folder.'); return; }
             const folder = entry.folder != null ? entry.folder : (supportsFS ? (selectedFolderPath + (entry.sub ? '/' + entry.sub : '')) : '');
             setSelected({ name: entry.name, file, folder });

@@ -32,6 +32,23 @@ window.Pad = ({
             onPointerDown={onPointerDown}
             onPointerUp={onPointerUp}
             onPointerLeave={onPointerLeave}
+            onDragOver={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                e.dataTransfer.dropEffect = 'copy';
+            }}
+            onDrop={async (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                const files = e.dataTransfer.files;
+                if (files && files.length > 0) {
+                    const file = files[0];
+                    if (window.oaLoadSampleToPad) {
+                        await window.oaLoadSampleToPad(idx, file);
+                        window.dispatchEvent(new CustomEvent('oa-sample-changed', { detail: { idx } }));
+                    }
+                }
+            }}
             className="oa-pad"
             style={{
                 position: 'relative',

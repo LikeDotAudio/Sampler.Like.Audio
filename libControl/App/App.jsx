@@ -14,6 +14,8 @@
             const [activeTabs, setActiveTabs] = React.useState(['PADS']); // default
             const [isMobile, setIsMobile] = React.useState(window.innerWidth <= 800);
             const [deferredPrompt, setDeferredPrompt] = React.useState(null);
+            const [isDragging, setIsDragging] = React.useState(false);
+            const dragCounterRef = React.useRef(0);
             
             React.useEffect(() => {
                 const handleResize = () => setIsMobile(window.innerWidth <= 800);
@@ -25,9 +27,76 @@
                 };
                 window.addEventListener('beforeinstallprompt', handleBeforeInstall);
 
+                const handleDragEnter = (e) => {
+                    e.preventDefault();
+                    dragCounterRef.current++;
+                    if (e.dataTransfer && e.dataTransfer.types && e.dataTransfer.types.includes('Files')) {
+                        setIsDragging(true);
+                    }
+                };
+
+                const handleDragOver = (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'copy';
+                };
+
+                const handleDragLeave = (e) => {
+                    e.preventDefault();
+                    dragCounterRef.current--;
+                    if (dragCounterRef.current <= 0) {
+                        dragCounterRef.current = 0;
+                        setIsDragging(false);
+                    }
+                };
+
+                const handleGlobalDrop = async (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    dragCounterRef.current = 0;
+                    setIsDragging(false);
+
+                    const files = e.dataTransfer ? Array.from(e.dataTransfer.files) : [];
+                    const audioFiles = files.filter(f => f.type.startsWith('audio/') || /\.(wav|mp3|m4a|aac|flac|aif|aiff|ogg)$/i.test(f.name));
+
+                    if (audioFiles.length > 0) {
+                        const file = audioFiles[0];
+                        console.log(`[+] Global drop received audio file: ${file.name}`);
+                        
+                        try {
+                            const ctx = window.oaAudioCtx();
+                            const arrayBuffer = await file.arrayBuffer();
+                            const buffer = await (window.oaDecodeAudio ? window.oaDecodeAudio(ctx, arrayBuffer) : ctx.decodeAudioData(arrayBuffer));
+                            
+                            // 1. Slice across pads as sample bank
+                            if (window.oaChopSongToPads) {
+                                window.oaChopSongToPads(buffer, file.name);
+                            }
+                            
+                            // 2. Load into Pad 0 for primary editor inspection
+                            if (window.oaLoadSampleToPad) {
+                                await window.oaLoadSampleToPad(0, file);
+                            }
+
+                            // 3. Promote PADS & MIXER tabs to view pads and sampler editor
+                            setActiveTabs(['PADS', 'MIXER']);
+                        } catch (err) {
+                            console.error("Global drop audio decode error:", err);
+                        }
+                    }
+                };
+
+                window.addEventListener('dragenter', handleDragEnter);
+                window.addEventListener('dragover', handleDragOver);
+                window.addEventListener('dragleave', handleDragLeave);
+                window.addEventListener('drop', handleGlobalDrop);
+
                 return () => {
                     window.removeEventListener('resize', handleResize);
                     window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+                    window.removeEventListener('dragenter', handleDragEnter);
+                    window.removeEventListener('dragover', handleDragOver);
+                    window.removeEventListener('dragleave', handleDragLeave);
+                    window.removeEventListener('drop', handleGlobalDrop);
                 };
             }, []);
 
@@ -121,6 +190,24 @@
                     </main>
 
                     {window.Footer ? <window.Footer /> : null}
+
+                    {/* Global Drag & Drop Visual Dropzone Overlay */}
+                    {isDragging && (
+                        <div style={{
+                            position: 'fixed', inset: 0, zIndex: 9999,
+                            background: 'rgba(0, 0, 0, 0.88)', border: '4px dashed var(--accent)',
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                            color: 'var(--accent)', pointerEvents: 'none', backdropFilter: 'blur(4px)'
+                        }}>
+                            <span style={{ fontSize: '64px', marginBottom: '16px', filter: 'drop-shadow(0 0 12px var(--accent))' }}>📥</span>
+                            <span style={{ fontSize: '24px', fontWeight: 'bold', letterSpacing: '1.5px', textTransform: 'uppercase' }}>
+                                Drop Audio File Anywhere to Load, Scan & Slice
+                            </span>
+                            <span style={{ fontSize: '14px', color: '#ccc', marginTop: '10px' }}>
+                                Supports .wav, .mp3, .m4a, .flac, .aiff, .ogg — auto-chops to 16 pads!
+                            </span>
+                        </div>
+                    )}
 
                     {/* One for the whole desk: whichever control is being dragged
                         puts its value up here, large enough to read past a hand. */}

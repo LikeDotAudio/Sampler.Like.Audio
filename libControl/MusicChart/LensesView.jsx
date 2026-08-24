@@ -112,6 +112,49 @@ window.LensesView = ({ audioBuffer, filename, padIdx }) => {
 
     }, [buf, scanData]);
 
+    // Handle Timeline Scrubbing & Seeking
+    const handleTimelineClick = (e) => {
+        const canvas = canvasRef.current;
+        if (!canvas || !buf) return;
+        const rect = canvas.getBoundingClientRect();
+        const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+        const progress = x / rect.width;
+        const seekTime = progress * buf.duration;
+
+        if (window.oaSeekAudio) {
+            window.oaSeekAudio(seekTime);
+        }
+    };
+
+    // Export Performance Data (.PERF JSON)
+    const exportPERFData = () => {
+        if (!scanData) return;
+        const payload = {
+            filename: fname,
+            duration_seconds: buf ? buf.duration : 0,
+            sample_rate: buf ? buf.sampleRate : (window.oaSampleRate ? window.oaSampleRate() : null),
+            performance_data: {
+                pitch_hz: scanData.musicality.pitchHz,
+                key: scanData.musicality.key,
+                bpm: scanData.musicality.bpm,
+                integrated_lufs: scanData.loudness.integratedLUFS,
+                max_true_peak_dbtp: scanData.loudness.maxTruePeakdBTP,
+                lra_lu: scanData.loudness.lraLU,
+                beat_markers: scanData.beatMarkers,
+                vad_vocal_events: scanData.lyrics.words,
+                sha256_checksum: scanData.sha256
+            }
+        };
+
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${fname.replace(/\.[^/.]+$/, "")}.PERF.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
     // Speech Dictation ("Talk to Type")
     const startDictation = (onResult) => {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -270,6 +313,10 @@ window.LensesView = ({ audioBuffer, filename, padIdx }) => {
                         📥 Import Sidecar/LRC
                         <input type="file" accept=".PEAK,.json,.lrc" onChange={handleImportFile} style={{ display: 'none' }} />
                     </label>
+                    <button onClick={exportPERFData} disabled={!scanData}
+                        style={{ background: '#9c27b0', color: '#fff', border: 'none', borderRadius: '3px', padding: '4px 8px', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer' }}>
+                        📊 Export .PERF JSON
+                    </button>
                     <button onClick={exportPeakSidecar} disabled={!scanData}
                         style={{ background: 'var(--accent)', color: '#111', border: 'none', borderRadius: '3px', padding: '4px 8px', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer' }}>
                         💾 Export .PEAK
@@ -283,10 +330,15 @@ window.LensesView = ({ audioBuffer, filename, padIdx }) => {
 
             {/* Performance Data Over Time Timeline Canvas */}
             <div style={{ marginBottom: '12px', background: '#0b0d11', borderRadius: '4px', padding: '4px', border: '1px solid #222' }}>
-                <div style={{ fontSize: '10px', color: 'var(--accent)', fontWeight: 'bold', marginBottom: '4px', letterSpacing: '0.5px' }}>
-                    📈 PERFORMANCE DATA OVER TIME (PITCH, RMS, VAD & BEATS)
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                    <span style={{ fontSize: '10px', color: 'var(--accent)', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+                        📈 PERFORMANCE DATA OVER TIME (CLICK TO SEEK & PLAY)
+                    </span>
+                    <span style={{ fontSize: '9px', color: '#888' }}>
+                        Waveform / Pitch Contour (Hz) / Beat Grid / Vocal VAD Bursts
+                    </span>
                 </div>
-                <canvas ref={canvasRef} style={{ width: '100%', height: '140px', display: 'block', borderRadius: '3px' }} />
+                <canvas ref={canvasRef} onClick={handleTimelineClick} style={{ width: '100%', height: '140px', display: 'block', borderRadius: '3px', cursor: 'pointer' }} />
             </div>
 
             {/* Lens Tabs */}

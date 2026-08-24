@@ -1,0 +1,4609 @@
+{
+  "metadata": {
+    "name": "02 Track 02.m4a",
+    "path": "/home/anthony/Downloads/02 Track 02.m4a",
+    "length_seconds": 219.2,
+    "sample_rate": 44100,
+    "channels": 1
+  },
+  "musicality": {
+    "pitch_hz": 78.73,
+    "root_note_name": "D#2",
+    "root_frequency_hz": 78.73,
+    "root_cents_offset": 21.0,
+    "beats_per_minute": 129.2,
+    "root_midi_note": 39,
+    "note_root_key_beat_marker_map": {
+      "file_name": "02 Track 02.m4a",
+      "file_path": "/home/anthony/Downloads/02 Track 02.m4a",
+      "length_seconds": 219.2,
+      "sample_rate": 44100,
+      "global_root_note": "D#2",
+      "global_midi_note": 39,
+      "global_bpm": 129.2,
+      "total_beats": 473,
+      "total_chunks": 61,
+      "beat_markers": [
+        {
+          "index": 0,
+          "timestamp_seconds": 0.0,
+          "sample_index": 0,
+          "is_downbeat": true,
+          "bar": 1,
+          "beat": 1
+        },
+        {
+          "index": 1,
+          "timestamp_seconds": 0.464,
+          "sample_index": 20479,
+          "is_downbeat": false,
+          "bar": 1,
+          "beat": 2
+        },
+        {
+          "index": 2,
+          "timestamp_seconds": 0.929,
+          "sample_index": 40959,
+          "is_downbeat": false,
+          "bar": 1,
+          "beat": 3
+        },
+        {
+          "index": 3,
+          "timestamp_seconds": 1.393,
+          "sample_index": 61439,
+          "is_downbeat": false,
+          "bar": 1,
+          "beat": 4
+        },
+        {
+          "index": 4,
+          "timestamp_seconds": 1.858,
+          "sample_index": 81919,
+          "is_downbeat": true,
+          "bar": 2,
+          "beat": 1
+        },
+        {
+          "index": 5,
+          "timestamp_seconds": 2.322,
+          "sample_index": 102399,
+          "is_downbeat": false,
+          "bar": 2,
+          "beat": 2
+        },
+        {
+          "index": 6,
+          "timestamp_seconds": 2.786,
+          "sample_index": 122879,
+          "is_downbeat": false,
+          "bar": 2,
+          "beat": 3
+        },
+        {
+          "index": 7,
+          "timestamp_seconds": 3.251,
+          "sample_index": 143359,
+          "is_downbeat": false,
+          "bar": 2,
+          "beat": 4
+        },
+        {
+          "index": 8,
+          "timestamp_seconds": 3.715,
+          "sample_index": 163839,
+          "is_downbeat": true,
+          "bar": 3,
+          "beat": 1
+        },
+        {
+          "index": 9,
+          "timestamp_seconds": 4.18,
+          "sample_index": 184318,
+          "is_downbeat": false,
+          "bar": 3,
+          "beat": 2
+        },
+        {
+          "index": 10,
+          "timestamp_seconds": 4.644,
+          "sample_index": 204798,
+          "is_downbeat": false,
+          "bar": 3,
+          "beat": 3
+        },
+        {
+          "index": 11,
+          "timestamp_seconds": 5.108,
+          "sample_index": 225278,
+          "is_downbeat": false,
+          "bar": 3,
+          "beat": 4
+        },
+        {
+          "index": 12,
+          "timestamp_seconds": 5.573,
+          "sample_index": 245758,
+          "is_downbeat": true,
+          "bar": 4,
+          "beat": 1
+        },
+        {
+          "index": 13,
+          "timestamp_seconds": 6.037,
+          "sample_index": 266238,
+          "is_downbeat": false,
+          "bar": 4,
+          "beat": 2
+        },
+        {
+          "index": 14,
+          "timestamp_seconds": 6.502,
+          "sample_index": 286718,
+          "is_downbeat": false,
+          "bar": 4,
+          "beat": 3
+        },
+        {
+          "index": 15,
+          "timestamp_seconds": 6.966,
+          "sample_index": 307198,
+          "is_downbeat": false,
+          "bar": 4,
+          "beat": 4
+        },
+        {
+          "index": 16,
+          "timestamp_seconds": 7.43,
+          "sample_index": 327678,
+          "is_downbeat": true,
+          "bar": 5,
+          "beat": 1
+        },
+        {
+          "index": 17,
+          "timestamp_seconds": 7.895,
+          "sample_index": 348157,
+          "is_downbeat": false,
+          "bar": 5,
+          "beat": 2
+        },
+        {
+          "index": 18,
+          "timestamp_seconds": 8.359,
+          "sample_index": 368637,
+          "is_downbeat": false,
+          "bar": 5,
+          "beat": 3
+        },
+        {
+          "index": 19,
+          "timestamp_seconds": 8.824,
+          "sample_index": 389117,
+          "is_downbeat": false,
+          "bar": 5,
+          "beat": 4
+        },
+        {
+          "index": 20,
+          "timestamp_seconds": 9.288,
+          "sample_index": 409597,
+          "is_downbeat": true,
+          "bar": 6,
+          "beat": 1
+        },
+        {
+          "index": 21,
+          "timestamp_seconds": 9.752,
+          "sample_index": 430077,
+          "is_downbeat": false,
+          "bar": 6,
+          "beat": 2
+        },
+        {
+          "index": 22,
+          "timestamp_seconds": 10.217,
+          "sample_index": 450557,
+          "is_downbeat": false,
+          "bar": 6,
+          "beat": 3
+        },
+        {
+          "index": 23,
+          "timestamp_seconds": 10.681,
+          "sample_index": 471037,
+          "is_downbeat": false,
+          "bar": 6,
+          "beat": 4
+        },
+        {
+          "index": 24,
+          "timestamp_seconds": 11.146,
+          "sample_index": 491517,
+          "is_downbeat": true,
+          "bar": 7,
+          "beat": 1
+        },
+        {
+          "index": 25,
+          "timestamp_seconds": 11.61,
+          "sample_index": 511996,
+          "is_downbeat": false,
+          "bar": 7,
+          "beat": 2
+        },
+        {
+          "index": 26,
+          "timestamp_seconds": 12.074,
+          "sample_index": 532476,
+          "is_downbeat": false,
+          "bar": 7,
+          "beat": 3
+        },
+        {
+          "index": 27,
+          "timestamp_seconds": 12.539,
+          "sample_index": 552956,
+          "is_downbeat": false,
+          "bar": 7,
+          "beat": 4
+        },
+        {
+          "index": 28,
+          "timestamp_seconds": 13.003,
+          "sample_index": 573436,
+          "is_downbeat": true,
+          "bar": 8,
+          "beat": 1
+        },
+        {
+          "index": 29,
+          "timestamp_seconds": 13.467,
+          "sample_index": 593916,
+          "is_downbeat": false,
+          "bar": 8,
+          "beat": 2
+        },
+        {
+          "index": 30,
+          "timestamp_seconds": 13.932,
+          "sample_index": 614396,
+          "is_downbeat": false,
+          "bar": 8,
+          "beat": 3
+        },
+        {
+          "index": 31,
+          "timestamp_seconds": 14.396,
+          "sample_index": 634876,
+          "is_downbeat": false,
+          "bar": 8,
+          "beat": 4
+        },
+        {
+          "index": 32,
+          "timestamp_seconds": 14.861,
+          "sample_index": 655356,
+          "is_downbeat": true,
+          "bar": 9,
+          "beat": 1
+        },
+        {
+          "index": 33,
+          "timestamp_seconds": 15.325,
+          "sample_index": 675835,
+          "is_downbeat": false,
+          "bar": 9,
+          "beat": 2
+        },
+        {
+          "index": 34,
+          "timestamp_seconds": 15.789,
+          "sample_index": 696315,
+          "is_downbeat": false,
+          "bar": 9,
+          "beat": 3
+        },
+        {
+          "index": 35,
+          "timestamp_seconds": 16.254,
+          "sample_index": 716795,
+          "is_downbeat": false,
+          "bar": 9,
+          "beat": 4
+        },
+        {
+          "index": 36,
+          "timestamp_seconds": 16.718,
+          "sample_index": 737275,
+          "is_downbeat": true,
+          "bar": 10,
+          "beat": 1
+        },
+        {
+          "index": 37,
+          "timestamp_seconds": 17.183,
+          "sample_index": 757755,
+          "is_downbeat": false,
+          "bar": 10,
+          "beat": 2
+        },
+        {
+          "index": 38,
+          "timestamp_seconds": 17.647,
+          "sample_index": 778235,
+          "is_downbeat": false,
+          "bar": 10,
+          "beat": 3
+        },
+        {
+          "index": 39,
+          "timestamp_seconds": 18.111,
+          "sample_index": 798715,
+          "is_downbeat": false,
+          "bar": 10,
+          "beat": 4
+        },
+        {
+          "index": 40,
+          "timestamp_seconds": 18.576,
+          "sample_index": 819195,
+          "is_downbeat": true,
+          "bar": 11,
+          "beat": 1
+        },
+        {
+          "index": 41,
+          "timestamp_seconds": 19.04,
+          "sample_index": 839674,
+          "is_downbeat": false,
+          "bar": 11,
+          "beat": 2
+        },
+        {
+          "index": 42,
+          "timestamp_seconds": 19.505,
+          "sample_index": 860154,
+          "is_downbeat": false,
+          "bar": 11,
+          "beat": 3
+        },
+        {
+          "index": 43,
+          "timestamp_seconds": 19.969,
+          "sample_index": 880634,
+          "is_downbeat": false,
+          "bar": 11,
+          "beat": 4
+        },
+        {
+          "index": 44,
+          "timestamp_seconds": 20.433,
+          "sample_index": 901114,
+          "is_downbeat": true,
+          "bar": 12,
+          "beat": 1
+        },
+        {
+          "index": 45,
+          "timestamp_seconds": 20.898,
+          "sample_index": 921594,
+          "is_downbeat": false,
+          "bar": 12,
+          "beat": 2
+        },
+        {
+          "index": 46,
+          "timestamp_seconds": 21.362,
+          "sample_index": 942074,
+          "is_downbeat": false,
+          "bar": 12,
+          "beat": 3
+        },
+        {
+          "index": 47,
+          "timestamp_seconds": 21.827,
+          "sample_index": 962554,
+          "is_downbeat": false,
+          "bar": 12,
+          "beat": 4
+        },
+        {
+          "index": 48,
+          "timestamp_seconds": 22.291,
+          "sample_index": 983034,
+          "is_downbeat": true,
+          "bar": 13,
+          "beat": 1
+        },
+        {
+          "index": 49,
+          "timestamp_seconds": 22.755,
+          "sample_index": 1003513,
+          "is_downbeat": false,
+          "bar": 13,
+          "beat": 2
+        },
+        {
+          "index": 50,
+          "timestamp_seconds": 23.22,
+          "sample_index": 1023993,
+          "is_downbeat": false,
+          "bar": 13,
+          "beat": 3
+        },
+        {
+          "index": 51,
+          "timestamp_seconds": 23.684,
+          "sample_index": 1044473,
+          "is_downbeat": false,
+          "bar": 13,
+          "beat": 4
+        },
+        {
+          "index": 52,
+          "timestamp_seconds": 24.149,
+          "sample_index": 1064953,
+          "is_downbeat": true,
+          "bar": 14,
+          "beat": 1
+        },
+        {
+          "index": 53,
+          "timestamp_seconds": 24.613,
+          "sample_index": 1085433,
+          "is_downbeat": false,
+          "bar": 14,
+          "beat": 2
+        },
+        {
+          "index": 54,
+          "timestamp_seconds": 25.077,
+          "sample_index": 1105913,
+          "is_downbeat": false,
+          "bar": 14,
+          "beat": 3
+        },
+        {
+          "index": 55,
+          "timestamp_seconds": 25.542,
+          "sample_index": 1126393,
+          "is_downbeat": false,
+          "bar": 14,
+          "beat": 4
+        },
+        {
+          "index": 56,
+          "timestamp_seconds": 26.006,
+          "sample_index": 1146873,
+          "is_downbeat": true,
+          "bar": 15,
+          "beat": 1
+        },
+        {
+          "index": 57,
+          "timestamp_seconds": 26.471,
+          "sample_index": 1167352,
+          "is_downbeat": false,
+          "bar": 15,
+          "beat": 2
+        },
+        {
+          "index": 58,
+          "timestamp_seconds": 26.935,
+          "sample_index": 1187832,
+          "is_downbeat": false,
+          "bar": 15,
+          "beat": 3
+        },
+        {
+          "index": 59,
+          "timestamp_seconds": 27.399,
+          "sample_index": 1208312,
+          "is_downbeat": false,
+          "bar": 15,
+          "beat": 4
+        },
+        {
+          "index": 60,
+          "timestamp_seconds": 27.864,
+          "sample_index": 1228792,
+          "is_downbeat": true,
+          "bar": 16,
+          "beat": 1
+        },
+        {
+          "index": 61,
+          "timestamp_seconds": 28.328,
+          "sample_index": 1249272,
+          "is_downbeat": false,
+          "bar": 16,
+          "beat": 2
+        },
+        {
+          "index": 62,
+          "timestamp_seconds": 28.793,
+          "sample_index": 1269752,
+          "is_downbeat": false,
+          "bar": 16,
+          "beat": 3
+        },
+        {
+          "index": 63,
+          "timestamp_seconds": 29.257,
+          "sample_index": 1290232,
+          "is_downbeat": false,
+          "bar": 16,
+          "beat": 4
+        },
+        {
+          "index": 64,
+          "timestamp_seconds": 29.721,
+          "sample_index": 1310712,
+          "is_downbeat": true,
+          "bar": 17,
+          "beat": 1
+        },
+        {
+          "index": 65,
+          "timestamp_seconds": 30.186,
+          "sample_index": 1331191,
+          "is_downbeat": false,
+          "bar": 17,
+          "beat": 2
+        },
+        {
+          "index": 66,
+          "timestamp_seconds": 30.65,
+          "sample_index": 1351671,
+          "is_downbeat": false,
+          "bar": 17,
+          "beat": 3
+        },
+        {
+          "index": 67,
+          "timestamp_seconds": 31.115,
+          "sample_index": 1372151,
+          "is_downbeat": false,
+          "bar": 17,
+          "beat": 4
+        },
+        {
+          "index": 68,
+          "timestamp_seconds": 31.579,
+          "sample_index": 1392631,
+          "is_downbeat": true,
+          "bar": 18,
+          "beat": 1
+        },
+        {
+          "index": 69,
+          "timestamp_seconds": 32.043,
+          "sample_index": 1413111,
+          "is_downbeat": false,
+          "bar": 18,
+          "beat": 2
+        },
+        {
+          "index": 70,
+          "timestamp_seconds": 32.508,
+          "sample_index": 1433591,
+          "is_downbeat": false,
+          "bar": 18,
+          "beat": 3
+        },
+        {
+          "index": 71,
+          "timestamp_seconds": 32.972,
+          "sample_index": 1454071,
+          "is_downbeat": false,
+          "bar": 18,
+          "beat": 4
+        },
+        {
+          "index": 72,
+          "timestamp_seconds": 33.437,
+          "sample_index": 1474551,
+          "is_downbeat": true,
+          "bar": 19,
+          "beat": 1
+        },
+        {
+          "index": 73,
+          "timestamp_seconds": 33.901,
+          "sample_index": 1495030,
+          "is_downbeat": false,
+          "bar": 19,
+          "beat": 2
+        },
+        {
+          "index": 74,
+          "timestamp_seconds": 34.365,
+          "sample_index": 1515510,
+          "is_downbeat": false,
+          "bar": 19,
+          "beat": 3
+        },
+        {
+          "index": 75,
+          "timestamp_seconds": 34.83,
+          "sample_index": 1535990,
+          "is_downbeat": false,
+          "bar": 19,
+          "beat": 4
+        },
+        {
+          "index": 76,
+          "timestamp_seconds": 35.294,
+          "sample_index": 1556470,
+          "is_downbeat": true,
+          "bar": 20,
+          "beat": 1
+        },
+        {
+          "index": 77,
+          "timestamp_seconds": 35.759,
+          "sample_index": 1576950,
+          "is_downbeat": false,
+          "bar": 20,
+          "beat": 2
+        },
+        {
+          "index": 78,
+          "timestamp_seconds": 36.223,
+          "sample_index": 1597430,
+          "is_downbeat": false,
+          "bar": 20,
+          "beat": 3
+        },
+        {
+          "index": 79,
+          "timestamp_seconds": 36.687,
+          "sample_index": 1617910,
+          "is_downbeat": false,
+          "bar": 20,
+          "beat": 4
+        },
+        {
+          "index": 80,
+          "timestamp_seconds": 37.152,
+          "sample_index": 1638390,
+          "is_downbeat": true,
+          "bar": 21,
+          "beat": 1
+        },
+        {
+          "index": 81,
+          "timestamp_seconds": 37.616,
+          "sample_index": 1658869,
+          "is_downbeat": false,
+          "bar": 21,
+          "beat": 2
+        },
+        {
+          "index": 82,
+          "timestamp_seconds": 38.08,
+          "sample_index": 1679349,
+          "is_downbeat": false,
+          "bar": 21,
+          "beat": 3
+        },
+        {
+          "index": 83,
+          "timestamp_seconds": 38.545,
+          "sample_index": 1699829,
+          "is_downbeat": false,
+          "bar": 21,
+          "beat": 4
+        },
+        {
+          "index": 84,
+          "timestamp_seconds": 39.009,
+          "sample_index": 1720309,
+          "is_downbeat": true,
+          "bar": 22,
+          "beat": 1
+        },
+        {
+          "index": 85,
+          "timestamp_seconds": 39.474,
+          "sample_index": 1740789,
+          "is_downbeat": false,
+          "bar": 22,
+          "beat": 2
+        },
+        {
+          "index": 86,
+          "timestamp_seconds": 39.938,
+          "sample_index": 1761269,
+          "is_downbeat": false,
+          "bar": 22,
+          "beat": 3
+        },
+        {
+          "index": 87,
+          "timestamp_seconds": 40.402,
+          "sample_index": 1781749,
+          "is_downbeat": false,
+          "bar": 22,
+          "beat": 4
+        },
+        {
+          "index": 88,
+          "timestamp_seconds": 40.867,
+          "sample_index": 1802229,
+          "is_downbeat": true,
+          "bar": 23,
+          "beat": 1
+        },
+        {
+          "index": 89,
+          "timestamp_seconds": 41.331,
+          "sample_index": 1822708,
+          "is_downbeat": false,
+          "bar": 23,
+          "beat": 2
+        },
+        {
+          "index": 90,
+          "timestamp_seconds": 41.796,
+          "sample_index": 1843188,
+          "is_downbeat": false,
+          "bar": 23,
+          "beat": 3
+        },
+        {
+          "index": 91,
+          "timestamp_seconds": 42.26,
+          "sample_index": 1863668,
+          "is_downbeat": false,
+          "bar": 23,
+          "beat": 4
+        },
+        {
+          "index": 92,
+          "timestamp_seconds": 42.724,
+          "sample_index": 1884148,
+          "is_downbeat": true,
+          "bar": 24,
+          "beat": 1
+        },
+        {
+          "index": 93,
+          "timestamp_seconds": 43.189,
+          "sample_index": 1904628,
+          "is_downbeat": false,
+          "bar": 24,
+          "beat": 2
+        },
+        {
+          "index": 94,
+          "timestamp_seconds": 43.653,
+          "sample_index": 1925108,
+          "is_downbeat": false,
+          "bar": 24,
+          "beat": 3
+        },
+        {
+          "index": 95,
+          "timestamp_seconds": 44.118,
+          "sample_index": 1945588,
+          "is_downbeat": false,
+          "bar": 24,
+          "beat": 4
+        },
+        {
+          "index": 96,
+          "timestamp_seconds": 44.582,
+          "sample_index": 1966068,
+          "is_downbeat": true,
+          "bar": 25,
+          "beat": 1
+        },
+        {
+          "index": 97,
+          "timestamp_seconds": 45.046,
+          "sample_index": 1986547,
+          "is_downbeat": false,
+          "bar": 25,
+          "beat": 2
+        },
+        {
+          "index": 98,
+          "timestamp_seconds": 45.511,
+          "sample_index": 2007027,
+          "is_downbeat": false,
+          "bar": 25,
+          "beat": 3
+        },
+        {
+          "index": 99,
+          "timestamp_seconds": 45.975,
+          "sample_index": 2027507,
+          "is_downbeat": false,
+          "bar": 25,
+          "beat": 4
+        },
+        {
+          "index": 100,
+          "timestamp_seconds": 46.44,
+          "sample_index": 2047987,
+          "is_downbeat": true,
+          "bar": 26,
+          "beat": 1
+        },
+        {
+          "index": 101,
+          "timestamp_seconds": 46.904,
+          "sample_index": 2068467,
+          "is_downbeat": false,
+          "bar": 26,
+          "beat": 2
+        },
+        {
+          "index": 102,
+          "timestamp_seconds": 47.368,
+          "sample_index": 2088947,
+          "is_downbeat": false,
+          "bar": 26,
+          "beat": 3
+        },
+        {
+          "index": 103,
+          "timestamp_seconds": 47.833,
+          "sample_index": 2109427,
+          "is_downbeat": false,
+          "bar": 26,
+          "beat": 4
+        },
+        {
+          "index": 104,
+          "timestamp_seconds": 48.297,
+          "sample_index": 2129907,
+          "is_downbeat": true,
+          "bar": 27,
+          "beat": 1
+        },
+        {
+          "index": 105,
+          "timestamp_seconds": 48.762,
+          "sample_index": 2150386,
+          "is_downbeat": false,
+          "bar": 27,
+          "beat": 2
+        },
+        {
+          "index": 106,
+          "timestamp_seconds": 49.226,
+          "sample_index": 2170866,
+          "is_downbeat": false,
+          "bar": 27,
+          "beat": 3
+        },
+        {
+          "index": 107,
+          "timestamp_seconds": 49.69,
+          "sample_index": 2191346,
+          "is_downbeat": false,
+          "bar": 27,
+          "beat": 4
+        },
+        {
+          "index": 108,
+          "timestamp_seconds": 50.155,
+          "sample_index": 2211826,
+          "is_downbeat": true,
+          "bar": 28,
+          "beat": 1
+        },
+        {
+          "index": 109,
+          "timestamp_seconds": 50.619,
+          "sample_index": 2232306,
+          "is_downbeat": false,
+          "bar": 28,
+          "beat": 2
+        },
+        {
+          "index": 110,
+          "timestamp_seconds": 51.084,
+          "sample_index": 2252786,
+          "is_downbeat": false,
+          "bar": 28,
+          "beat": 3
+        },
+        {
+          "index": 111,
+          "timestamp_seconds": 51.548,
+          "sample_index": 2273266,
+          "is_downbeat": false,
+          "bar": 28,
+          "beat": 4
+        },
+        {
+          "index": 112,
+          "timestamp_seconds": 52.012,
+          "sample_index": 2293746,
+          "is_downbeat": true,
+          "bar": 29,
+          "beat": 1
+        },
+        {
+          "index": 113,
+          "timestamp_seconds": 52.477,
+          "sample_index": 2314226,
+          "is_downbeat": false,
+          "bar": 29,
+          "beat": 2
+        },
+        {
+          "index": 114,
+          "timestamp_seconds": 52.941,
+          "sample_index": 2334705,
+          "is_downbeat": false,
+          "bar": 29,
+          "beat": 3
+        },
+        {
+          "index": 115,
+          "timestamp_seconds": 53.406,
+          "sample_index": 2355185,
+          "is_downbeat": false,
+          "bar": 29,
+          "beat": 4
+        },
+        {
+          "index": 116,
+          "timestamp_seconds": 53.87,
+          "sample_index": 2375665,
+          "is_downbeat": true,
+          "bar": 30,
+          "beat": 1
+        },
+        {
+          "index": 117,
+          "timestamp_seconds": 54.334,
+          "sample_index": 2396145,
+          "is_downbeat": false,
+          "bar": 30,
+          "beat": 2
+        },
+        {
+          "index": 118,
+          "timestamp_seconds": 54.799,
+          "sample_index": 2416625,
+          "is_downbeat": false,
+          "bar": 30,
+          "beat": 3
+        },
+        {
+          "index": 119,
+          "timestamp_seconds": 55.263,
+          "sample_index": 2437105,
+          "is_downbeat": false,
+          "bar": 30,
+          "beat": 4
+        },
+        {
+          "index": 120,
+          "timestamp_seconds": 55.728,
+          "sample_index": 2457585,
+          "is_downbeat": true,
+          "bar": 31,
+          "beat": 1
+        },
+        {
+          "index": 121,
+          "timestamp_seconds": 56.192,
+          "sample_index": 2478065,
+          "is_downbeat": false,
+          "bar": 31,
+          "beat": 2
+        },
+        {
+          "index": 122,
+          "timestamp_seconds": 56.656,
+          "sample_index": 2498544,
+          "is_downbeat": false,
+          "bar": 31,
+          "beat": 3
+        },
+        {
+          "index": 123,
+          "timestamp_seconds": 57.121,
+          "sample_index": 2519024,
+          "is_downbeat": false,
+          "bar": 31,
+          "beat": 4
+        },
+        {
+          "index": 124,
+          "timestamp_seconds": 57.585,
+          "sample_index": 2539504,
+          "is_downbeat": true,
+          "bar": 32,
+          "beat": 1
+        },
+        {
+          "index": 125,
+          "timestamp_seconds": 58.05,
+          "sample_index": 2559984,
+          "is_downbeat": false,
+          "bar": 32,
+          "beat": 2
+        },
+        {
+          "index": 126,
+          "timestamp_seconds": 58.514,
+          "sample_index": 2580464,
+          "is_downbeat": false,
+          "bar": 32,
+          "beat": 3
+        },
+        {
+          "index": 127,
+          "timestamp_seconds": 58.978,
+          "sample_index": 2600944,
+          "is_downbeat": false,
+          "bar": 32,
+          "beat": 4
+        },
+        {
+          "index": 128,
+          "timestamp_seconds": 59.443,
+          "sample_index": 2621424,
+          "is_downbeat": true,
+          "bar": 33,
+          "beat": 1
+        },
+        {
+          "index": 129,
+          "timestamp_seconds": 59.907,
+          "sample_index": 2641904,
+          "is_downbeat": false,
+          "bar": 33,
+          "beat": 2
+        },
+        {
+          "index": 130,
+          "timestamp_seconds": 60.372,
+          "sample_index": 2662383,
+          "is_downbeat": false,
+          "bar": 33,
+          "beat": 3
+        },
+        {
+          "index": 131,
+          "timestamp_seconds": 60.836,
+          "sample_index": 2682863,
+          "is_downbeat": false,
+          "bar": 33,
+          "beat": 4
+        },
+        {
+          "index": 132,
+          "timestamp_seconds": 61.3,
+          "sample_index": 2703343,
+          "is_downbeat": true,
+          "bar": 34,
+          "beat": 1
+        },
+        {
+          "index": 133,
+          "timestamp_seconds": 61.765,
+          "sample_index": 2723823,
+          "is_downbeat": false,
+          "bar": 34,
+          "beat": 2
+        },
+        {
+          "index": 134,
+          "timestamp_seconds": 62.229,
+          "sample_index": 2744303,
+          "is_downbeat": false,
+          "bar": 34,
+          "beat": 3
+        },
+        {
+          "index": 135,
+          "timestamp_seconds": 62.693,
+          "sample_index": 2764783,
+          "is_downbeat": false,
+          "bar": 34,
+          "beat": 4
+        },
+        {
+          "index": 136,
+          "timestamp_seconds": 63.158,
+          "sample_index": 2785263,
+          "is_downbeat": true,
+          "bar": 35,
+          "beat": 1
+        },
+        {
+          "index": 137,
+          "timestamp_seconds": 63.622,
+          "sample_index": 2805743,
+          "is_downbeat": false,
+          "bar": 35,
+          "beat": 2
+        },
+        {
+          "index": 138,
+          "timestamp_seconds": 64.087,
+          "sample_index": 2826222,
+          "is_downbeat": false,
+          "bar": 35,
+          "beat": 3
+        },
+        {
+          "index": 139,
+          "timestamp_seconds": 64.551,
+          "sample_index": 2846702,
+          "is_downbeat": false,
+          "bar": 35,
+          "beat": 4
+        },
+        {
+          "index": 140,
+          "timestamp_seconds": 65.015,
+          "sample_index": 2867182,
+          "is_downbeat": true,
+          "bar": 36,
+          "beat": 1
+        },
+        {
+          "index": 141,
+          "timestamp_seconds": 65.48,
+          "sample_index": 2887662,
+          "is_downbeat": false,
+          "bar": 36,
+          "beat": 2
+        },
+        {
+          "index": 142,
+          "timestamp_seconds": 65.944,
+          "sample_index": 2908142,
+          "is_downbeat": false,
+          "bar": 36,
+          "beat": 3
+        },
+        {
+          "index": 143,
+          "timestamp_seconds": 66.409,
+          "sample_index": 2928622,
+          "is_downbeat": false,
+          "bar": 36,
+          "beat": 4
+        },
+        {
+          "index": 144,
+          "timestamp_seconds": 66.873,
+          "sample_index": 2949102,
+          "is_downbeat": true,
+          "bar": 37,
+          "beat": 1
+        },
+        {
+          "index": 145,
+          "timestamp_seconds": 67.337,
+          "sample_index": 2969582,
+          "is_downbeat": false,
+          "bar": 37,
+          "beat": 2
+        },
+        {
+          "index": 146,
+          "timestamp_seconds": 67.802,
+          "sample_index": 2990061,
+          "is_downbeat": false,
+          "bar": 37,
+          "beat": 3
+        },
+        {
+          "index": 147,
+          "timestamp_seconds": 68.266,
+          "sample_index": 3010541,
+          "is_downbeat": false,
+          "bar": 37,
+          "beat": 4
+        },
+        {
+          "index": 148,
+          "timestamp_seconds": 68.731,
+          "sample_index": 3031021,
+          "is_downbeat": true,
+          "bar": 38,
+          "beat": 1
+        },
+        {
+          "index": 149,
+          "timestamp_seconds": 69.195,
+          "sample_index": 3051501,
+          "is_downbeat": false,
+          "bar": 38,
+          "beat": 2
+        },
+        {
+          "index": 150,
+          "timestamp_seconds": 69.659,
+          "sample_index": 3071981,
+          "is_downbeat": false,
+          "bar": 38,
+          "beat": 3
+        },
+        {
+          "index": 151,
+          "timestamp_seconds": 70.124,
+          "sample_index": 3092461,
+          "is_downbeat": false,
+          "bar": 38,
+          "beat": 4
+        },
+        {
+          "index": 152,
+          "timestamp_seconds": 70.588,
+          "sample_index": 3112941,
+          "is_downbeat": true,
+          "bar": 39,
+          "beat": 1
+        },
+        {
+          "index": 153,
+          "timestamp_seconds": 71.053,
+          "sample_index": 3133421,
+          "is_downbeat": false,
+          "bar": 39,
+          "beat": 2
+        },
+        {
+          "index": 154,
+          "timestamp_seconds": 71.517,
+          "sample_index": 3153900,
+          "is_downbeat": false,
+          "bar": 39,
+          "beat": 3
+        },
+        {
+          "index": 155,
+          "timestamp_seconds": 71.981,
+          "sample_index": 3174380,
+          "is_downbeat": false,
+          "bar": 39,
+          "beat": 4
+        },
+        {
+          "index": 156,
+          "timestamp_seconds": 72.446,
+          "sample_index": 3194860,
+          "is_downbeat": true,
+          "bar": 40,
+          "beat": 1
+        },
+        {
+          "index": 157,
+          "timestamp_seconds": 72.91,
+          "sample_index": 3215340,
+          "is_downbeat": false,
+          "bar": 40,
+          "beat": 2
+        },
+        {
+          "index": 158,
+          "timestamp_seconds": 73.375,
+          "sample_index": 3235820,
+          "is_downbeat": false,
+          "bar": 40,
+          "beat": 3
+        },
+        {
+          "index": 159,
+          "timestamp_seconds": 73.839,
+          "sample_index": 3256300,
+          "is_downbeat": false,
+          "bar": 40,
+          "beat": 4
+        },
+        {
+          "index": 160,
+          "timestamp_seconds": 74.303,
+          "sample_index": 3276780,
+          "is_downbeat": true,
+          "bar": 41,
+          "beat": 1
+        },
+        {
+          "index": 161,
+          "timestamp_seconds": 74.768,
+          "sample_index": 3297260,
+          "is_downbeat": false,
+          "bar": 41,
+          "beat": 2
+        },
+        {
+          "index": 162,
+          "timestamp_seconds": 75.232,
+          "sample_index": 3317739,
+          "is_downbeat": false,
+          "bar": 41,
+          "beat": 3
+        },
+        {
+          "index": 163,
+          "timestamp_seconds": 75.697,
+          "sample_index": 3338219,
+          "is_downbeat": false,
+          "bar": 41,
+          "beat": 4
+        },
+        {
+          "index": 164,
+          "timestamp_seconds": 76.161,
+          "sample_index": 3358699,
+          "is_downbeat": true,
+          "bar": 42,
+          "beat": 1
+        },
+        {
+          "index": 165,
+          "timestamp_seconds": 76.625,
+          "sample_index": 3379179,
+          "is_downbeat": false,
+          "bar": 42,
+          "beat": 2
+        },
+        {
+          "index": 166,
+          "timestamp_seconds": 77.09,
+          "sample_index": 3399659,
+          "is_downbeat": false,
+          "bar": 42,
+          "beat": 3
+        },
+        {
+          "index": 167,
+          "timestamp_seconds": 77.554,
+          "sample_index": 3420139,
+          "is_downbeat": false,
+          "bar": 42,
+          "beat": 4
+        },
+        {
+          "index": 168,
+          "timestamp_seconds": 78.019,
+          "sample_index": 3440619,
+          "is_downbeat": true,
+          "bar": 43,
+          "beat": 1
+        },
+        {
+          "index": 169,
+          "timestamp_seconds": 78.483,
+          "sample_index": 3461099,
+          "is_downbeat": false,
+          "bar": 43,
+          "beat": 2
+        },
+        {
+          "index": 170,
+          "timestamp_seconds": 78.947,
+          "sample_index": 3481578,
+          "is_downbeat": false,
+          "bar": 43,
+          "beat": 3
+        },
+        {
+          "index": 171,
+          "timestamp_seconds": 79.412,
+          "sample_index": 3502058,
+          "is_downbeat": false,
+          "bar": 43,
+          "beat": 4
+        },
+        {
+          "index": 172,
+          "timestamp_seconds": 79.876,
+          "sample_index": 3522538,
+          "is_downbeat": true,
+          "bar": 44,
+          "beat": 1
+        },
+        {
+          "index": 173,
+          "timestamp_seconds": 80.341,
+          "sample_index": 3543018,
+          "is_downbeat": false,
+          "bar": 44,
+          "beat": 2
+        },
+        {
+          "index": 174,
+          "timestamp_seconds": 80.805,
+          "sample_index": 3563498,
+          "is_downbeat": false,
+          "bar": 44,
+          "beat": 3
+        },
+        {
+          "index": 175,
+          "timestamp_seconds": 81.269,
+          "sample_index": 3583978,
+          "is_downbeat": false,
+          "bar": 44,
+          "beat": 4
+        },
+        {
+          "index": 176,
+          "timestamp_seconds": 81.734,
+          "sample_index": 3604458,
+          "is_downbeat": true,
+          "bar": 45,
+          "beat": 1
+        },
+        {
+          "index": 177,
+          "timestamp_seconds": 82.198,
+          "sample_index": 3624938,
+          "is_downbeat": false,
+          "bar": 45,
+          "beat": 2
+        },
+        {
+          "index": 178,
+          "timestamp_seconds": 82.663,
+          "sample_index": 3645417,
+          "is_downbeat": false,
+          "bar": 45,
+          "beat": 3
+        },
+        {
+          "index": 179,
+          "timestamp_seconds": 83.127,
+          "sample_index": 3665897,
+          "is_downbeat": false,
+          "bar": 45,
+          "beat": 4
+        },
+        {
+          "index": 180,
+          "timestamp_seconds": 83.591,
+          "sample_index": 3686377,
+          "is_downbeat": true,
+          "bar": 46,
+          "beat": 1
+        },
+        {
+          "index": 181,
+          "timestamp_seconds": 84.056,
+          "sample_index": 3706857,
+          "is_downbeat": false,
+          "bar": 46,
+          "beat": 2
+        },
+        {
+          "index": 182,
+          "timestamp_seconds": 84.52,
+          "sample_index": 3727337,
+          "is_downbeat": false,
+          "bar": 46,
+          "beat": 3
+        },
+        {
+          "index": 183,
+          "timestamp_seconds": 84.985,
+          "sample_index": 3747817,
+          "is_downbeat": false,
+          "bar": 46,
+          "beat": 4
+        },
+        {
+          "index": 184,
+          "timestamp_seconds": 85.449,
+          "sample_index": 3768297,
+          "is_downbeat": true,
+          "bar": 47,
+          "beat": 1
+        },
+        {
+          "index": 185,
+          "timestamp_seconds": 85.913,
+          "sample_index": 3788777,
+          "is_downbeat": false,
+          "bar": 47,
+          "beat": 2
+        },
+        {
+          "index": 186,
+          "timestamp_seconds": 86.378,
+          "sample_index": 3809256,
+          "is_downbeat": false,
+          "bar": 47,
+          "beat": 3
+        },
+        {
+          "index": 187,
+          "timestamp_seconds": 86.842,
+          "sample_index": 3829736,
+          "is_downbeat": false,
+          "bar": 47,
+          "beat": 4
+        },
+        {
+          "index": 188,
+          "timestamp_seconds": 87.307,
+          "sample_index": 3850216,
+          "is_downbeat": true,
+          "bar": 48,
+          "beat": 1
+        },
+        {
+          "index": 189,
+          "timestamp_seconds": 87.771,
+          "sample_index": 3870696,
+          "is_downbeat": false,
+          "bar": 48,
+          "beat": 2
+        },
+        {
+          "index": 190,
+          "timestamp_seconds": 88.235,
+          "sample_index": 3891176,
+          "is_downbeat": false,
+          "bar": 48,
+          "beat": 3
+        },
+        {
+          "index": 191,
+          "timestamp_seconds": 88.7,
+          "sample_index": 3911656,
+          "is_downbeat": false,
+          "bar": 48,
+          "beat": 4
+        },
+        {
+          "index": 192,
+          "timestamp_seconds": 89.164,
+          "sample_index": 3932136,
+          "is_downbeat": true,
+          "bar": 49,
+          "beat": 1
+        },
+        {
+          "index": 193,
+          "timestamp_seconds": 89.628,
+          "sample_index": 3952616,
+          "is_downbeat": false,
+          "bar": 49,
+          "beat": 2
+        },
+        {
+          "index": 194,
+          "timestamp_seconds": 90.093,
+          "sample_index": 3973095,
+          "is_downbeat": false,
+          "bar": 49,
+          "beat": 3
+        },
+        {
+          "index": 195,
+          "timestamp_seconds": 90.557,
+          "sample_index": 3993575,
+          "is_downbeat": false,
+          "bar": 49,
+          "beat": 4
+        },
+        {
+          "index": 196,
+          "timestamp_seconds": 91.022,
+          "sample_index": 4014055,
+          "is_downbeat": true,
+          "bar": 50,
+          "beat": 1
+        },
+        {
+          "index": 197,
+          "timestamp_seconds": 91.486,
+          "sample_index": 4034535,
+          "is_downbeat": false,
+          "bar": 50,
+          "beat": 2
+        },
+        {
+          "index": 198,
+          "timestamp_seconds": 91.95,
+          "sample_index": 4055015,
+          "is_downbeat": false,
+          "bar": 50,
+          "beat": 3
+        },
+        {
+          "index": 199,
+          "timestamp_seconds": 92.415,
+          "sample_index": 4075495,
+          "is_downbeat": false,
+          "bar": 50,
+          "beat": 4
+        },
+        {
+          "index": 200,
+          "timestamp_seconds": 92.879,
+          "sample_index": 4095975,
+          "is_downbeat": true,
+          "bar": 51,
+          "beat": 1
+        },
+        {
+          "index": 201,
+          "timestamp_seconds": 93.344,
+          "sample_index": 4116455,
+          "is_downbeat": false,
+          "bar": 51,
+          "beat": 2
+        },
+        {
+          "index": 202,
+          "timestamp_seconds": 93.808,
+          "sample_index": 4136934,
+          "is_downbeat": false,
+          "bar": 51,
+          "beat": 3
+        },
+        {
+          "index": 203,
+          "timestamp_seconds": 94.272,
+          "sample_index": 4157414,
+          "is_downbeat": false,
+          "bar": 51,
+          "beat": 4
+        },
+        {
+          "index": 204,
+          "timestamp_seconds": 94.737,
+          "sample_index": 4177894,
+          "is_downbeat": true,
+          "bar": 52,
+          "beat": 1
+        },
+        {
+          "index": 205,
+          "timestamp_seconds": 95.201,
+          "sample_index": 4198374,
+          "is_downbeat": false,
+          "bar": 52,
+          "beat": 2
+        },
+        {
+          "index": 206,
+          "timestamp_seconds": 95.666,
+          "sample_index": 4218854,
+          "is_downbeat": false,
+          "bar": 52,
+          "beat": 3
+        },
+        {
+          "index": 207,
+          "timestamp_seconds": 96.13,
+          "sample_index": 4239334,
+          "is_downbeat": false,
+          "bar": 52,
+          "beat": 4
+        },
+        {
+          "index": 208,
+          "timestamp_seconds": 96.594,
+          "sample_index": 4259814,
+          "is_downbeat": true,
+          "bar": 53,
+          "beat": 1
+        },
+        {
+          "index": 209,
+          "timestamp_seconds": 97.059,
+          "sample_index": 4280294,
+          "is_downbeat": false,
+          "bar": 53,
+          "beat": 2
+        },
+        {
+          "index": 210,
+          "timestamp_seconds": 97.523,
+          "sample_index": 4300773,
+          "is_downbeat": false,
+          "bar": 53,
+          "beat": 3
+        },
+        {
+          "index": 211,
+          "timestamp_seconds": 97.988,
+          "sample_index": 4321253,
+          "is_downbeat": false,
+          "bar": 53,
+          "beat": 4
+        },
+        {
+          "index": 212,
+          "timestamp_seconds": 98.452,
+          "sample_index": 4341733,
+          "is_downbeat": true,
+          "bar": 54,
+          "beat": 1
+        },
+        {
+          "index": 213,
+          "timestamp_seconds": 98.916,
+          "sample_index": 4362213,
+          "is_downbeat": false,
+          "bar": 54,
+          "beat": 2
+        },
+        {
+          "index": 214,
+          "timestamp_seconds": 99.381,
+          "sample_index": 4382693,
+          "is_downbeat": false,
+          "bar": 54,
+          "beat": 3
+        },
+        {
+          "index": 215,
+          "timestamp_seconds": 99.845,
+          "sample_index": 4403173,
+          "is_downbeat": false,
+          "bar": 54,
+          "beat": 4
+        },
+        {
+          "index": 216,
+          "timestamp_seconds": 100.31,
+          "sample_index": 4423653,
+          "is_downbeat": true,
+          "bar": 55,
+          "beat": 1
+        },
+        {
+          "index": 217,
+          "timestamp_seconds": 100.774,
+          "sample_index": 4444133,
+          "is_downbeat": false,
+          "bar": 55,
+          "beat": 2
+        },
+        {
+          "index": 218,
+          "timestamp_seconds": 101.238,
+          "sample_index": 4464613,
+          "is_downbeat": false,
+          "bar": 55,
+          "beat": 3
+        },
+        {
+          "index": 219,
+          "timestamp_seconds": 101.703,
+          "sample_index": 4485092,
+          "is_downbeat": false,
+          "bar": 55,
+          "beat": 4
+        },
+        {
+          "index": 220,
+          "timestamp_seconds": 102.167,
+          "sample_index": 4505572,
+          "is_downbeat": true,
+          "bar": 56,
+          "beat": 1
+        },
+        {
+          "index": 221,
+          "timestamp_seconds": 102.632,
+          "sample_index": 4526052,
+          "is_downbeat": false,
+          "bar": 56,
+          "beat": 2
+        },
+        {
+          "index": 222,
+          "timestamp_seconds": 103.096,
+          "sample_index": 4546532,
+          "is_downbeat": false,
+          "bar": 56,
+          "beat": 3
+        },
+        {
+          "index": 223,
+          "timestamp_seconds": 103.56,
+          "sample_index": 4567012,
+          "is_downbeat": false,
+          "bar": 56,
+          "beat": 4
+        },
+        {
+          "index": 224,
+          "timestamp_seconds": 104.025,
+          "sample_index": 4587492,
+          "is_downbeat": true,
+          "bar": 57,
+          "beat": 1
+        },
+        {
+          "index": 225,
+          "timestamp_seconds": 104.489,
+          "sample_index": 4607972,
+          "is_downbeat": false,
+          "bar": 57,
+          "beat": 2
+        },
+        {
+          "index": 226,
+          "timestamp_seconds": 104.954,
+          "sample_index": 4628452,
+          "is_downbeat": false,
+          "bar": 57,
+          "beat": 3
+        },
+        {
+          "index": 227,
+          "timestamp_seconds": 105.418,
+          "sample_index": 4648931,
+          "is_downbeat": false,
+          "bar": 57,
+          "beat": 4
+        },
+        {
+          "index": 228,
+          "timestamp_seconds": 105.882,
+          "sample_index": 4669411,
+          "is_downbeat": true,
+          "bar": 58,
+          "beat": 1
+        },
+        {
+          "index": 229,
+          "timestamp_seconds": 106.347,
+          "sample_index": 4689891,
+          "is_downbeat": false,
+          "bar": 58,
+          "beat": 2
+        },
+        {
+          "index": 230,
+          "timestamp_seconds": 106.811,
+          "sample_index": 4710371,
+          "is_downbeat": false,
+          "bar": 58,
+          "beat": 3
+        },
+        {
+          "index": 231,
+          "timestamp_seconds": 107.276,
+          "sample_index": 4730851,
+          "is_downbeat": false,
+          "bar": 58,
+          "beat": 4
+        },
+        {
+          "index": 232,
+          "timestamp_seconds": 107.74,
+          "sample_index": 4751331,
+          "is_downbeat": true,
+          "bar": 59,
+          "beat": 1
+        },
+        {
+          "index": 233,
+          "timestamp_seconds": 108.204,
+          "sample_index": 4771811,
+          "is_downbeat": false,
+          "bar": 59,
+          "beat": 2
+        },
+        {
+          "index": 234,
+          "timestamp_seconds": 108.669,
+          "sample_index": 4792291,
+          "is_downbeat": false,
+          "bar": 59,
+          "beat": 3
+        },
+        {
+          "index": 235,
+          "timestamp_seconds": 109.133,
+          "sample_index": 4812770,
+          "is_downbeat": false,
+          "bar": 59,
+          "beat": 4
+        },
+        {
+          "index": 236,
+          "timestamp_seconds": 109.598,
+          "sample_index": 4833250,
+          "is_downbeat": true,
+          "bar": 60,
+          "beat": 1
+        },
+        {
+          "index": 237,
+          "timestamp_seconds": 110.062,
+          "sample_index": 4853730,
+          "is_downbeat": false,
+          "bar": 60,
+          "beat": 2
+        },
+        {
+          "index": 238,
+          "timestamp_seconds": 110.526,
+          "sample_index": 4874210,
+          "is_downbeat": false,
+          "bar": 60,
+          "beat": 3
+        },
+        {
+          "index": 239,
+          "timestamp_seconds": 110.991,
+          "sample_index": 4894690,
+          "is_downbeat": false,
+          "bar": 60,
+          "beat": 4
+        },
+        {
+          "index": 240,
+          "timestamp_seconds": 111.455,
+          "sample_index": 4915170,
+          "is_downbeat": true,
+          "bar": 61,
+          "beat": 1
+        },
+        {
+          "index": 241,
+          "timestamp_seconds": 111.92,
+          "sample_index": 4935650,
+          "is_downbeat": false,
+          "bar": 61,
+          "beat": 2
+        },
+        {
+          "index": 242,
+          "timestamp_seconds": 112.384,
+          "sample_index": 4956130,
+          "is_downbeat": false,
+          "bar": 61,
+          "beat": 3
+        },
+        {
+          "index": 243,
+          "timestamp_seconds": 112.848,
+          "sample_index": 4976609,
+          "is_downbeat": false,
+          "bar": 61,
+          "beat": 4
+        },
+        {
+          "index": 244,
+          "timestamp_seconds": 113.313,
+          "sample_index": 4997089,
+          "is_downbeat": true,
+          "bar": 62,
+          "beat": 1
+        },
+        {
+          "index": 245,
+          "timestamp_seconds": 113.777,
+          "sample_index": 5017569,
+          "is_downbeat": false,
+          "bar": 62,
+          "beat": 2
+        },
+        {
+          "index": 246,
+          "timestamp_seconds": 114.241,
+          "sample_index": 5038049,
+          "is_downbeat": false,
+          "bar": 62,
+          "beat": 3
+        },
+        {
+          "index": 247,
+          "timestamp_seconds": 114.706,
+          "sample_index": 5058529,
+          "is_downbeat": false,
+          "bar": 62,
+          "beat": 4
+        },
+        {
+          "index": 248,
+          "timestamp_seconds": 115.17,
+          "sample_index": 5079009,
+          "is_downbeat": true,
+          "bar": 63,
+          "beat": 1
+        },
+        {
+          "index": 249,
+          "timestamp_seconds": 115.635,
+          "sample_index": 5099489,
+          "is_downbeat": false,
+          "bar": 63,
+          "beat": 2
+        },
+        {
+          "index": 250,
+          "timestamp_seconds": 116.099,
+          "sample_index": 5119969,
+          "is_downbeat": false,
+          "bar": 63,
+          "beat": 3
+        },
+        {
+          "index": 251,
+          "timestamp_seconds": 116.563,
+          "sample_index": 5140448,
+          "is_downbeat": false,
+          "bar": 63,
+          "beat": 4
+        },
+        {
+          "index": 252,
+          "timestamp_seconds": 117.028,
+          "sample_index": 5160928,
+          "is_downbeat": true,
+          "bar": 64,
+          "beat": 1
+        },
+        {
+          "index": 253,
+          "timestamp_seconds": 117.492,
+          "sample_index": 5181408,
+          "is_downbeat": false,
+          "bar": 64,
+          "beat": 2
+        },
+        {
+          "index": 254,
+          "timestamp_seconds": 117.957,
+          "sample_index": 5201888,
+          "is_downbeat": false,
+          "bar": 64,
+          "beat": 3
+        },
+        {
+          "index": 255,
+          "timestamp_seconds": 118.421,
+          "sample_index": 5222368,
+          "is_downbeat": false,
+          "bar": 64,
+          "beat": 4
+        },
+        {
+          "index": 256,
+          "timestamp_seconds": 118.885,
+          "sample_index": 5242848,
+          "is_downbeat": true,
+          "bar": 65,
+          "beat": 1
+        },
+        {
+          "index": 257,
+          "timestamp_seconds": 119.35,
+          "sample_index": 5263328,
+          "is_downbeat": false,
+          "bar": 65,
+          "beat": 2
+        },
+        {
+          "index": 258,
+          "timestamp_seconds": 119.814,
+          "sample_index": 5283808,
+          "is_downbeat": false,
+          "bar": 65,
+          "beat": 3
+        },
+        {
+          "index": 259,
+          "timestamp_seconds": 120.279,
+          "sample_index": 5304287,
+          "is_downbeat": false,
+          "bar": 65,
+          "beat": 4
+        },
+        {
+          "index": 260,
+          "timestamp_seconds": 120.743,
+          "sample_index": 5324767,
+          "is_downbeat": true,
+          "bar": 66,
+          "beat": 1
+        },
+        {
+          "index": 261,
+          "timestamp_seconds": 121.207,
+          "sample_index": 5345247,
+          "is_downbeat": false,
+          "bar": 66,
+          "beat": 2
+        },
+        {
+          "index": 262,
+          "timestamp_seconds": 121.672,
+          "sample_index": 5365727,
+          "is_downbeat": false,
+          "bar": 66,
+          "beat": 3
+        },
+        {
+          "index": 263,
+          "timestamp_seconds": 122.136,
+          "sample_index": 5386207,
+          "is_downbeat": false,
+          "bar": 66,
+          "beat": 4
+        },
+        {
+          "index": 264,
+          "timestamp_seconds": 122.601,
+          "sample_index": 5406687,
+          "is_downbeat": true,
+          "bar": 67,
+          "beat": 1
+        },
+        {
+          "index": 265,
+          "timestamp_seconds": 123.065,
+          "sample_index": 5427167,
+          "is_downbeat": false,
+          "bar": 67,
+          "beat": 2
+        },
+        {
+          "index": 266,
+          "timestamp_seconds": 123.529,
+          "sample_index": 5447647,
+          "is_downbeat": false,
+          "bar": 67,
+          "beat": 3
+        },
+        {
+          "index": 267,
+          "timestamp_seconds": 123.994,
+          "sample_index": 5468126,
+          "is_downbeat": false,
+          "bar": 67,
+          "beat": 4
+        },
+        {
+          "index": 268,
+          "timestamp_seconds": 124.458,
+          "sample_index": 5488606,
+          "is_downbeat": true,
+          "bar": 68,
+          "beat": 1
+        },
+        {
+          "index": 269,
+          "timestamp_seconds": 124.923,
+          "sample_index": 5509086,
+          "is_downbeat": false,
+          "bar": 68,
+          "beat": 2
+        },
+        {
+          "index": 270,
+          "timestamp_seconds": 125.387,
+          "sample_index": 5529566,
+          "is_downbeat": false,
+          "bar": 68,
+          "beat": 3
+        },
+        {
+          "index": 271,
+          "timestamp_seconds": 125.851,
+          "sample_index": 5550046,
+          "is_downbeat": false,
+          "bar": 68,
+          "beat": 4
+        },
+        {
+          "index": 272,
+          "timestamp_seconds": 126.316,
+          "sample_index": 5570526,
+          "is_downbeat": true,
+          "bar": 69,
+          "beat": 1
+        },
+        {
+          "index": 273,
+          "timestamp_seconds": 126.78,
+          "sample_index": 5591006,
+          "is_downbeat": false,
+          "bar": 69,
+          "beat": 2
+        },
+        {
+          "index": 274,
+          "timestamp_seconds": 127.245,
+          "sample_index": 5611486,
+          "is_downbeat": false,
+          "bar": 69,
+          "beat": 3
+        },
+        {
+          "index": 275,
+          "timestamp_seconds": 127.709,
+          "sample_index": 5631965,
+          "is_downbeat": false,
+          "bar": 69,
+          "beat": 4
+        },
+        {
+          "index": 276,
+          "timestamp_seconds": 128.173,
+          "sample_index": 5652445,
+          "is_downbeat": true,
+          "bar": 70,
+          "beat": 1
+        },
+        {
+          "index": 277,
+          "timestamp_seconds": 128.638,
+          "sample_index": 5672925,
+          "is_downbeat": false,
+          "bar": 70,
+          "beat": 2
+        },
+        {
+          "index": 278,
+          "timestamp_seconds": 129.102,
+          "sample_index": 5693405,
+          "is_downbeat": false,
+          "bar": 70,
+          "beat": 3
+        },
+        {
+          "index": 279,
+          "timestamp_seconds": 129.567,
+          "sample_index": 5713885,
+          "is_downbeat": false,
+          "bar": 70,
+          "beat": 4
+        },
+        {
+          "index": 280,
+          "timestamp_seconds": 130.031,
+          "sample_index": 5734365,
+          "is_downbeat": true,
+          "bar": 71,
+          "beat": 1
+        },
+        {
+          "index": 281,
+          "timestamp_seconds": 130.495,
+          "sample_index": 5754845,
+          "is_downbeat": false,
+          "bar": 71,
+          "beat": 2
+        },
+        {
+          "index": 282,
+          "timestamp_seconds": 130.96,
+          "sample_index": 5775325,
+          "is_downbeat": false,
+          "bar": 71,
+          "beat": 3
+        },
+        {
+          "index": 283,
+          "timestamp_seconds": 131.424,
+          "sample_index": 5795804,
+          "is_downbeat": false,
+          "bar": 71,
+          "beat": 4
+        },
+        {
+          "index": 284,
+          "timestamp_seconds": 131.889,
+          "sample_index": 5816284,
+          "is_downbeat": true,
+          "bar": 72,
+          "beat": 1
+        },
+        {
+          "index": 285,
+          "timestamp_seconds": 132.353,
+          "sample_index": 5836764,
+          "is_downbeat": false,
+          "bar": 72,
+          "beat": 2
+        },
+        {
+          "index": 286,
+          "timestamp_seconds": 132.817,
+          "sample_index": 5857244,
+          "is_downbeat": false,
+          "bar": 72,
+          "beat": 3
+        },
+        {
+          "index": 287,
+          "timestamp_seconds": 133.282,
+          "sample_index": 5877724,
+          "is_downbeat": false,
+          "bar": 72,
+          "beat": 4
+        },
+        {
+          "index": 288,
+          "timestamp_seconds": 133.746,
+          "sample_index": 5898204,
+          "is_downbeat": true,
+          "bar": 73,
+          "beat": 1
+        },
+        {
+          "index": 289,
+          "timestamp_seconds": 134.211,
+          "sample_index": 5918684,
+          "is_downbeat": false,
+          "bar": 73,
+          "beat": 2
+        },
+        {
+          "index": 290,
+          "timestamp_seconds": 134.675,
+          "sample_index": 5939164,
+          "is_downbeat": false,
+          "bar": 73,
+          "beat": 3
+        },
+        {
+          "index": 291,
+          "timestamp_seconds": 135.139,
+          "sample_index": 5959643,
+          "is_downbeat": false,
+          "bar": 73,
+          "beat": 4
+        },
+        {
+          "index": 292,
+          "timestamp_seconds": 135.604,
+          "sample_index": 5980123,
+          "is_downbeat": true,
+          "bar": 74,
+          "beat": 1
+        },
+        {
+          "index": 293,
+          "timestamp_seconds": 136.068,
+          "sample_index": 6000603,
+          "is_downbeat": false,
+          "bar": 74,
+          "beat": 2
+        },
+        {
+          "index": 294,
+          "timestamp_seconds": 136.533,
+          "sample_index": 6021083,
+          "is_downbeat": false,
+          "bar": 74,
+          "beat": 3
+        },
+        {
+          "index": 295,
+          "timestamp_seconds": 136.997,
+          "sample_index": 6041563,
+          "is_downbeat": false,
+          "bar": 74,
+          "beat": 4
+        },
+        {
+          "index": 296,
+          "timestamp_seconds": 137.461,
+          "sample_index": 6062043,
+          "is_downbeat": true,
+          "bar": 75,
+          "beat": 1
+        },
+        {
+          "index": 297,
+          "timestamp_seconds": 137.926,
+          "sample_index": 6082523,
+          "is_downbeat": false,
+          "bar": 75,
+          "beat": 2
+        },
+        {
+          "index": 298,
+          "timestamp_seconds": 138.39,
+          "sample_index": 6103003,
+          "is_downbeat": false,
+          "bar": 75,
+          "beat": 3
+        },
+        {
+          "index": 299,
+          "timestamp_seconds": 138.854,
+          "sample_index": 6123482,
+          "is_downbeat": false,
+          "bar": 75,
+          "beat": 4
+        },
+        {
+          "index": 300,
+          "timestamp_seconds": 139.319,
+          "sample_index": 6143962,
+          "is_downbeat": true,
+          "bar": 76,
+          "beat": 1
+        },
+        {
+          "index": 301,
+          "timestamp_seconds": 139.783,
+          "sample_index": 6164442,
+          "is_downbeat": false,
+          "bar": 76,
+          "beat": 2
+        },
+        {
+          "index": 302,
+          "timestamp_seconds": 140.248,
+          "sample_index": 6184922,
+          "is_downbeat": false,
+          "bar": 76,
+          "beat": 3
+        },
+        {
+          "index": 303,
+          "timestamp_seconds": 140.712,
+          "sample_index": 6205402,
+          "is_downbeat": false,
+          "bar": 76,
+          "beat": 4
+        },
+        {
+          "index": 304,
+          "timestamp_seconds": 141.176,
+          "sample_index": 6225882,
+          "is_downbeat": true,
+          "bar": 77,
+          "beat": 1
+        },
+        {
+          "index": 305,
+          "timestamp_seconds": 141.641,
+          "sample_index": 6246362,
+          "is_downbeat": false,
+          "bar": 77,
+          "beat": 2
+        },
+        {
+          "index": 306,
+          "timestamp_seconds": 142.105,
+          "sample_index": 6266842,
+          "is_downbeat": false,
+          "bar": 77,
+          "beat": 3
+        },
+        {
+          "index": 307,
+          "timestamp_seconds": 142.57,
+          "sample_index": 6287321,
+          "is_downbeat": false,
+          "bar": 77,
+          "beat": 4
+        },
+        {
+          "index": 308,
+          "timestamp_seconds": 143.034,
+          "sample_index": 6307801,
+          "is_downbeat": true,
+          "bar": 78,
+          "beat": 1
+        },
+        {
+          "index": 309,
+          "timestamp_seconds": 143.498,
+          "sample_index": 6328281,
+          "is_downbeat": false,
+          "bar": 78,
+          "beat": 2
+        },
+        {
+          "index": 310,
+          "timestamp_seconds": 143.963,
+          "sample_index": 6348761,
+          "is_downbeat": false,
+          "bar": 78,
+          "beat": 3
+        },
+        {
+          "index": 311,
+          "timestamp_seconds": 144.427,
+          "sample_index": 6369241,
+          "is_downbeat": false,
+          "bar": 78,
+          "beat": 4
+        },
+        {
+          "index": 312,
+          "timestamp_seconds": 144.892,
+          "sample_index": 6389721,
+          "is_downbeat": true,
+          "bar": 79,
+          "beat": 1
+        },
+        {
+          "index": 313,
+          "timestamp_seconds": 145.356,
+          "sample_index": 6410201,
+          "is_downbeat": false,
+          "bar": 79,
+          "beat": 2
+        },
+        {
+          "index": 314,
+          "timestamp_seconds": 145.82,
+          "sample_index": 6430681,
+          "is_downbeat": false,
+          "bar": 79,
+          "beat": 3
+        },
+        {
+          "index": 315,
+          "timestamp_seconds": 146.285,
+          "sample_index": 6451160,
+          "is_downbeat": false,
+          "bar": 79,
+          "beat": 4
+        },
+        {
+          "index": 316,
+          "timestamp_seconds": 146.749,
+          "sample_index": 6471640,
+          "is_downbeat": true,
+          "bar": 80,
+          "beat": 1
+        },
+        {
+          "index": 317,
+          "timestamp_seconds": 147.214,
+          "sample_index": 6492120,
+          "is_downbeat": false,
+          "bar": 80,
+          "beat": 2
+        },
+        {
+          "index": 318,
+          "timestamp_seconds": 147.678,
+          "sample_index": 6512600,
+          "is_downbeat": false,
+          "bar": 80,
+          "beat": 3
+        },
+        {
+          "index": 319,
+          "timestamp_seconds": 148.142,
+          "sample_index": 6533080,
+          "is_downbeat": false,
+          "bar": 80,
+          "beat": 4
+        },
+        {
+          "index": 320,
+          "timestamp_seconds": 148.607,
+          "sample_index": 6553560,
+          "is_downbeat": true,
+          "bar": 81,
+          "beat": 1
+        },
+        {
+          "index": 321,
+          "timestamp_seconds": 149.071,
+          "sample_index": 6574040,
+          "is_downbeat": false,
+          "bar": 81,
+          "beat": 2
+        },
+        {
+          "index": 322,
+          "timestamp_seconds": 149.536,
+          "sample_index": 6594520,
+          "is_downbeat": false,
+          "bar": 81,
+          "beat": 3
+        },
+        {
+          "index": 323,
+          "timestamp_seconds": 150.0,
+          "sample_index": 6615000,
+          "is_downbeat": false,
+          "bar": 81,
+          "beat": 4
+        },
+        {
+          "index": 324,
+          "timestamp_seconds": 150.464,
+          "sample_index": 6635479,
+          "is_downbeat": true,
+          "bar": 82,
+          "beat": 1
+        },
+        {
+          "index": 325,
+          "timestamp_seconds": 150.929,
+          "sample_index": 6655959,
+          "is_downbeat": false,
+          "bar": 82,
+          "beat": 2
+        },
+        {
+          "index": 326,
+          "timestamp_seconds": 151.393,
+          "sample_index": 6676439,
+          "is_downbeat": false,
+          "bar": 82,
+          "beat": 3
+        },
+        {
+          "index": 327,
+          "timestamp_seconds": 151.858,
+          "sample_index": 6696919,
+          "is_downbeat": false,
+          "bar": 82,
+          "beat": 4
+        },
+        {
+          "index": 328,
+          "timestamp_seconds": 152.322,
+          "sample_index": 6717399,
+          "is_downbeat": true,
+          "bar": 83,
+          "beat": 1
+        },
+        {
+          "index": 329,
+          "timestamp_seconds": 152.786,
+          "sample_index": 6737879,
+          "is_downbeat": false,
+          "bar": 83,
+          "beat": 2
+        },
+        {
+          "index": 330,
+          "timestamp_seconds": 153.251,
+          "sample_index": 6758359,
+          "is_downbeat": false,
+          "bar": 83,
+          "beat": 3
+        },
+        {
+          "index": 331,
+          "timestamp_seconds": 153.715,
+          "sample_index": 6778839,
+          "is_downbeat": false,
+          "bar": 83,
+          "beat": 4
+        },
+        {
+          "index": 332,
+          "timestamp_seconds": 154.18,
+          "sample_index": 6799318,
+          "is_downbeat": true,
+          "bar": 84,
+          "beat": 1
+        },
+        {
+          "index": 333,
+          "timestamp_seconds": 154.644,
+          "sample_index": 6819798,
+          "is_downbeat": false,
+          "bar": 84,
+          "beat": 2
+        },
+        {
+          "index": 334,
+          "timestamp_seconds": 155.108,
+          "sample_index": 6840278,
+          "is_downbeat": false,
+          "bar": 84,
+          "beat": 3
+        },
+        {
+          "index": 335,
+          "timestamp_seconds": 155.573,
+          "sample_index": 6860758,
+          "is_downbeat": false,
+          "bar": 84,
+          "beat": 4
+        },
+        {
+          "index": 336,
+          "timestamp_seconds": 156.037,
+          "sample_index": 6881238,
+          "is_downbeat": true,
+          "bar": 85,
+          "beat": 1
+        },
+        {
+          "index": 337,
+          "timestamp_seconds": 156.502,
+          "sample_index": 6901718,
+          "is_downbeat": false,
+          "bar": 85,
+          "beat": 2
+        },
+        {
+          "index": 338,
+          "timestamp_seconds": 156.966,
+          "sample_index": 6922198,
+          "is_downbeat": false,
+          "bar": 85,
+          "beat": 3
+        },
+        {
+          "index": 339,
+          "timestamp_seconds": 157.43,
+          "sample_index": 6942678,
+          "is_downbeat": false,
+          "bar": 85,
+          "beat": 4
+        },
+        {
+          "index": 340,
+          "timestamp_seconds": 157.895,
+          "sample_index": 6963157,
+          "is_downbeat": true,
+          "bar": 86,
+          "beat": 1
+        },
+        {
+          "index": 341,
+          "timestamp_seconds": 158.359,
+          "sample_index": 6983637,
+          "is_downbeat": false,
+          "bar": 86,
+          "beat": 2
+        },
+        {
+          "index": 342,
+          "timestamp_seconds": 158.824,
+          "sample_index": 7004117,
+          "is_downbeat": false,
+          "bar": 86,
+          "beat": 3
+        },
+        {
+          "index": 343,
+          "timestamp_seconds": 159.288,
+          "sample_index": 7024597,
+          "is_downbeat": false,
+          "bar": 86,
+          "beat": 4
+        },
+        {
+          "index": 344,
+          "timestamp_seconds": 159.752,
+          "sample_index": 7045077,
+          "is_downbeat": true,
+          "bar": 87,
+          "beat": 1
+        },
+        {
+          "index": 345,
+          "timestamp_seconds": 160.217,
+          "sample_index": 7065557,
+          "is_downbeat": false,
+          "bar": 87,
+          "beat": 2
+        },
+        {
+          "index": 346,
+          "timestamp_seconds": 160.681,
+          "sample_index": 7086037,
+          "is_downbeat": false,
+          "bar": 87,
+          "beat": 3
+        },
+        {
+          "index": 347,
+          "timestamp_seconds": 161.146,
+          "sample_index": 7106517,
+          "is_downbeat": false,
+          "bar": 87,
+          "beat": 4
+        },
+        {
+          "index": 348,
+          "timestamp_seconds": 161.61,
+          "sample_index": 7126996,
+          "is_downbeat": true,
+          "bar": 88,
+          "beat": 1
+        },
+        {
+          "index": 349,
+          "timestamp_seconds": 162.074,
+          "sample_index": 7147476,
+          "is_downbeat": false,
+          "bar": 88,
+          "beat": 2
+        },
+        {
+          "index": 350,
+          "timestamp_seconds": 162.539,
+          "sample_index": 7167956,
+          "is_downbeat": false,
+          "bar": 88,
+          "beat": 3
+        },
+        {
+          "index": 351,
+          "timestamp_seconds": 163.003,
+          "sample_index": 7188436,
+          "is_downbeat": false,
+          "bar": 88,
+          "beat": 4
+        },
+        {
+          "index": 352,
+          "timestamp_seconds": 163.467,
+          "sample_index": 7208916,
+          "is_downbeat": true,
+          "bar": 89,
+          "beat": 1
+        },
+        {
+          "index": 353,
+          "timestamp_seconds": 163.932,
+          "sample_index": 7229396,
+          "is_downbeat": false,
+          "bar": 89,
+          "beat": 2
+        },
+        {
+          "index": 354,
+          "timestamp_seconds": 164.396,
+          "sample_index": 7249876,
+          "is_downbeat": false,
+          "bar": 89,
+          "beat": 3
+        },
+        {
+          "index": 355,
+          "timestamp_seconds": 164.861,
+          "sample_index": 7270356,
+          "is_downbeat": false,
+          "bar": 89,
+          "beat": 4
+        },
+        {
+          "index": 356,
+          "timestamp_seconds": 165.325,
+          "sample_index": 7290835,
+          "is_downbeat": true,
+          "bar": 90,
+          "beat": 1
+        },
+        {
+          "index": 357,
+          "timestamp_seconds": 165.789,
+          "sample_index": 7311315,
+          "is_downbeat": false,
+          "bar": 90,
+          "beat": 2
+        },
+        {
+          "index": 358,
+          "timestamp_seconds": 166.254,
+          "sample_index": 7331795,
+          "is_downbeat": false,
+          "bar": 90,
+          "beat": 3
+        },
+        {
+          "index": 359,
+          "timestamp_seconds": 166.718,
+          "sample_index": 7352275,
+          "is_downbeat": false,
+          "bar": 90,
+          "beat": 4
+        },
+        {
+          "index": 360,
+          "timestamp_seconds": 167.183,
+          "sample_index": 7372755,
+          "is_downbeat": true,
+          "bar": 91,
+          "beat": 1
+        },
+        {
+          "index": 361,
+          "timestamp_seconds": 167.647,
+          "sample_index": 7393235,
+          "is_downbeat": false,
+          "bar": 91,
+          "beat": 2
+        },
+        {
+          "index": 362,
+          "timestamp_seconds": 168.111,
+          "sample_index": 7413715,
+          "is_downbeat": false,
+          "bar": 91,
+          "beat": 3
+        },
+        {
+          "index": 363,
+          "timestamp_seconds": 168.576,
+          "sample_index": 7434195,
+          "is_downbeat": false,
+          "bar": 91,
+          "beat": 4
+        },
+        {
+          "index": 364,
+          "timestamp_seconds": 169.04,
+          "sample_index": 7454674,
+          "is_downbeat": true,
+          "bar": 92,
+          "beat": 1
+        },
+        {
+          "index": 365,
+          "timestamp_seconds": 169.505,
+          "sample_index": 7475154,
+          "is_downbeat": false,
+          "bar": 92,
+          "beat": 2
+        },
+        {
+          "index": 366,
+          "timestamp_seconds": 169.969,
+          "sample_index": 7495634,
+          "is_downbeat": false,
+          "bar": 92,
+          "beat": 3
+        },
+        {
+          "index": 367,
+          "timestamp_seconds": 170.433,
+          "sample_index": 7516114,
+          "is_downbeat": false,
+          "bar": 92,
+          "beat": 4
+        },
+        {
+          "index": 368,
+          "timestamp_seconds": 170.898,
+          "sample_index": 7536594,
+          "is_downbeat": true,
+          "bar": 93,
+          "beat": 1
+        },
+        {
+          "index": 369,
+          "timestamp_seconds": 171.362,
+          "sample_index": 7557074,
+          "is_downbeat": false,
+          "bar": 93,
+          "beat": 2
+        },
+        {
+          "index": 370,
+          "timestamp_seconds": 171.827,
+          "sample_index": 7577554,
+          "is_downbeat": false,
+          "bar": 93,
+          "beat": 3
+        },
+        {
+          "index": 371,
+          "timestamp_seconds": 172.291,
+          "sample_index": 7598034,
+          "is_downbeat": false,
+          "bar": 93,
+          "beat": 4
+        },
+        {
+          "index": 372,
+          "timestamp_seconds": 172.755,
+          "sample_index": 7618513,
+          "is_downbeat": true,
+          "bar": 94,
+          "beat": 1
+        },
+        {
+          "index": 373,
+          "timestamp_seconds": 173.22,
+          "sample_index": 7638993,
+          "is_downbeat": false,
+          "bar": 94,
+          "beat": 2
+        },
+        {
+          "index": 374,
+          "timestamp_seconds": 173.684,
+          "sample_index": 7659473,
+          "is_downbeat": false,
+          "bar": 94,
+          "beat": 3
+        },
+        {
+          "index": 375,
+          "timestamp_seconds": 174.149,
+          "sample_index": 7679953,
+          "is_downbeat": false,
+          "bar": 94,
+          "beat": 4
+        },
+        {
+          "index": 376,
+          "timestamp_seconds": 174.613,
+          "sample_index": 7700433,
+          "is_downbeat": true,
+          "bar": 95,
+          "beat": 1
+        },
+        {
+          "index": 377,
+          "timestamp_seconds": 175.077,
+          "sample_index": 7720913,
+          "is_downbeat": false,
+          "bar": 95,
+          "beat": 2
+        },
+        {
+          "index": 378,
+          "timestamp_seconds": 175.542,
+          "sample_index": 7741393,
+          "is_downbeat": false,
+          "bar": 95,
+          "beat": 3
+        },
+        {
+          "index": 379,
+          "timestamp_seconds": 176.006,
+          "sample_index": 7761873,
+          "is_downbeat": false,
+          "bar": 95,
+          "beat": 4
+        },
+        {
+          "index": 380,
+          "timestamp_seconds": 176.471,
+          "sample_index": 7782352,
+          "is_downbeat": true,
+          "bar": 96,
+          "beat": 1
+        },
+        {
+          "index": 381,
+          "timestamp_seconds": 176.935,
+          "sample_index": 7802832,
+          "is_downbeat": false,
+          "bar": 96,
+          "beat": 2
+        },
+        {
+          "index": 382,
+          "timestamp_seconds": 177.399,
+          "sample_index": 7823312,
+          "is_downbeat": false,
+          "bar": 96,
+          "beat": 3
+        },
+        {
+          "index": 383,
+          "timestamp_seconds": 177.864,
+          "sample_index": 7843792,
+          "is_downbeat": false,
+          "bar": 96,
+          "beat": 4
+        },
+        {
+          "index": 384,
+          "timestamp_seconds": 178.328,
+          "sample_index": 7864272,
+          "is_downbeat": true,
+          "bar": 97,
+          "beat": 1
+        },
+        {
+          "index": 385,
+          "timestamp_seconds": 178.793,
+          "sample_index": 7884752,
+          "is_downbeat": false,
+          "bar": 97,
+          "beat": 2
+        },
+        {
+          "index": 386,
+          "timestamp_seconds": 179.257,
+          "sample_index": 7905232,
+          "is_downbeat": false,
+          "bar": 97,
+          "beat": 3
+        },
+        {
+          "index": 387,
+          "timestamp_seconds": 179.721,
+          "sample_index": 7925712,
+          "is_downbeat": false,
+          "bar": 97,
+          "beat": 4
+        },
+        {
+          "index": 388,
+          "timestamp_seconds": 180.186,
+          "sample_index": 7946191,
+          "is_downbeat": true,
+          "bar": 98,
+          "beat": 1
+        },
+        {
+          "index": 389,
+          "timestamp_seconds": 180.65,
+          "sample_index": 7966671,
+          "is_downbeat": false,
+          "bar": 98,
+          "beat": 2
+        },
+        {
+          "index": 390,
+          "timestamp_seconds": 181.115,
+          "sample_index": 7987151,
+          "is_downbeat": false,
+          "bar": 98,
+          "beat": 3
+        },
+        {
+          "index": 391,
+          "timestamp_seconds": 181.579,
+          "sample_index": 8007631,
+          "is_downbeat": false,
+          "bar": 98,
+          "beat": 4
+        },
+        {
+          "index": 392,
+          "timestamp_seconds": 182.043,
+          "sample_index": 8028111,
+          "is_downbeat": true,
+          "bar": 99,
+          "beat": 1
+        },
+        {
+          "index": 393,
+          "timestamp_seconds": 182.508,
+          "sample_index": 8048591,
+          "is_downbeat": false,
+          "bar": 99,
+          "beat": 2
+        },
+        {
+          "index": 394,
+          "timestamp_seconds": 182.972,
+          "sample_index": 8069071,
+          "is_downbeat": false,
+          "bar": 99,
+          "beat": 3
+        },
+        {
+          "index": 395,
+          "timestamp_seconds": 183.437,
+          "sample_index": 8089551,
+          "is_downbeat": false,
+          "bar": 99,
+          "beat": 4
+        },
+        {
+          "index": 396,
+          "timestamp_seconds": 183.901,
+          "sample_index": 8110030,
+          "is_downbeat": true,
+          "bar": 100,
+          "beat": 1
+        },
+        {
+          "index": 397,
+          "timestamp_seconds": 184.365,
+          "sample_index": 8130510,
+          "is_downbeat": false,
+          "bar": 100,
+          "beat": 2
+        },
+        {
+          "index": 398,
+          "timestamp_seconds": 184.83,
+          "sample_index": 8150990,
+          "is_downbeat": false,
+          "bar": 100,
+          "beat": 3
+        },
+        {
+          "index": 399,
+          "timestamp_seconds": 185.294,
+          "sample_index": 8171470,
+          "is_downbeat": false,
+          "bar": 100,
+          "beat": 4
+        },
+        {
+          "index": 400,
+          "timestamp_seconds": 185.759,
+          "sample_index": 8191950,
+          "is_downbeat": true,
+          "bar": 101,
+          "beat": 1
+        },
+        {
+          "index": 401,
+          "timestamp_seconds": 186.223,
+          "sample_index": 8212430,
+          "is_downbeat": false,
+          "bar": 101,
+          "beat": 2
+        },
+        {
+          "index": 402,
+          "timestamp_seconds": 186.687,
+          "sample_index": 8232910,
+          "is_downbeat": false,
+          "bar": 101,
+          "beat": 3
+        },
+        {
+          "index": 403,
+          "timestamp_seconds": 187.152,
+          "sample_index": 8253390,
+          "is_downbeat": false,
+          "bar": 101,
+          "beat": 4
+        },
+        {
+          "index": 404,
+          "timestamp_seconds": 187.616,
+          "sample_index": 8273869,
+          "is_downbeat": true,
+          "bar": 102,
+          "beat": 1
+        },
+        {
+          "index": 405,
+          "timestamp_seconds": 188.08,
+          "sample_index": 8294349,
+          "is_downbeat": false,
+          "bar": 102,
+          "beat": 2
+        },
+        {
+          "index": 406,
+          "timestamp_seconds": 188.545,
+          "sample_index": 8314829,
+          "is_downbeat": false,
+          "bar": 102,
+          "beat": 3
+        },
+        {
+          "index": 407,
+          "timestamp_seconds": 189.009,
+          "sample_index": 8335309,
+          "is_downbeat": false,
+          "bar": 102,
+          "beat": 4
+        },
+        {
+          "index": 408,
+          "timestamp_seconds": 189.474,
+          "sample_index": 8355789,
+          "is_downbeat": true,
+          "bar": 103,
+          "beat": 1
+        },
+        {
+          "index": 409,
+          "timestamp_seconds": 189.938,
+          "sample_index": 8376269,
+          "is_downbeat": false,
+          "bar": 103,
+          "beat": 2
+        },
+        {
+          "index": 410,
+          "timestamp_seconds": 190.402,
+          "sample_index": 8396749,
+          "is_downbeat": false,
+          "bar": 103,
+          "beat": 3
+        },
+        {
+          "index": 411,
+          "timestamp_seconds": 190.867,
+          "sample_index": 8417229,
+          "is_downbeat": false,
+          "bar": 103,
+          "beat": 4
+        },
+        {
+          "index": 412,
+          "timestamp_seconds": 191.331,
+          "sample_index": 8437708,
+          "is_downbeat": true,
+          "bar": 104,
+          "beat": 1
+        },
+        {
+          "index": 413,
+          "timestamp_seconds": 191.796,
+          "sample_index": 8458188,
+          "is_downbeat": false,
+          "bar": 104,
+          "beat": 2
+        },
+        {
+          "index": 414,
+          "timestamp_seconds": 192.26,
+          "sample_index": 8478668,
+          "is_downbeat": false,
+          "bar": 104,
+          "beat": 3
+        },
+        {
+          "index": 415,
+          "timestamp_seconds": 192.724,
+          "sample_index": 8499148,
+          "is_downbeat": false,
+          "bar": 104,
+          "beat": 4
+        },
+        {
+          "index": 416,
+          "timestamp_seconds": 193.189,
+          "sample_index": 8519628,
+          "is_downbeat": true,
+          "bar": 105,
+          "beat": 1
+        },
+        {
+          "index": 417,
+          "timestamp_seconds": 193.653,
+          "sample_index": 8540108,
+          "is_downbeat": false,
+          "bar": 105,
+          "beat": 2
+        },
+        {
+          "index": 418,
+          "timestamp_seconds": 194.118,
+          "sample_index": 8560588,
+          "is_downbeat": false,
+          "bar": 105,
+          "beat": 3
+        },
+        {
+          "index": 419,
+          "timestamp_seconds": 194.582,
+          "sample_index": 8581068,
+          "is_downbeat": false,
+          "bar": 105,
+          "beat": 4
+        },
+        {
+          "index": 420,
+          "timestamp_seconds": 195.046,
+          "sample_index": 8601547,
+          "is_downbeat": true,
+          "bar": 106,
+          "beat": 1
+        },
+        {
+          "index": 421,
+          "timestamp_seconds": 195.511,
+          "sample_index": 8622027,
+          "is_downbeat": false,
+          "bar": 106,
+          "beat": 2
+        },
+        {
+          "index": 422,
+          "timestamp_seconds": 195.975,
+          "sample_index": 8642507,
+          "is_downbeat": false,
+          "bar": 106,
+          "beat": 3
+        },
+        {
+          "index": 423,
+          "timestamp_seconds": 196.44,
+          "sample_index": 8662987,
+          "is_downbeat": false,
+          "bar": 106,
+          "beat": 4
+        },
+        {
+          "index": 424,
+          "timestamp_seconds": 196.904,
+          "sample_index": 8683467,
+          "is_downbeat": true,
+          "bar": 107,
+          "beat": 1
+        },
+        {
+          "index": 425,
+          "timestamp_seconds": 197.368,
+          "sample_index": 8703947,
+          "is_downbeat": false,
+          "bar": 107,
+          "beat": 2
+        },
+        {
+          "index": 426,
+          "timestamp_seconds": 197.833,
+          "sample_index": 8724427,
+          "is_downbeat": false,
+          "bar": 107,
+          "beat": 3
+        },
+        {
+          "index": 427,
+          "timestamp_seconds": 198.297,
+          "sample_index": 8744907,
+          "is_downbeat": false,
+          "bar": 107,
+          "beat": 4
+        },
+        {
+          "index": 428,
+          "timestamp_seconds": 198.762,
+          "sample_index": 8765386,
+          "is_downbeat": true,
+          "bar": 108,
+          "beat": 1
+        },
+        {
+          "index": 429,
+          "timestamp_seconds": 199.226,
+          "sample_index": 8785866,
+          "is_downbeat": false,
+          "bar": 108,
+          "beat": 2
+        },
+        {
+          "index": 430,
+          "timestamp_seconds": 199.69,
+          "sample_index": 8806346,
+          "is_downbeat": false,
+          "bar": 108,
+          "beat": 3
+        },
+        {
+          "index": 431,
+          "timestamp_seconds": 200.155,
+          "sample_index": 8826826,
+          "is_downbeat": false,
+          "bar": 108,
+          "beat": 4
+        },
+        {
+          "index": 432,
+          "timestamp_seconds": 200.619,
+          "sample_index": 8847306,
+          "is_downbeat": true,
+          "bar": 109,
+          "beat": 1
+        },
+        {
+          "index": 433,
+          "timestamp_seconds": 201.084,
+          "sample_index": 8867786,
+          "is_downbeat": false,
+          "bar": 109,
+          "beat": 2
+        },
+        {
+          "index": 434,
+          "timestamp_seconds": 201.548,
+          "sample_index": 8888266,
+          "is_downbeat": false,
+          "bar": 109,
+          "beat": 3
+        },
+        {
+          "index": 435,
+          "timestamp_seconds": 202.012,
+          "sample_index": 8908746,
+          "is_downbeat": false,
+          "bar": 109,
+          "beat": 4
+        },
+        {
+          "index": 436,
+          "timestamp_seconds": 202.477,
+          "sample_index": 8929226,
+          "is_downbeat": true,
+          "bar": 110,
+          "beat": 1
+        },
+        {
+          "index": 437,
+          "timestamp_seconds": 202.941,
+          "sample_index": 8949705,
+          "is_downbeat": false,
+          "bar": 110,
+          "beat": 2
+        },
+        {
+          "index": 438,
+          "timestamp_seconds": 203.406,
+          "sample_index": 8970185,
+          "is_downbeat": false,
+          "bar": 110,
+          "beat": 3
+        },
+        {
+          "index": 439,
+          "timestamp_seconds": 203.87,
+          "sample_index": 8990665,
+          "is_downbeat": false,
+          "bar": 110,
+          "beat": 4
+        },
+        {
+          "index": 440,
+          "timestamp_seconds": 204.334,
+          "sample_index": 9011145,
+          "is_downbeat": true,
+          "bar": 111,
+          "beat": 1
+        },
+        {
+          "index": 441,
+          "timestamp_seconds": 204.799,
+          "sample_index": 9031625,
+          "is_downbeat": false,
+          "bar": 111,
+          "beat": 2
+        },
+        {
+          "index": 442,
+          "timestamp_seconds": 205.263,
+          "sample_index": 9052105,
+          "is_downbeat": false,
+          "bar": 111,
+          "beat": 3
+        },
+        {
+          "index": 443,
+          "timestamp_seconds": 205.728,
+          "sample_index": 9072585,
+          "is_downbeat": false,
+          "bar": 111,
+          "beat": 4
+        },
+        {
+          "index": 444,
+          "timestamp_seconds": 206.192,
+          "sample_index": 9093065,
+          "is_downbeat": true,
+          "bar": 112,
+          "beat": 1
+        },
+        {
+          "index": 445,
+          "timestamp_seconds": 206.656,
+          "sample_index": 9113544,
+          "is_downbeat": false,
+          "bar": 112,
+          "beat": 2
+        },
+        {
+          "index": 446,
+          "timestamp_seconds": 207.121,
+          "sample_index": 9134024,
+          "is_downbeat": false,
+          "bar": 112,
+          "beat": 3
+        },
+        {
+          "index": 447,
+          "timestamp_seconds": 207.585,
+          "sample_index": 9154504,
+          "is_downbeat": false,
+          "bar": 112,
+          "beat": 4
+        },
+        {
+          "index": 448,
+          "timestamp_seconds": 208.05,
+          "sample_index": 9174984,
+          "is_downbeat": true,
+          "bar": 113,
+          "beat": 1
+        },
+        {
+          "index": 449,
+          "timestamp_seconds": 208.514,
+          "sample_index": 9195464,
+          "is_downbeat": false,
+          "bar": 113,
+          "beat": 2
+        },
+        {
+          "index": 450,
+          "timestamp_seconds": 208.978,
+          "sample_index": 9215944,
+          "is_downbeat": false,
+          "bar": 113,
+          "beat": 3
+        },
+        {
+          "index": 451,
+          "timestamp_seconds": 209.443,
+          "sample_index": 9236424,
+          "is_downbeat": false,
+          "bar": 113,
+          "beat": 4
+        },
+        {
+          "index": 452,
+          "timestamp_seconds": 209.907,
+          "sample_index": 9256904,
+          "is_downbeat": true,
+          "bar": 114,
+          "beat": 1
+        },
+        {
+          "index": 453,
+          "timestamp_seconds": 210.372,
+          "sample_index": 9277383,
+          "is_downbeat": false,
+          "bar": 114,
+          "beat": 2
+        },
+        {
+          "index": 454,
+          "timestamp_seconds": 210.836,
+          "sample_index": 9297863,
+          "is_downbeat": false,
+          "bar": 114,
+          "beat": 3
+        },
+        {
+          "index": 455,
+          "timestamp_seconds": 211.3,
+          "sample_index": 9318343,
+          "is_downbeat": false,
+          "bar": 114,
+          "beat": 4
+        },
+        {
+          "index": 456,
+          "timestamp_seconds": 211.765,
+          "sample_index": 9338823,
+          "is_downbeat": true,
+          "bar": 115,
+          "beat": 1
+        },
+        {
+          "index": 457,
+          "timestamp_seconds": 212.229,
+          "sample_index": 9359303,
+          "is_downbeat": false,
+          "bar": 115,
+          "beat": 2
+        },
+        {
+          "index": 458,
+          "timestamp_seconds": 212.693,
+          "sample_index": 9379783,
+          "is_downbeat": false,
+          "bar": 115,
+          "beat": 3
+        },
+        {
+          "index": 459,
+          "timestamp_seconds": 213.158,
+          "sample_index": 9400263,
+          "is_downbeat": false,
+          "bar": 115,
+          "beat": 4
+        },
+        {
+          "index": 460,
+          "timestamp_seconds": 213.622,
+          "sample_index": 9420743,
+          "is_downbeat": true,
+          "bar": 116,
+          "beat": 1
+        },
+        {
+          "index": 461,
+          "timestamp_seconds": 214.087,
+          "sample_index": 9441222,
+          "is_downbeat": false,
+          "bar": 116,
+          "beat": 2
+        },
+        {
+          "index": 462,
+          "timestamp_seconds": 214.551,
+          "sample_index": 9461702,
+          "is_downbeat": false,
+          "bar": 116,
+          "beat": 3
+        },
+        {
+          "index": 463,
+          "timestamp_seconds": 215.015,
+          "sample_index": 9482182,
+          "is_downbeat": false,
+          "bar": 116,
+          "beat": 4
+        },
+        {
+          "index": 464,
+          "timestamp_seconds": 215.48,
+          "sample_index": 9502662,
+          "is_downbeat": true,
+          "bar": 117,
+          "beat": 1
+        },
+        {
+          "index": 465,
+          "timestamp_seconds": 215.944,
+          "sample_index": 9523142,
+          "is_downbeat": false,
+          "bar": 117,
+          "beat": 2
+        },
+        {
+          "index": 466,
+          "timestamp_seconds": 216.409,
+          "sample_index": 9543622,
+          "is_downbeat": false,
+          "bar": 117,
+          "beat": 3
+        },
+        {
+          "index": 467,
+          "timestamp_seconds": 216.873,
+          "sample_index": 9564102,
+          "is_downbeat": false,
+          "bar": 117,
+          "beat": 4
+        },
+        {
+          "index": 468,
+          "timestamp_seconds": 217.337,
+          "sample_index": 9584582,
+          "is_downbeat": true,
+          "bar": 118,
+          "beat": 1
+        },
+        {
+          "index": 469,
+          "timestamp_seconds": 217.802,
+          "sample_index": 9605061,
+          "is_downbeat": false,
+          "bar": 118,
+          "beat": 2
+        },
+        {
+          "index": 470,
+          "timestamp_seconds": 218.266,
+          "sample_index": 9625541,
+          "is_downbeat": false,
+          "bar": 118,
+          "beat": 3
+        },
+        {
+          "index": 471,
+          "timestamp_seconds": 218.731,
+          "sample_index": 9646021,
+          "is_downbeat": false,
+          "bar": 118,
+          "beat": 4
+        },
+        {
+          "index": 472,
+          "timestamp_seconds": 219.195,
+          "sample_index": 9666501,
+          "is_downbeat": true,
+          "bar": 119,
+          "beat": 1
+        }
+      ],
+      "chunk_maps": [
+        {
+          "chunk_index": 0,
+          "start_seconds": 2.199,
+          "end_seconds": 11.87,
+          "duration_seconds": 9.671,
+          "root_note_name": "E2",
+          "root_midi_note": 40,
+          "root_frequency_hz": 82.77,
+          "pitch_hz": 82.77,
+          "cents_offset": 7.6,
+          "peak_amplitude": 0.592,
+          "nearest_beat_index": 5
+        },
+        {
+          "chunk_index": 1,
+          "start_seconds": 12.12,
+          "end_seconds": 17.692,
+          "duration_seconds": 5.572,
+          "root_note_name": "B1",
+          "root_midi_note": 35,
+          "root_frequency_hz": 61.24,
+          "pitch_hz": 61.24,
+          "cents_offset": -14.1,
+          "peak_amplitude": 0.667,
+          "nearest_beat_index": 26
+        },
+        {
+          "chunk_index": 2,
+          "start_seconds": 17.817,
+          "end_seconds": 18.142,
+          "duration_seconds": 0.325,
+          "root_note_name": "G3",
+          "root_midi_note": 55,
+          "root_frequency_hz": 197.0,
+          "pitch_hz": 197.0,
+          "cents_offset": 8.8,
+          "peak_amplitude": 0.37,
+          "nearest_beat_index": 38
+        },
+        {
+          "chunk_index": 3,
+          "start_seconds": 18.267,
+          "end_seconds": 18.567,
+          "duration_seconds": 0.3,
+          "root_note_name": "G#3",
+          "root_midi_note": 56,
+          "root_frequency_hz": 210.1,
+          "pitch_hz": 210.1,
+          "cents_offset": 20.2,
+          "peak_amplitude": 0.428,
+          "nearest_beat_index": 39
+        },
+        {
+          "chunk_index": 4,
+          "start_seconds": 18.717,
+          "end_seconds": 19.041,
+          "duration_seconds": 0.325,
+          "root_note_name": "E2",
+          "root_midi_note": 40,
+          "root_frequency_hz": 83.11,
+          "pitch_hz": 83.11,
+          "cents_offset": 14.8,
+          "peak_amplitude": 0.371,
+          "nearest_beat_index": 40
+        },
+        {
+          "chunk_index": 5,
+          "start_seconds": 19.066,
+          "end_seconds": 26.938,
+          "duration_seconds": 7.871,
+          "root_note_name": "C#2",
+          "root_midi_note": 37,
+          "root_frequency_hz": 69.98,
+          "pitch_hz": 69.98,
+          "cents_offset": 17.1,
+          "peak_amplitude": 0.651,
+          "nearest_beat_index": 41
+        },
+        {
+          "chunk_index": 6,
+          "start_seconds": 26.988,
+          "end_seconds": 32.66,
+          "duration_seconds": 5.672,
+          "root_note_name": "B1",
+          "root_midi_note": 35,
+          "root_frequency_hz": 61.91,
+          "pitch_hz": 61.91,
+          "cents_offset": 4.8,
+          "peak_amplitude": 0.557,
+          "nearest_beat_index": 58
+        },
+        {
+          "chunk_index": 7,
+          "start_seconds": 32.76,
+          "end_seconds": 33.06,
+          "duration_seconds": 0.3,
+          "root_note_name": "E2",
+          "root_midi_note": 40,
+          "root_frequency_hz": 83.37,
+          "pitch_hz": 83.37,
+          "cents_offset": 20.1,
+          "peak_amplitude": 0.378,
+          "nearest_beat_index": 71
+        },
+        {
+          "chunk_index": 8,
+          "start_seconds": 33.235,
+          "end_seconds": 33.56,
+          "duration_seconds": 0.325,
+          "root_note_name": "G#3",
+          "root_midi_note": 56,
+          "root_frequency_hz": 206.25,
+          "pitch_hz": 206.25,
+          "cents_offset": -11.8,
+          "peak_amplitude": 0.575,
+          "nearest_beat_index": 72
+        },
+        {
+          "chunk_index": 9,
+          "start_seconds": 33.66,
+          "end_seconds": 34.534,
+          "duration_seconds": 0.875,
+          "root_note_name": "G#3",
+          "root_midi_note": 56,
+          "root_frequency_hz": 205.81,
+          "pitch_hz": 205.81,
+          "cents_offset": -15.4,
+          "peak_amplitude": 0.414,
+          "nearest_beat_index": 72
+        },
+        {
+          "chunk_index": 10,
+          "start_seconds": 34.559,
+          "end_seconds": 59.648,
+          "duration_seconds": 25.089,
+          "root_note_name": "E2",
+          "root_midi_note": 40,
+          "root_frequency_hz": 82.77,
+          "pitch_hz": 82.77,
+          "cents_offset": 7.6,
+          "peak_amplitude": 0.653,
+          "nearest_beat_index": 74
+        },
+        {
+          "chunk_index": 11,
+          "start_seconds": 59.698,
+          "end_seconds": 60.098,
+          "duration_seconds": 0.4,
+          "root_note_name": "D#3",
+          "root_midi_note": 51,
+          "root_frequency_hz": 160.07,
+          "pitch_hz": 160.07,
+          "cents_offset": 49.5,
+          "peak_amplitude": 0.166,
+          "nearest_beat_index": 129
+        },
+        {
+          "chunk_index": 12,
+          "start_seconds": 60.273,
+          "end_seconds": 72.067,
+          "duration_seconds": 11.795,
+          "root_note_name": "E2",
+          "root_midi_note": 40,
+          "root_frequency_hz": 82.77,
+          "pitch_hz": 82.77,
+          "cents_offset": 7.6,
+          "peak_amplitude": 0.665,
+          "nearest_beat_index": 130
+        },
+        {
+          "chunk_index": 13,
+          "start_seconds": 72.117,
+          "end_seconds": 78.015,
+          "duration_seconds": 5.897,
+          "root_note_name": "B1",
+          "root_midi_note": 35,
+          "root_frequency_hz": 61.91,
+          "pitch_hz": 61.91,
+          "cents_offset": 4.8,
+          "peak_amplitude": 0.589,
+          "nearest_beat_index": 155
+        },
+        {
+          "chunk_index": 14,
+          "start_seconds": 78.04,
+          "end_seconds": 78.589,
+          "duration_seconds": 0.55,
+          "root_note_name": "G#3",
+          "root_midi_note": 56,
+          "root_frequency_hz": 211.0,
+          "pitch_hz": 211.0,
+          "cents_offset": 27.7,
+          "peak_amplitude": 0.591,
+          "nearest_beat_index": 168
+        },
+        {
+          "chunk_index": 15,
+          "start_seconds": 78.714,
+          "end_seconds": 78.989,
+          "duration_seconds": 0.275,
+          "root_note_name": "E3",
+          "root_midi_note": 52,
+          "root_frequency_hz": 163.7,
+          "pitch_hz": 163.7,
+          "cents_offset": -11.8,
+          "peak_amplitude": 0.18,
+          "nearest_beat_index": 169
+        },
+        {
+          "chunk_index": 16,
+          "start_seconds": 79.064,
+          "end_seconds": 92.633,
+          "duration_seconds": 13.569,
+          "root_note_name": "A2",
+          "root_midi_note": 45,
+          "root_frequency_hz": 110.36,
+          "pitch_hz": 110.36,
+          "cents_offset": 5.6,
+          "peak_amplitude": 0.585,
+          "nearest_beat_index": 170
+        },
+        {
+          "chunk_index": 17,
+          "start_seconds": 92.683,
+          "end_seconds": 93.133,
+          "duration_seconds": 0.45,
+          "root_note_name": "G#3",
+          "root_midi_note": 56,
+          "root_frequency_hz": 213.43,
+          "pitch_hz": 213.43,
+          "cents_offset": 47.5,
+          "peak_amplitude": 0.238,
+          "nearest_beat_index": 200
+        },
+        {
+          "chunk_index": 18,
+          "start_seconds": 93.233,
+          "end_seconds": 93.608,
+          "duration_seconds": 0.375,
+          "root_note_name": "G3",
+          "root_midi_note": 55,
+          "root_frequency_hz": 200.1,
+          "pitch_hz": 200.1,
+          "cents_offset": 35.9,
+          "peak_amplitude": 0.564,
+          "nearest_beat_index": 201
+        },
+        {
+          "chunk_index": 19,
+          "start_seconds": 93.658,
+          "end_seconds": 94.132,
+          "duration_seconds": 0.475,
+          "root_note_name": "G#3",
+          "root_midi_note": 56,
+          "root_frequency_hz": 206.4,
+          "pitch_hz": 206.4,
+          "cents_offset": -10.5,
+          "peak_amplitude": 0.256,
+          "nearest_beat_index": 202
+        },
+        {
+          "chunk_index": 20,
+          "start_seconds": 94.182,
+          "end_seconds": 94.557,
+          "duration_seconds": 0.375,
+          "root_note_name": "C#2",
+          "root_midi_note": 37,
+          "root_frequency_hz": 69.36,
+          "pitch_hz": 69.36,
+          "cents_offset": 1.7,
+          "peak_amplitude": 0.434,
+          "nearest_beat_index": 203
+        },
+        {
+          "chunk_index": 21,
+          "start_seconds": 94.632,
+          "end_seconds": 95.881,
+          "duration_seconds": 1.249,
+          "root_note_name": "C#2",
+          "root_midi_note": 37,
+          "root_frequency_hz": 69.63,
+          "pitch_hz": 69.63,
+          "cents_offset": 8.4,
+          "peak_amplitude": 0.47,
+          "nearest_beat_index": 204
+        },
+        {
+          "chunk_index": 22,
+          "start_seconds": 95.906,
+          "end_seconds": 97.456,
+          "duration_seconds": 1.549,
+          "root_note_name": "G#3",
+          "root_midi_note": 56,
+          "root_frequency_hz": 207.26,
+          "pitch_hz": 207.26,
+          "cents_offset": -3.3,
+          "peak_amplitude": 0.461,
+          "nearest_beat_index": 207
+        },
+        {
+          "chunk_index": 23,
+          "start_seconds": 97.481,
+          "end_seconds": 98.205,
+          "duration_seconds": 0.725,
+          "root_note_name": "F#2",
+          "root_midi_note": 42,
+          "root_frequency_hz": 92.46,
+          "pitch_hz": 92.46,
+          "cents_offset": -0.8,
+          "peak_amplitude": 0.411,
+          "nearest_beat_index": 210
+        },
+        {
+          "chunk_index": 24,
+          "start_seconds": 98.23,
+          "end_seconds": 101.579,
+          "duration_seconds": 3.348,
+          "root_note_name": "F#3",
+          "root_midi_note": 54,
+          "root_frequency_hz": 185.72,
+          "pitch_hz": 185.72,
+          "cents_offset": 6.8,
+          "peak_amplitude": 0.585,
+          "nearest_beat_index": 212
+        },
+        {
+          "chunk_index": 25,
+          "start_seconds": 101.604,
+          "end_seconds": 102.004,
+          "duration_seconds": 0.4,
+          "root_note_name": "D2",
+          "root_midi_note": 38,
+          "root_frequency_hz": 72.53,
+          "pitch_hz": 72.53,
+          "cents_offset": -21.0,
+          "peak_amplitude": 0.384,
+          "nearest_beat_index": 219
+        },
+        {
+          "chunk_index": 26,
+          "start_seconds": 102.054,
+          "end_seconds": 134.864,
+          "duration_seconds": 32.81,
+          "root_note_name": "G#3",
+          "root_midi_note": 56,
+          "root_frequency_hz": 207.93,
+          "pitch_hz": 207.93,
+          "cents_offset": 2.3,
+          "peak_amplitude": 0.657,
+          "nearest_beat_index": 220
+        },
+        {
+          "chunk_index": 27,
+          "start_seconds": 134.964,
+          "end_seconds": 135.239,
+          "duration_seconds": 0.275,
+          "root_note_name": "E3",
+          "root_midi_note": 52,
+          "root_frequency_hz": 163.71,
+          "pitch_hz": 163.71,
+          "cents_offset": -11.6,
+          "peak_amplitude": 0.122,
+          "nearest_beat_index": 291
+        },
+        {
+          "chunk_index": 28,
+          "start_seconds": 135.539,
+          "end_seconds": 135.813,
+          "duration_seconds": 0.275,
+          "root_note_name": "B1",
+          "root_midi_note": 35,
+          "root_frequency_hz": 61.85,
+          "pitch_hz": 61.85,
+          "cents_offset": 3.1,
+          "peak_amplitude": 0.469,
+          "nearest_beat_index": 292
+        },
+        {
+          "chunk_index": 29,
+          "start_seconds": 136.138,
+          "end_seconds": 144.384,
+          "duration_seconds": 8.246,
+          "root_note_name": "E2",
+          "root_midi_note": 40,
+          "root_frequency_hz": 82.77,
+          "pitch_hz": 82.77,
+          "cents_offset": 7.6,
+          "peak_amplitude": 0.611,
+          "nearest_beat_index": 293
+        },
+        {
+          "chunk_index": 30,
+          "start_seconds": 144.434,
+          "end_seconds": 144.809,
+          "duration_seconds": 0.375,
+          "root_note_name": "G#1",
+          "root_midi_note": 32,
+          "root_frequency_hz": 53.36,
+          "pitch_hz": 53.36,
+          "cents_offset": 47.5,
+          "peak_amplitude": 0.447,
+          "nearest_beat_index": 311
+        },
+        {
+          "chunk_index": 31,
+          "start_seconds": 145.034,
+          "end_seconds": 145.284,
+          "duration_seconds": 0.25,
+          "root_note_name": "F#2",
+          "root_midi_note": 42,
+          "root_frequency_hz": 92.03,
+          "pitch_hz": 92.03,
+          "cents_offset": -8.7,
+          "peak_amplitude": 0.54,
+          "nearest_beat_index": 312
+        },
+        {
+          "chunk_index": 32,
+          "start_seconds": 145.359,
+          "end_seconds": 145.834,
+          "duration_seconds": 0.475,
+          "root_note_name": "C#3",
+          "root_midi_note": 49,
+          "root_frequency_hz": 139.01,
+          "pitch_hz": 139.01,
+          "cents_offset": 5.2,
+          "peak_amplitude": 0.176,
+          "nearest_beat_index": 313
+        },
+        {
+          "chunk_index": 33,
+          "start_seconds": 145.909,
+          "end_seconds": 146.484,
+          "duration_seconds": 0.575,
+          "root_note_name": "A3",
+          "root_midi_note": 57,
+          "root_frequency_hz": 222.71,
+          "pitch_hz": 222.71,
+          "cents_offset": 21.2,
+          "peak_amplitude": 0.198,
+          "nearest_beat_index": 314
+        },
+        {
+          "chunk_index": 34,
+          "start_seconds": 146.534,
+          "end_seconds": 147.108,
+          "duration_seconds": 0.575,
+          "root_note_name": "G3",
+          "root_midi_note": 55,
+          "root_frequency_hz": 191.39,
+          "pitch_hz": 191.39,
+          "cents_offset": -41.2,
+          "peak_amplitude": 0.291,
+          "nearest_beat_index": 316
+        },
+        {
+          "chunk_index": 35,
+          "start_seconds": 149.157,
+          "end_seconds": 149.707,
+          "duration_seconds": 0.55,
+          "root_note_name": "G#3",
+          "root_midi_note": 56,
+          "root_frequency_hz": 205.55,
+          "pitch_hz": 205.55,
+          "cents_offset": -17.6,
+          "peak_amplitude": 0.268,
+          "nearest_beat_index": 321
+        },
+        {
+          "chunk_index": 36,
+          "start_seconds": 149.782,
+          "end_seconds": 150.632,
+          "duration_seconds": 0.85,
+          "root_note_name": "G#3",
+          "root_midi_note": 56,
+          "root_frequency_hz": 203.62,
+          "pitch_hz": 203.62,
+          "cents_offset": -33.9,
+          "peak_amplitude": 0.249,
+          "nearest_beat_index": 323
+        },
+        {
+          "chunk_index": 37,
+          "start_seconds": 150.707,
+          "end_seconds": 152.331,
+          "duration_seconds": 1.624,
+          "root_note_name": "G3",
+          "root_midi_note": 55,
+          "root_frequency_hz": 191.11,
+          "pitch_hz": 191.11,
+          "cents_offset": -43.7,
+          "peak_amplitude": 0.234,
+          "nearest_beat_index": 325
+        },
+        {
+          "chunk_index": 38,
+          "start_seconds": 152.406,
+          "end_seconds": 152.931,
+          "duration_seconds": 0.525,
+          "root_note_name": "F#3",
+          "root_midi_note": 54,
+          "root_frequency_hz": 184.85,
+          "pitch_hz": 184.85,
+          "cents_offset": -1.4,
+          "peak_amplitude": 0.244,
+          "nearest_beat_index": 328
+        },
+        {
+          "chunk_index": 39,
+          "start_seconds": 152.956,
+          "end_seconds": 153.33,
+          "duration_seconds": 0.375,
+          "root_note_name": "C#3",
+          "root_midi_note": 49,
+          "root_frequency_hz": 138.73,
+          "pitch_hz": 138.73,
+          "cents_offset": 1.7,
+          "peak_amplitude": 0.188,
+          "nearest_beat_index": 329
+        },
+        {
+          "chunk_index": 40,
+          "start_seconds": 153.38,
+          "end_seconds": 154.205,
+          "duration_seconds": 0.825,
+          "root_note_name": "A3",
+          "root_midi_note": 57,
+          "root_frequency_hz": 217.07,
+          "pitch_hz": 217.07,
+          "cents_offset": -23.2,
+          "peak_amplitude": 0.198,
+          "nearest_beat_index": 330
+        },
+        {
+          "chunk_index": 41,
+          "start_seconds": 154.28,
+          "end_seconds": 154.58,
+          "duration_seconds": 0.3,
+          "root_note_name": "F#3",
+          "root_midi_note": 54,
+          "root_frequency_hz": 183.42,
+          "pitch_hz": 183.42,
+          "cents_offset": -14.9,
+          "peak_amplitude": 0.144,
+          "nearest_beat_index": 332
+        },
+        {
+          "chunk_index": 42,
+          "start_seconds": 155.854,
+          "end_seconds": 156.179,
+          "duration_seconds": 0.325,
+          "root_note_name": "F#2",
+          "root_midi_note": 42,
+          "root_frequency_hz": 92.36,
+          "pitch_hz": 92.36,
+          "cents_offset": -2.7,
+          "peak_amplitude": 0.085,
+          "nearest_beat_index": 336
+        },
+        {
+          "chunk_index": 43,
+          "start_seconds": 156.854,
+          "end_seconds": 159.378,
+          "duration_seconds": 2.524,
+          "root_note_name": "G#3",
+          "root_midi_note": 56,
+          "root_frequency_hz": 202.55,
+          "pitch_hz": 202.55,
+          "cents_offset": -43.1,
+          "peak_amplitude": 0.294,
+          "nearest_beat_index": 338
+        },
+        {
+          "chunk_index": 44,
+          "start_seconds": 159.478,
+          "end_seconds": 159.952,
+          "duration_seconds": 0.475,
+          "root_note_name": "D#3",
+          "root_midi_note": 51,
+          "root_frequency_hz": 157.97,
+          "pitch_hz": 157.97,
+          "cents_offset": 26.5,
+          "peak_amplitude": 0.237,
+          "nearest_beat_index": 343
+        },
+        {
+          "chunk_index": 45,
+          "start_seconds": 160.052,
+          "end_seconds": 161.727,
+          "duration_seconds": 1.674,
+          "root_note_name": "A3",
+          "root_midi_note": 57,
+          "root_frequency_hz": 221.39,
+          "pitch_hz": 221.39,
+          "cents_offset": 10.9,
+          "peak_amplitude": 0.217,
+          "nearest_beat_index": 345
+        },
+        {
+          "chunk_index": 46,
+          "start_seconds": 161.902,
+          "end_seconds": 162.226,
+          "duration_seconds": 0.325,
+          "root_note_name": "F#3",
+          "root_midi_note": 54,
+          "root_frequency_hz": 181.62,
+          "pitch_hz": 181.62,
+          "cents_offset": -31.9,
+          "peak_amplitude": 0.211,
+          "nearest_beat_index": 349
+        },
+        {
+          "chunk_index": 47,
+          "start_seconds": 163.476,
+          "end_seconds": 164.275,
+          "duration_seconds": 0.8,
+          "root_note_name": "B2",
+          "root_midi_note": 47,
+          "root_frequency_hz": 123.81,
+          "pitch_hz": 123.81,
+          "cents_offset": 4.7,
+          "peak_amplitude": 0.161,
+          "nearest_beat_index": 352
+        },
+        {
+          "chunk_index": 48,
+          "start_seconds": 164.375,
+          "end_seconds": 168.149,
+          "duration_seconds": 3.773,
+          "root_note_name": "G#3",
+          "root_midi_note": 56,
+          "root_frequency_hz": 209.28,
+          "pitch_hz": 209.28,
+          "cents_offset": 13.5,
+          "peak_amplitude": 0.285,
+          "nearest_beat_index": 354
+        },
+        {
+          "chunk_index": 49,
+          "start_seconds": 168.199,
+          "end_seconds": 169.898,
+          "duration_seconds": 1.699,
+          "root_note_name": "A3",
+          "root_midi_note": 57,
+          "root_frequency_hz": 219.37,
+          "pitch_hz": 219.37,
+          "cents_offset": -5.0,
+          "peak_amplitude": 0.228,
+          "nearest_beat_index": 362
+        },
+        {
+          "chunk_index": 50,
+          "start_seconds": 172.897,
+          "end_seconds": 174.196,
+          "duration_seconds": 1.299,
+          "root_note_name": "B2",
+          "root_midi_note": 47,
+          "root_frequency_hz": 123.13,
+          "pitch_hz": 123.13,
+          "cents_offset": -4.7,
+          "peak_amplitude": 0.439,
+          "nearest_beat_index": 372
+        },
+        {
+          "chunk_index": 51,
+          "start_seconds": 174.346,
+          "end_seconds": 174.721,
+          "duration_seconds": 0.375,
+          "root_note_name": "D#3",
+          "root_midi_note": 51,
+          "root_frequency_hz": 154.74,
+          "pitch_hz": 154.74,
+          "cents_offset": -9.2,
+          "peak_amplitude": 0.392,
+          "nearest_beat_index": 375
+        },
+        {
+          "chunk_index": 52,
+          "start_seconds": 174.821,
+          "end_seconds": 175.071,
+          "duration_seconds": 0.25,
+          "root_note_name": "G#1",
+          "root_midi_note": 32,
+          "root_frequency_hz": 52.02,
+          "pitch_hz": 52.02,
+          "cents_offset": 3.5,
+          "peak_amplitude": 0.424,
+          "nearest_beat_index": 376
+        },
+        {
+          "chunk_index": 53,
+          "start_seconds": 175.146,
+          "end_seconds": 177.444,
+          "duration_seconds": 2.299,
+          "root_note_name": "F#3",
+          "root_midi_note": 54,
+          "root_frequency_hz": 186.4,
+          "pitch_hz": 186.4,
+          "cents_offset": 13.0,
+          "peak_amplitude": 0.454,
+          "nearest_beat_index": 377
+        },
+        {
+          "chunk_index": 54,
+          "start_seconds": 177.619,
+          "end_seconds": 178.419,
+          "duration_seconds": 0.8,
+          "root_note_name": "E2",
+          "root_midi_note": 40,
+          "root_frequency_hz": 82.54,
+          "pitch_hz": 82.54,
+          "cents_offset": 2.7,
+          "peak_amplitude": 0.322,
+          "nearest_beat_index": 382
+        },
+        {
+          "chunk_index": 55,
+          "start_seconds": 178.569,
+          "end_seconds": 179.319,
+          "duration_seconds": 0.75,
+          "root_note_name": "C#2",
+          "root_midi_note": 37,
+          "root_frequency_hz": 69.36,
+          "pitch_hz": 69.36,
+          "cents_offset": 1.7,
+          "peak_amplitude": 0.311,
+          "nearest_beat_index": 385
+        },
+        {
+          "chunk_index": 56,
+          "start_seconds": 179.519,
+          "end_seconds": 181.318,
+          "duration_seconds": 1.799,
+          "root_note_name": "G#2",
+          "root_midi_note": 44,
+          "root_frequency_hz": 103.63,
+          "pitch_hz": 103.63,
+          "cents_offset": -3.3,
+          "peak_amplitude": 0.468,
+          "nearest_beat_index": 387
+        },
+        {
+          "chunk_index": 57,
+          "start_seconds": 181.343,
+          "end_seconds": 208.256,
+          "duration_seconds": 26.913,
+          "root_note_name": "G#2",
+          "root_midi_note": 44,
+          "root_frequency_hz": 104.3,
+          "pitch_hz": 104.3,
+          "cents_offset": 7.9,
+          "peak_amplitude": 0.717,
+          "nearest_beat_index": 390
+        },
+        {
+          "chunk_index": 58,
+          "start_seconds": 213.928,
+          "end_seconds": 214.178,
+          "duration_seconds": 0.25,
+          "root_note_name": "G3",
+          "root_midi_note": 55,
+          "root_frequency_hz": 192.09,
+          "pitch_hz": 192.09,
+          "cents_offset": -34.9,
+          "peak_amplitude": 0.153,
+          "nearest_beat_index": 461
+        },
+        {
+          "chunk_index": 59,
+          "start_seconds": 214.253,
+          "end_seconds": 214.603,
+          "duration_seconds": 0.35,
+          "root_note_name": "A#3",
+          "root_midi_note": 58,
+          "root_frequency_hz": 228.68,
+          "pitch_hz": 228.68,
+          "cents_offset": -33.0,
+          "peak_amplitude": 0.189,
+          "nearest_beat_index": 461
+        },
+        {
+          "chunk_index": 60,
+          "start_seconds": 214.678,
+          "end_seconds": 215.002,
+          "duration_seconds": 0.325,
+          "root_note_name": "A#3",
+          "root_midi_note": 58,
+          "root_frequency_hz": 237.03,
+          "pitch_hz": 237.03,
+          "cents_offset": 29.1,
+          "peak_amplitude": 0.086,
+          "nearest_beat_index": 462
+        }
+      ]
+    }
+  }
+}

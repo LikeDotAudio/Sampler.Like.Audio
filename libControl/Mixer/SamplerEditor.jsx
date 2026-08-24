@@ -216,6 +216,17 @@ window.SamplerEditor = ({ idx, name, onClose, oaPopped }) => {
                 />
             )}
 
+            {/* Scanalyzer Multi-Lens Inspector & Exporter */}
+            {window.ScanalyzerView && (
+                <div style={{ marginTop: '12px' }}>
+                    <window.ScanalyzerView
+                        audioBuffer={buffer}
+                        filename={entry ? entry.name : "sample.wav"}
+                        padIdx={idx}
+                    />
+                </div>
+            )}
+
             {browsing && window.SoundBrowser && ReactDOM.createPortal(
                 <window.SoundBrowser
                     targetLabel={name}

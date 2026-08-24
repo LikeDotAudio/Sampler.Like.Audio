@@ -93,5 +93,6 @@
   "libControl/SoundBrowser/SoundBrowser.jsx",
   "libControl/MusicChart/oaDeepScanner.js",
   "libControl/MusicChart/MusicChartOverlay.jsx",
+  "libControl/MusicChart/ScanalyzerView.jsx",
   "libControl/App/App.jsx"
 ]

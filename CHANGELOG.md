@@ -22,5 +22,28 @@ All notable changes to the Sampler.Like.Audio software, extractor engine, and mu
   - Added multi-tab Music Chart Overlay (*Chart Timeline*, *Notes & Pitch*, *Lyrics & Vocals*) to `SamplerEditor.jsx`.
   - Added interactive `🎛️ Chop to 16 Pads` button to auto-slice song sections onto triggerable drum pads.
 
+- **Platform-Wide Drag & Drop Support (`App.jsx`, `Pad.jsx`, `SeqTrack.jsx`, `Mixer.jsx`, `SoundBrowser.jsx`)**:
+  - Added full-screen visual dropzone overlay (`📥 Drop Audio File Anywhere to Load, Scan & Slice`).
+  - Added per-component drag-and-drop handling across 4x4 drum pads, step sequencer track rows, Sound Browser grid, and Mixer channel strips.
+  - Added support for dropping `.PEAK` JSON sidecar files alongside or independent of audio/video media files.
+
+- **Scanalyzer Multi-Lens Inspector & Exporter (`ScanalyzerView.jsx`)**:
+  - Implemented 6-lens inspection panel: *UCS Taxonomy*, *Pitch & Beats*, *Lyrics VAD*, *EBU R128 Loudness*, *AES Preservation*, and *AES69 3D Spatial Audio*.
+  - Added **Talk & Type** Speech Dictation (`webkitSpeechRecognition`) for typing lyrics and UCS category keys by voice.
+  - Added Speech Synthesis Read Aloud (`speechSynthesis`) to speak pitch notes, UCS basenames, and lyric text.
+  - Added `.PEAK` JSON sidecar and `.LRC` timestamped lyric import and export capabilities.
+
+- **Automated Scanalyzer Media Processing**:
+  - Dropping any audio/video media file (`.wav`, `.m4a`, `.mp3`, `.flac`, `.mp4`, `.mov`, `.webm`, `.aiff`) automatically decodes the track, runs `oaDeepScanAudio`, populates the 6 lenses, and chops the song into 16 pads.
+
+- **Expanded Media Container Recognition & Sound Browser Fallback Fix**:
+  - Expanded `AUDIO_RE` scanner regex across `SoundBrowser.jsx`, `useSoundBrowseState.js`, `gatherAll.js`, and `gatherMatching.js` to recognize video containers (`.mp4`, `.mov`, `.mkv`, `.webm`, `.avi`, `.m4v`, `.3gp`, `.flv`).
+  - Added automatic fallback in `useSoundBrowseState.js` to immediately populate `01 Track 01.wav`, `02 Track 02.wav`, and drum kit samples in the Sound Browser grid when no local folder has been selected yet.
+
+- **Standards Documentation & Engineering Roadmaps**:
+  - Created `EBU_Audio_Standards_and_Formats_Report.md` detailing EBU R128, EBU BWF (Tech 3285), EBU ADM (Tech 3364), and EBU Core (Tech 3293).
+  - Created `UCS_AES_Metadata_Harmonization_Roadmap.md` establishing a 30-step architectural roadmap for AES SC-03-06 (Digital Library & Archive Systems) and AES SC-03-07 (Audio Metadata).
+  - Created `Audio_Media_Lenses_Framework.md` defining the 6 multidimensional audio metadata lenses.
+
 ### Fixed & Tested
 - Passed full Web Audio test suite (111/111 tests) and verified bundle compilation in `dist/app.js`.

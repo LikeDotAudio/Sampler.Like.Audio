@@ -218,6 +218,14 @@
                         <div style={panelStyle('MIXER')}>
                             {window.Mixer ? <window.Mixer /> : <div>Loading MIXER...</div>}
                         </div>
+
+                        <div style={{ ...panelStyle('SCANALYZER'), display: activeTabs.includes('SCANALYZER') ? 'flex' : 'none', justifyContent: 'center' }}>
+                            {window.ScanalyzerView ? (
+                                <div style={{ width: '100%', maxWidth: '1100px' }}>
+                                    <window.ScanalyzerView padIdx={0} />
+                                </div>
+                            ) : <div>Loading SCANALYZER...</div>}
+                        </div>
                     </main>
 
                     {window.Footer ? <window.Footer /> : null}

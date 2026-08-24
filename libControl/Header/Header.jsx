@@ -70,7 +70,8 @@ const Header = ({ activeTabs, toggleTab, deferredPrompt, installApp }) => {
                 <button onClick={() => toggleTab('SEQ')} style={btnStyle('SEQ')}>SEQ</button>
                 <button onClick={() => toggleTab('SONG')} style={btnStyle('SONG')}>SONG</button>
                 <button onClick={() => toggleTab('EDITOR')} style={btnStyle('EDITOR')}>EDITOR</button>
-                <button onClick={() => toggleTab('MIXER')} style={btnStyle('MIXER', true)}>MIXER</button>
+                <button onClick={() => toggleTab('MIXER')} style={btnStyle('MIXER')}>MIXER</button>
+                <button onClick={() => toggleTab('SCANALYZER')} style={btnStyle('SCANALYZER', true)}>🔬 SCANALYZER</button>
             </div>
             {deferredPrompt && (
                 <button onClick={installApp} style={{ padding: '8px 16px', background: '#388e3c', color: '#fff', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px', marginLeft: 'auto' }}>

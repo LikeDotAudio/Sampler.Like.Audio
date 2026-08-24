@@ -79,20 +79,26 @@
                             const arrayBuffer = await file.arrayBuffer();
                             const buffer = await (window.oaDecodeAudio ? window.oaDecodeAudio(ctx, arrayBuffer) : ctx.decodeAudioData(arrayBuffer));
                             
-                            // 1. Slice across pads as sample bank
+                            // 1. If no sidecar was dropped, automatically scanalyze the media file!
+                            if (!peakData && window.oaDeepScanAudio) {
+                                console.log(`[+] Auto-scanalyzing dropped media: ${file.name}`);
+                                peakData = await window.oaDeepScanAudio(buffer);
+                            }
+
+                            // 2. Slice across pads as sample bank
                             if (window.oaChopSongToPads) {
                                 window.oaChopSongToPads(buffer, file.name, peakData);
                             }
                             
-                            // 2. Load into Pad 0 for primary editor inspection
+                            // 3. Load into Pad 0 for primary editor inspection
                             if (window.oaLoadSampleToPad) {
                                 await window.oaLoadSampleToPad(0, file);
                                 if (peakData && window.OA_DRUM_SAMPLES && window.OA_DRUM_SAMPLES[0]) {
                                     window.OA_DRUM_SAMPLES[0].noteMap = peakData.note_root_key_beat_marker_map || peakData.musicality;
                                     window.OA_DRUM_SAMPLES[0].beatMarkers = peakData.beat_markers;
                                     window.OA_DRUM_SAMPLES[0].chartData = peakData;
-                                    window.dispatchEvent(new CustomEvent('oa-sample-changed', { detail: { idx: 0 } }));
                                 }
+                                window.dispatchEvent(new CustomEvent('oa-sample-changed', { detail: { idx: 0 } }));
                             }
 
                             // 3. Promote PADS & MIXER tabs to view pads and sampler editor

@@ -32,6 +32,90 @@ window.ScanalyzerView = ({ audioBuffer, filename, padIdx }) => {
         })();
     }, [buf]);
 
+    const [isDictating, setIsDictating] = React.useState(false);
+    const [dictatedText, setDictatedText] = React.useState('');
+
+    // Speech Dictation ("Talk to Type")
+    const startDictation = (onResult) => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            alert("Speech recognition is not supported in this browser. Please type directly.");
+            return;
+        }
+        const recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = false;
+        recognition.lang = 'en-US';
+
+        setIsDictating(true);
+        recognition.onresult = (e) => {
+            const transcript = e.results[0][0].transcript;
+            setIsDictating(false);
+            if (onResult) onResult(transcript);
+        };
+        recognition.onerror = () => setIsDictating(false);
+        recognition.onend = () => setIsDictating(false);
+        recognition.start();
+    };
+
+    // Speech Synthesis ("Talk Back / Read Aloud")
+    const speakText = (text) => {
+        if (!window.speechSynthesis) return;
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.0;
+        window.speechSynthesis.speak(utterance);
+    };
+
+    // Import Metadata (.PEAK, .LRC, JSON)
+    const handleImportFile = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const text = event.target.result;
+                if (file.name.endsWith('.PEAK') || file.name.endsWith('.json')) {
+                    const parsed = JSON.parse(text);
+                    if (parsed.ucs) {
+                        if (parsed.ucs.cat_key) setUcsCatKey(parsed.ucs.cat_key);
+                        if (parsed.ucs.creator_id) setCreatorId(parsed.ucs.creator_id);
+                        if (parsed.ucs.source_id) setSourceId(parsed.ucs.source_id);
+                    }
+                    if (parsed.musicality || parsed.beat_markers) {
+                        setScanData(prev => ({
+                            ...prev,
+                            musicality: parsed.musicality || (prev && prev.musicality),
+                            beatMarkers: parsed.beat_markers || (prev && prev.beatMarkers),
+                            lyrics: parsed.lyrics_vad || (prev && prev.lyrics),
+                            loudness: parsed.loudness_ebu_r128 || (prev && prev.loudness)
+                        }));
+                    }
+                    alert(`Imported metadata sidecar successfully from ${file.name}`);
+                } else if (file.name.endsWith('.lrc')) {
+                    const lines = text.split('\n');
+                    const words = [];
+                    lines.forEach(l => {
+                        const m = l.match(/\[(\d+):(\d+\.\d+)\]\s*(.*)/);
+                        if (m) {
+                            const time = parseInt(m[1], 10) * 60 + parseFloat(m[2]);
+                            words.push({ start: time, text: m[3] });
+                        }
+                    });
+                    setScanData(prev => ({
+                        ...prev,
+                        lyrics: { words, vadSegments: [] }
+                    }));
+                    alert(`Imported ${words.length} LRC lyric timestamps from ${file.name}`);
+                }
+            } catch (err) {
+                console.error("Metadata import failed:", err);
+                alert("Could not parse imported metadata file.");
+            }
+        };
+        reader.readAsText(file);
+    };
+
     // Export Helpers
     const exportPeakSidecar = () => {
         if (!scanData) return;
@@ -104,14 +188,18 @@ window.ScanalyzerView = ({ audioBuffer, filename, padIdx }) => {
                     <span style={{ fontSize: '16px', color: 'var(--accent)', fontWeight: 'bold' }}>🔬 SCANALYZER MULTI-LENS INSPECTOR</span>
                     <span style={{ fontSize: '11px', color: '#888', background: '#1e222b', padding: '2px 6px', borderRadius: '3px' }}>{fname}</span>
                 </div>
-                <div style={{ display: 'flex', gap: '6px' }}>
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                    <label style={{ background: '#2a2f38', color: '#ccc', border: '1px solid #444', borderRadius: '3px', padding: '4px 8px', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer' }}>
+                        📥 Import Sidecar/LRC
+                        <input type="file" accept=".PEAK,.json,.lrc" onChange={handleImportFile} style={{ display: 'none' }} />
+                    </label>
                     <button onClick={exportPeakSidecar} disabled={!scanData}
                         style={{ background: 'var(--accent)', color: '#111', border: 'none', borderRadius: '3px', padding: '4px 8px', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer' }}>
-                        💾 Export .PEAK Sidecar
+                        💾 Export .PEAK
                     </button>
                     <button onClick={exportLrcLyrics} disabled={!scanData}
                         style={{ background: '#2196f3', color: '#fff', border: 'none', borderRadius: '3px', padding: '4px 8px', fontSize: '10px', fontWeight: 'bold', cursor: 'pointer' }}>
-                        📝 Export .LRC Lyrics
+                        📝 Export .LRC
                     </button>
                 </div>
             </div>
@@ -148,7 +236,13 @@ window.ScanalyzerView = ({ audioBuffer, filename, padIdx }) => {
                     {activeLens === 'taxonomy' && (
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '11px' }}>
                             <div style={{ background: '#181b22', padding: '10px', borderRadius: '4px', border: '1px solid #2a2f38' }}>
-                                <div style={{ color: 'var(--accent)', fontWeight: 'bold', marginBottom: '6px' }}>UCS CATEGORY CONFIGURATION</div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                                    <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>UCS CATEGORY CONFIGURATION</span>
+                                    <button onClick={() => startDictation(txt => setUcsCatKey(txt.toUpperCase().replace(/\s+/g, '-')))}
+                                        style={{ background: isDictating ? '#ff5252' : '#333', color: '#fff', border: '1px solid #555', borderRadius: '3px', padding: '2px 6px', fontSize: '9px', cursor: 'pointer' }}>
+                                        {isDictating ? '🎙️ Listening…' : '🎤 Dictate CatKey'}
+                                    </button>
+                                </div>
                                 <label style={{ display: 'block', marginBottom: '4px' }}>CatKey (6-Part Schema):</label>
                                 <input value={ucsCatKey} onChange={e => setUcsCatKey(e.target.value)}
                                     style={{ width: '100%', background: '#0d0e12', border: '1px solid #444', color: '#fff', padding: '4px', borderRadius: '3px', marginBottom: '8px' }} />
@@ -166,6 +260,10 @@ window.ScanalyzerView = ({ audioBuffer, filename, padIdx }) => {
                                 <div style={{ fontSize: '12px', color: '#7dff4a', background: '#0d0e12', padding: '8px', borderRadius: '3px', wordBreak: 'break-all' }}>
                                     {`${ucsCatKey}_${fname.replace(/\.[^/.]+$/, "")}_${creatorId}_${sourceId}.wav`}
                                 </div>
+                                <button onClick={() => speakText(`UCS Category Key: ${ucsCatKey}. Composed filename: ${ucsCatKey}_${fname.replace(/\.[^/.]+$/, "")}_${creatorId}_${sourceId}.wav`)}
+                                    style={{ marginTop: '8px', background: '#2a2f38', color: '#7dff4a', border: '1px solid #444', borderRadius: '3px', padding: '3px 8px', fontSize: '9px', cursor: 'pointer' }}>
+                                    🔊 Read Aloud UCS Basename
+                                </button>
                             </div>
                         </div>
                     )}
@@ -177,6 +275,10 @@ window.ScanalyzerView = ({ audioBuffer, filename, padIdx }) => {
                                 <div style={{ color: '#aaa' }}>DETECTED KEY & PITCH</div>
                                 <div style={{ fontSize: '20px', color: 'var(--accent)', fontWeight: 'bold' }}>{scanData.musicality.key}</div>
                                 <div>{scanData.musicality.pitchHz} Hz ({scanData.musicality.centsOffset} cents)</div>
+                                <button onClick={() => speakText(`Key: ${scanData.musicality.key}, ${scanData.musicality.pitchHz} Hertz`)}
+                                    style={{ marginTop: '6px', background: '#2a2f38', color: '#ccc', border: 'none', padding: '2px 5px', fontSize: '9px', borderRadius: '2px', cursor: 'pointer' }}>
+                                    🔊 Speak Pitch
+                                </button>
                             </div>
                             <div style={{ background: '#181b22', padding: '10px', borderRadius: '4px' }}>
                                 <div style={{ color: '#aaa' }}>ESTIMATED TEMPO</div>
@@ -194,7 +296,30 @@ window.ScanalyzerView = ({ audioBuffer, filename, padIdx }) => {
                     {/* Lens 3: Lyrics VAD */}
                     {activeLens === 'lyrics' && (
                         <div style={{ background: '#181b22', padding: '10px', borderRadius: '4px', fontSize: '11px' }}>
-                            <div style={{ color: 'var(--accent)', fontWeight: 'bold', marginBottom: '6px' }}>VOICE ACTIVITY & SUBTITLE ALIGNMENT</div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                                <span style={{ color: 'var(--accent)', fontWeight: 'bold' }}>VOICE ACTIVITY & SUBTITLE ALIGNMENT</span>
+                                <div style={{ display: 'flex', gap: '4px' }}>
+                                    <button onClick={() => startDictation(txt => {
+                                        const nowSec = 0.0;
+                                        setScanData(prev => ({
+                                            ...prev,
+                                            lyrics: {
+                                                words: [...((prev && prev.lyrics && prev.lyrics.words) || []), { start: nowSec, text: txt }]
+                                            }
+                                        }));
+                                    })} style={{ background: isDictating ? '#ff5252' : '#333', color: '#fff', border: '1px solid #555', borderRadius: '3px', padding: '2px 6px', fontSize: '9px', cursor: 'pointer' }}>
+                                        {isDictating ? '🎙️ Listening…' : '🎤 Dictate Lyric Line'}
+                                    </button>
+                                    <button onClick={() => {
+                                        if (scanData.lyrics && scanData.lyrics.words) {
+                                            const fullText = scanData.lyrics.words.map(w => w.text).join(' ');
+                                            speakText(fullText);
+                                        }
+                                    }} style={{ background: '#2a2f38', color: '#7dff4a', border: '1px solid #444', borderRadius: '3px', padding: '2px 6px', fontSize: '9px', cursor: 'pointer' }}>
+                                        🔊 Read Aloud Lyrics
+                                    </button>
+                                </div>
+                            </div>
                             <div>Vocal Phrasing Detected: {scanData.lyrics.words ? scanData.lyrics.words.length : 0} Word Timestamps</div>
                             <div style={{ maxHeight: '100px', overflowY: 'auto', marginTop: '6px', background: '#0d0e12', padding: '6px', borderRadius: '3px' }}>
                                 {scanData.lyrics.words && scanData.lyrics.words.map((w, i) => (

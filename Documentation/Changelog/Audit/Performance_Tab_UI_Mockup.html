@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sampler.Like.Audio — Guitar Hero Performance Mode</title>
+    <style>
+        :root {
+            --bg-dark: #050811;
+            --panel-bg: #0d1526;
+            --panel-border: #1e2c45;
+            --accent-blue: #0284c7;
+            --accent-cyan: #06b6d4;
+            --accent-purple: #a855f7;
+            --accent-green: #10b981;
+            --accent-orange: #f97316;
+            --accent-eye: #22d3ee;
+            --accent-yellow: #facc15;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --pad-bg: #172338;
+            
+            --resistor-black: #1c1917;
+            --resistor-brown: #854d0e;
+            --resistor-red: #dc2626;
+            --resistor-orange: #ea580c;
+            --resistor-yellow: #ca8a04;
+            --resistor-green: #16a34a;
+            --resistor-blue: #2563eb;
+            --resistor-violet: #9333ea;
+            --resistor-grey: #52525b;
+            --resistor-white: #f8fafc;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--panel-bg);
+            padding: 8px 18px;
+            border-radius: 10px;
+            border: 1px solid var(--panel-border);
+        }
+
+        .logo-area h1 { font-size: 17px; font-weight: 800; color: var(--text-main); letter-spacing: 0.5px; }
+        .logo-area span { font-size: 10px; color: var(--accent-cyan); font-weight: 700; text-transform: uppercase; background: rgba(6, 182, 212, 0.15); padding: 2px 8px; border-radius: 4px; margin-left: 8px; }
+
+        .nav-modules { display: flex; gap: 8px; align-items: center; }
+        .nav-btn {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-muted);
+            padding: 5px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 12px;
+        }
+        .nav-btn.active {
+            background-color: var(--accent-blue);
+            color: #ffffff;
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 10px rgba(2, 132, 199, 0.4);
+        }
+
+        .hero-mode-btn {
+            background: linear-gradient(135deg, #ec4899, #8b5cf6);
+            color: #fff;
+            border: none;
+            font-weight: 900;
+            padding: 5px 12px;
+            border-radius: 6px;
+            font-size: 11px;
+            cursor: pointer;
+            box-shadow: 0 0 12px rgba(236, 72, 153, 0.5);
+            letter-spacing: 0.5px;
+        }
+
+        /* Workspace Grid */
+        .workspace {
+            display: grid;
+            grid-template-columns: 270px 1fr 310px;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .panel {
+            background-color: var(--panel-bg);
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            padding: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .panel-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--accent-cyan);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--panel-border);
+            padding-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Center Stage Layout */
+        .center-stage {
+            display: grid;
+            grid-template-rows: 140px 140px 135px 95px;
+            gap: 10px;
+        }
+
+        .top-quads {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 10px;
+        }
+
+        .quad-card {
+            background-color: #080e1a;
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quad-title {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .quad-title.space { color: var(--accent-purple); }
+        .quad-title.time { color: var(--accent-green); }
+        .quad-title.meaning { color: var(--accent-orange); }
+
+        .space-view { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; }
+        .spatial-ring {
+            width: 75px; height: 45px;
+            border: 1px dashed var(--accent-purple);
+            border-radius: 50%;
+            transform: rotateX(60deg);
+            position: absolute;
+            animation: spinRing 12s linear infinite;
+        }
+        .spatial-node { width: 6px; height: 6px; background: var(--accent-cyan); border-radius: 50%; box-shadow: 0 0 8px var(--accent-cyan); position: absolute; }
+        @keyframes spinRing { from { transform: rotateX(60deg) rotateZ(0deg); } to { transform: rotateX(60deg) rotateZ(360deg); } }
+
+        /* GUITAR HERO 3D CASCADING RHYTHM HIGHWAY VIEW IN TIME QUADRANT */
+        .guitar-hero-highway {
+            flex: 1;
+            position: relative;
+            background: radial-gradient(circle at top, #0f172a 0%, #030712 100%);
+            border-radius: 6px;
+            overflow: hidden;
+            border: 1px solid var(--panel-border);
+            perspective: 250px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .highway-track-3d {
+            width: 90%;
+            height: 100%;
+            transform: rotateX(55deg);
+            transform-origin: bottom center;
+            position: relative;
+            background: linear-gradient(to bottom, #090d16 0%, #1e293b 100%);
+            border-left: 2px solid var(--accent-purple);
+            border-right: 2px solid var(--accent-purple);
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+        }
+
+        .highway-lane {
+            border-right: 1px dashed rgba(255,255,255,0.15);
+            position: relative;
+        }
+
+        .falling-hero-note {
+            position: absolute;
+            width: 80%;
+            left: 10%;
+            height: 14px;
+            border-radius: 4px;
+            box-shadow: 0 0 10px currentColor;
+            animation: fallDown 1.5s linear infinite;
+        }
+
+        @keyframes fallDown {
+            0% { top: -20%; opacity: 0.2; transform: scale(0.6); }
+            80% { opacity: 1; transform: scale(1.0); }
+            100% { top: 90%; opacity: 1; transform: scale(1.1); }
+        }
+
+        .highway-target-bar {
+            position: absolute;
+            bottom: 6px;
+            left: 5%; right: 5%;
+            height: 8px;
+            background: rgba(234, 179, 8, 0.4);
+            border: 2px solid var(--accent-yellow);
+            border-radius: 4px;
+            box-shadow: 0 0 12px var(--accent-yellow);
+            z-index: 10;
+        }
+
+        /* THE BIG EYE IN THE CENTER */
+        .eye-housing-box {
+            background: radial-gradient(circle at center, #0e1a2e 0%, #050811 85%);
+            border: 2px solid var(--accent-blue);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: 0 0 20px rgba(2, 132, 199, 0.25);
+        }
+
+        .eye-housing {
+            width: 115px;
+            height: 115px;
+            border-radius: 50%;
+            border: 3px solid var(--panel-border);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #04070e;
+            box-shadow: 0 0 20px rgba(34, 211, 238, 0.2), inset 0 0 15px rgba(0,0,0,0.9);
+        }
+
+        .eye-iris {
+            width: 65px;
+            height: 65px;
+            border-radius: 50%;
+            border: 2px dashed var(--accent-eye);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: spinIris 24s linear infinite;
+        }
+
+        .eye-pupil {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #22d3ee, #0284c7 65%, #0369a1 100%);
+            box-shadow: 0 0 20px var(--accent-eye);
+            transition: transform 0.1s ease;
+        }
+
+        @keyframes spinIris { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        /* BOTTOM: MEANING = HORIZONTAL WAVEFORM */
+        .meaning-waveform-panel {
+            background-color: #060b14;
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .waveform-canvas-wrap {
+            width: 100%;
+            height: 75px;
+            position: relative;
+            margin-top: 4px;
+            border-radius: 6px;
+            background: #03060c;
+            border: 1px solid #142136;
+        }
+
+        svg.waveform-svg { width: 100%; height: 100%; }
+
+        .playhead-line {
+            position: absolute;
+            top: 0; bottom: 0; left: 0%;
+            width: 2px;
+            background: var(--accent-eye);
+            box-shadow: 0 0 10px var(--accent-eye);
+            transition: left 0.1s linear;
+            z-index: 5;
+        }
+
+        .resistor-band {
+            position: absolute;
+            top: 0; bottom: 0;
+            opacity: 0.25;
+            border-right: 2px solid rgba(255,255,255,0.4);
+        }
+
+        /* GRAPHICAL KEYBOARD ARRAY AT THE BOTTOM */
+        .keyboard-array-panel {
+            background: #080e1a;
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 6px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .graphic-keybed {
+            display: flex;
+            height: 52px;
+            position: relative;
+            width: 100%;
+            background: #03060c;
+            border-radius: 6px;
+            padding: 2px;
+            gap: 2px;
+        }
+
+        .gkey-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 3px 2px;
+            border-radius: 4px;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.05s ease;
+            position: relative;
+        }
+        .gkey-item.white-key { background: #e2e8f0; color: #0f172a; border-bottom: 3px solid #cbd5e1; }
+        .gkey-item.black-key { background: #0f172a; color: #22d3ee; border: 1px solid var(--accent-cyan); border-bottom: 3px solid var(--accent-blue); }
+
+        .gkey-item.active-playing {
+            background: var(--accent-orange) !important;
+            color: #ffffff !important;
+            border-color: #ffffff !important;
+            box-shadow: 0 0 14px var(--accent-orange) !important;
+            transform: scale(1.05);
+        }
+
+        .gkey-note { font-size: 10px; font-weight: 800; }
+        .gkey-chunk-tag { font-size: 7px; font-weight: 700; border-radius: 2px; padding: 1px 3px; }
+
+        .key-hint-badge {
+            position: absolute;
+            bottom: -6px;
+            background: var(--accent-yellow);
+            color: #000;
+            font-size: 7px;
+            font-weight: 900;
+            padding: 1px 3px;
+            border-radius: 3px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            z-index: 10;
+        }
+
+        /* SCORE & STREAK HUD FOR GUITAR HERO MODE */
+        .hero-hud-box {
+            background: rgba(236, 72, 153, 0.15);
+            border: 1px solid #ec4899;
+            border-radius: 6px;
+            padding: 6px 8px;
+            font-size: 10px;
+            color: #fbcfe8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .now-vs-next-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .now-box {
+            background: rgba(249, 115, 22, 0.15);
+            border: 1px solid var(--accent-orange);
+            border-radius: 6px;
+            padding: 6px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .next-box {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid var(--accent-green);
+            border-radius: 6px;
+            padding: 6px 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .now-next-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+        .now-next-key { font-size: 12px; font-weight: 800; display: flex; justify-content: space-between; align-items: center; }
+
+        /* Left & Right Panels */
+        .midi-out-list { display: flex; flex-direction: column; gap: 4px; font-size: 10px; }
+        .midi-out-item {
+            background: #09111e;
+            border-left: 3px solid var(--accent-green);
+            padding: 5px 8px;
+            border-radius: 3px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .sync-btn {
+            background: var(--accent-green);
+            border: none;
+            color: #000;
+            font-weight: 800;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
+        }
+        .sync-btn.playing { background: var(--accent-orange); color: #fff; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo-area">
+            <h1>Sampler.Like.Audio <span>Guitar Hero Performance Mode</span></h1>
+        </div>
+        <div class="nav-modules">
+            <button class="nav-btn">Extractor</button>
+            <button class="nav-btn active">The Big Eye</button>
+            <button class="hero-mode-btn" onclick="toggleAutoSync()">🎸 GUITAR HERO MODE: PLAY</button>
+        </div>
+    </header>
+
+    <div class="workspace">
+        
+        <!-- Left: Audio Extractor & Hero HUD -->
+        <div class="panel">
+            <div class="panel-title">
+                Guitar Hero Performance HUD
+                <span style="font-size: 9px; color: #ec4899;">SCORE & STREAK</span>
+            </div>
+
+            <!-- GUITAR HERO SCORE HUD -->
+            <div class="hero-hud-box">
+                <span>SCORE: <strong id="hero-score" style="color: #fff; font-size: 14px;">14,850</strong></span>
+                <span>STREAK: <strong id="hero-streak" style="color: var(--accent-yellow); font-size: 14px;">24x 🔥</strong></span>
+            </div>
+
+            <div class="now-vs-next-container" style="margin-top: 6px;">
+                <div class="now-box">
+                    <span class="now-next-label" style="color: var(--accent-orange);">TARGET NOTE (NOW)</span>
+                    <div class="now-next-key" style="color: #fff;" id="now-key-display">
+                        <span>F#2</span>
+                        <span style="font-size: 8px; background: #1c1917; padding: 1px 4px; border-radius: 2px;">HIT!</span>
+                    </div>
+                    <span style="font-size: 8px; color: var(--text-muted);" id="now-pitch-display">90.6 Hz | Resistor 1</span>
+                </div>
+
+                <div class="next-box">
+                    <span class="now-next-label" style="color: #86efac;">CASCADING NOTE (NEXT)</span>
+                    <div class="now-next-key" style="color: #fff;" id="next-key-display">
+                        <span>B1</span>
+                        <span style="font-size: 8px; background: #854d0e; padding: 1px 4px; border-radius: 2px;">IN 400ms</span>
+                    </div>
+                    <span style="font-size: 8px; color: var(--text-muted);" id="next-pitch-display">61.2 Hz | Resistor 2</span>
+                </div>
+            </div>
+
+            <div class="panel-title" style="margin-top: 6px;">
+                Highway Controls
+            </div>
+            <div style="font-size: 9px; color: var(--text-muted); display: flex; flex-direction: column; gap: 3px;">
+                <div style="display: flex; justify-content: space-between;"><span>Highway Speed</span><span style="color: var(--accent-cyan); font-weight: 800;">1.2x Speed</span></div>
+                <div style="display: flex; justify-content: space-between;"><span>Hit Precision Window</span><span style="color: var(--accent-green); font-weight: 800;">+/- 15 ms PERFECT</span></div>
+                <div style="display: flex; justify-content: space-between;"><span>Strum Controls</span><span style="color: var(--accent-yellow); font-weight: 800;">Keys [1]-[0] / [Space]</span></div>
+            </div>
+        </div>
+
+        <!-- Center Stage -->
+        <div class="center-stage">
+            
+            <!-- Top Quadrants -->
+            <div class="top-quads">
+                <div class="quad-card">
+                    <div class="quad-title space">
+                        <span>Top Left: Space</span>
+                        <span style="font-size: 8px; color: var(--accent-purple);">EBU ADM 3D</span>
+                    </div>
+                    <div class="space-view">
+                        <div class="spatial-ring"></div>
+                        <div class="spatial-node" style="top: 25%; left: 35%;"></div>
+                        <div class="spatial-node" style="top: 65%; left: 70%; background: var(--accent-purple);"></div>
+                    </div>
+                    <div style="font-size: 9px; color: var(--text-muted); text-align: center;">Spatial 3D Soundfield Orbit</div>
+                </div>
+
+                <!-- TOP RIGHT: 3D CASCADING RHYTHM HIGHWAY VIEW -->
+                <div class="quad-card">
+                    <div class="quad-title time">
+                        <span>Top Right: Guitar Hero 3D Note Highway</span>
+                        <span style="font-size: 8px; color: #ec4899;">CASCADING NOTES</span>
+                    </div>
+                    
+                    <div class="guitar-hero-highway">
+                        <div class="highway-track-3d">
+                            <div class="highway-lane">
+                                <div class="falling-hero-note" style="background: var(--resistor-red); color: var(--resistor-red); animation-delay: 0s;"></div>
+                            </div>
+                            <div class="highway-lane">
+                                <div class="falling-hero-note" style="background: var(--resistor-yellow); color: var(--resistor-yellow); animation-delay: 0.3s;"></div>
+                            </div>
+                            <div class="highway-lane">
+                                <div class="falling-hero-note" style="background: var(--resistor-green); color: var(--resistor-green); animation-delay: 0.6s;"></div>
+                            </div>
+                            <div class="highway-lane">
+                                <div class="falling-hero-note" style="background: var(--resistor-blue); color: var(--resistor-blue); animation-delay: 0.9s;"></div>
+                            </div>
+                            <div class="highway-lane">
+                                <div class="falling-hero-note" style="background: var(--resistor-violet); color: var(--resistor-violet); animation-delay: 1.2s;"></div>
+                            </div>
+
+                            <div class="highway-target-bar"></div>
+                        </div>
+                    </div>
+
+                    <div style="font-size: 9px; color: var(--text-muted); text-align: center;">3D Cascading Resistor Notes Highway</div>
+                </div>
+            </div>
+
+            <!-- CENTER: THE BIG EYE IN THE CENTER -->
+            <div class="eye-housing-box">
+                <div class="eye-housing">
+                    <div class="eye-iris">
+                        <div class="eye-pupil" id="pupil"></div>
+                    </div>
+                </div>
+                <div style="position: absolute; bottom: 6px; font-size: 10px; font-weight: 700; color: var(--accent-eye); letter-spacing: 1px;" id="eye-label">
+                    THE BIG EYE IN THE CENTER
+                </div>
+            </div>
+
+            <!-- BOTTOM: MEANING = HORIZONTAL WAVEFORM -->
+            <div class="meaning-waveform-panel">
+                <div class="quad-title meaning">
+                    <span>Bottom: Meaning — Waveform with Highway Note Markers</span>
+                    <button class="sync-btn" id="auto-sync-btn" onclick="toggleAutoSync()">PLAY HIGHWAY [P]</button>
+                </div>
+
+                <div class="waveform-canvas-wrap">
+                    <div class="resistor-band" style="left: 0%; width: 10%; background: var(--resistor-black);"></div>
+                    <div class="resistor-band" style="left: 10%; width: 10%; background: var(--resistor-brown);"></div>
+                    <div class="resistor-band" style="left: 20%; width: 10%; background: var(--resistor-red);"></div>
+                    <div class="resistor-band" style="left: 30%; width: 10%; background: var(--resistor-orange);"></div>
+                    <div class="resistor-band" style="left: 40%; width: 10%; background: var(--resistor-yellow);"></div>
+                    <div class="resistor-band" style="left: 50%; width: 10%; background: var(--resistor-green);"></div>
+
+                    <svg class="waveform-svg" viewBox="0 0 500 80" preserveAspectRatio="none">
+                        <line x1="0" y1="40" x2="500" y2="40" stroke="#1e2c45" stroke-width="1" />
+                        <path d="M0,40 Q15,5 30,40 T60,40 T90,5 T120,75 T150,40 T180,10 T210,70 T240,40 T270,0 T300,80 T330,40 T360,15 T390,65 T420,40 T450,20 T480,40 T500,40" fill="none" stroke="#f8fafc" stroke-width="2" />
+                    </svg>
+
+                    <div class="playhead-line" id="playhead"></div>
+                </div>
+            </div>
+
+            <!-- GRAPHICAL PIANO KEYBOARD ARRAY AT THE BOTTOM (STRUM TARGET KEYS) -->
+            <div class="keyboard-array-panel">
+                <div style="font-size: 9px; font-weight: 700; color: #ec4899; text-transform: uppercase; display: flex; justify-content: space-between;">
+                    <span>Graphical Piano Keybed Strum Targets (Guitar Hero Fret Keys)</span>
+                    <span style="color: var(--accent-yellow);">PERFECT HIT TARGETS</span>
+                </div>
+                <div class="graphic-keybed">
+                    <div class="gkey-item black-key" id="gkey-1" onclick="playChunk(1)"><span class="gkey-note">F#2</span><span class="gkey-chunk-tag" style="background: #1c1917; color: #fff;">1 BLK</span><span class="key-hint-badge">[1] HIT</span></div>
+                    <div class="gkey-item white-key" id="gkey-2" onclick="playChunk(2)"><span class="gkey-note">B1</span><span class="gkey-chunk-tag" style="background: #854d0e; color: #fff;">2 BRN</span><span class="key-hint-badge">[2] HIT</span></div>
+                    <div class="gkey-item white-key" id="gkey-3" onclick="playChunk(3)"><span class="gkey-note">C2</span><span class="gkey-chunk-tag" style="background: #dc2626; color: #fff;">3 RED</span><span class="key-hint-badge">[3] HIT</span></div>
+                    <div class="gkey-item white-key" id="gkey-4" onclick="playChunk(4)"><span class="gkey-note">F2</span><span class="gkey-chunk-tag" style="background: #ea580c; color: #fff;">4 ORG</span><span class="key-hint-badge">[4] HIT</span></div>
+                    <div class="gkey-item black-key" id="gkey-5" onclick="playChunk(5)"><span class="gkey-note">F#3</span><span class="gkey-chunk-tag" style="background: #ca8a04; color: #000;">5 YEL</span><span class="key-hint-badge">[5] HIT</span></div>
+                    <div class="gkey-item black-key" id="gkey-6" onclick="playChunk(6)"><span class="gkey-note">G#1</span><span class="gkey-chunk-tag" style="background: #16a34a; color: #fff;">6 GRN</span><span class="key-hint-badge">[6] HIT</span></div>
+                    <div class="gkey-item black-key" id="gkey-7" onclick="playChunk(7)"><span class="gkey-note">C#5</span><span class="gkey-chunk-tag" style="background: #2563eb; color: #fff;">7 BLU</span><span class="key-hint-badge">[7] HIT</span></div>
+                    <div class="gkey-item black-key" id="gkey-8" onclick="playChunk(8)"><span class="gkey-note">C#3</span><span class="gkey-chunk-tag" style="background: #9333ea; color: #fff;">8 VIO</span><span class="key-hint-badge">[8] HIT</span></div>
+                    <div class="gkey-item black-key" id="gkey-9" onclick="playChunk(9)"><span class="gkey-note">F#2</span><span class="gkey-chunk-tag" style="background: #52525b; color: #fff;">9 GRY</span><span class="key-hint-badge">[9] HIT</span></div>
+                    <div class="gkey-item black-key" id="gkey-10" onclick="playChunk(10)"><span class="gkey-note">A#2</span><span class="gkey-chunk-tag" style="background: #f8fafc; color: #000;">10 WHT</span><span class="key-hint-badge">[0] HIT</span></div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right: Telemetry Panel -->
+        <div class="panel">
+            <div class="panel-title">
+                Guitar Hero Performance Telemetry
+                <span style="font-size: 9px; color: var(--accent-green);">MIDI OUT</span>
+            </div>
+
+            <div class="midi-out-list">
+                <div class="midi-out-item">
+                    <span style="color: var(--text-muted);">Current Hit Note</span>
+                    <span style="font-family: monospace; font-weight: 700; color: var(--accent-orange);" id="out-key-now">F#2 (Black Key)</span>
+                </div>
+                <div class="midi-out-item">
+                    <span style="color: var(--text-muted);">Highway Cascading Note</span>
+                    <span style="font-family: monospace; font-weight: 700; color: var(--accent-green);" id="out-key-next">B1 (White Key)</span>
+                </div>
+                <div class="midi-out-item">
+                    <span style="color: var(--text-muted);">Hit Precision Window</span>
+                    <span style="font-family: monospace; color: var(--accent-yellow);">PERFECT (+/- 5ms)</span>
+                </div>
+                <div class="midi-out-item">
+                    <span style="color: var(--text-muted);">Hit Streak Counter</span>
+                    <span style="font-family: monospace; color: #ec4899;" id="tele-streak">24x Streak 🔥</span>
+                </div>
+            </div>
+
+            <div class="panel-title" style="margin-top: 6px;">
+                Performance Controls
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 6px;">
+                <button class="sync-btn" style="width: 100%; padding: 8px;" onclick="triggerNextKeySync()">STRUM NEXT HIGHWAY NOTE [Space]</button>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const chunkKeys = [
+            { num: 1, name: "BLACK", note: "F#2", hint: "Root", pitch: "90.6 Hz | MIDI 42", type: "Black Key", hex: "#1c1917", pct: "0%" },
+            { num: 2, name: "BROWN", note: "B1", hint: "5th Dom", pitch: "61.2 Hz | MIDI 35", type: "White Key", hex: "#854d0e", pct: "10%" },
+            { num: 3, name: "RED", note: "C2", hint: "Min 5th", pitch: "64.2 Hz | MIDI 36", type: "White Key", hex: "#dc2626", pct: "20%" },
+            { num: 4, name: "ORANGE", note: "F2", hint: "7th Min", pitch: "85.6 Hz | MIDI 41", type: "White Key", hex: "#ea580c", pct: "30%" },
+            { num: 5, name: "YELLOW", note: "F#3", hint: "Octave", pitch: "180.7 Hz | MIDI 54", type: "Black Key", hex: "#ca8a04", pct: "40%" },
+            { num: 6, name: "GREEN", note: "G#1", hint: "2nd Maj", pitch: "53.3 Hz | MIDI 32", type: "Black Key", hex: "#16a34a", pct: "50%" },
+            { num: 7, name: "BLUE", note: "C#5", hint: "5th High", pitch: "565.4 Hz | MIDI 73", type: "Black Key", hex: "#2563eb", pct: "60%" },
+            { num: 8, name: "VIOLET", note: "C#3", hint: "5th Mid", pitch: "142.3 Hz | MIDI 49", type: "Black Key", hex: "#9333ea", pct: "70%" },
+            { num: 9, name: "GREY", note: "F#2", hint: "Root", pitch: "95.0 Hz | MIDI 42", type: "Black Key", hex: "#52525b", pct: "80%" },
+            { num: 10, name: "WHITE", note: "A#2", hint: "3rd Maj", pitch: "118.2 Hz | MIDI 46", type: "Black Key", hex: "#f8fafc", pct: "90%" }
+        ];
+
+        let currentIdx = 0;
+        let timer = null;
+        let score = 14850;
+        let streak = 24;
+
+        function playChunk(num) {
+            currentIdx = num - 1;
+            score += 150;
+            streak += 1;
+            updatePlayState(currentIdx);
+        }
+
+        function updatePlayState(idx) {
+            const nowItem = chunkKeys[idx];
+            const nextItem = chunkKeys[(idx + 1) % chunkKeys.length];
+
+            const pupil = document.getElementById('pupil');
+            const label = document.getElementById('eye-label');
+            const playhead = document.getElementById('playhead');
+
+            pupil.style.transform = 'scale(1.4)';
+            pupil.style.background = nowItem.hex;
+            label.innerText = 'GUITAR HERO HIT: ' + nowItem.note + ' [' + nowItem.name + '] -> +150 PTS!';
+            playhead.style.left = nowItem.pct;
+
+            document.getElementById('hero-score').innerText = score.toLocaleString();
+            document.getElementById('hero-streak').innerText = streak + 'x 🔥';
+            document.getElementById('tele-streak').innerText = streak + 'x Streak 🔥';
+
+            document.getElementById('now-key-display').innerHTML = '<span>' + nowItem.note + '</span><span style="font-size: 8px; background: ' + nowItem.hex + '; padding: 1px 4px; border-radius: 2px;">PERFECT HIT</span>';
+            document.getElementById('now-pitch-display').innerText = nowItem.type + ' | ' + nowItem.pitch;
+
+            document.getElementById('next-key-display').innerHTML = '<span>' + nextItem.note + '</span><span style="font-size: 8px; background: ' + nextItem.hex + '; padding: 1px 4px; border-radius: 2px;">CASCADING</span>';
+            document.getElementById('next-pitch-display').innerText = nextItem.type + ' | ' + nextItem.pitch;
+
+            document.getElementById('out-key-now').innerText = nowItem.note + ' (' + nowItem.type + ')';
+            document.getElementById('out-key-next').innerText = nextItem.note + ' (' + nextItem.type + ')';
+
+            document.querySelectorAll('.gkey-item').forEach(k => k.classList.remove('active-playing'));
+            const activeKey = document.getElementById('gkey-' + nowItem.num);
+            if (activeKey) activeKey.classList.add('active-playing');
+
+            setTimeout(() => { pupil.style.transform = 'scale(1.0)'; }, 150);
+        }
+
+        function triggerNextKeySync() {
+            currentIdx = (currentIdx + 1) % chunkKeys.length;
+            playChunk(currentIdx + 1);
+        }
+
+        function toggleAutoSync() {
+            const btn = document.getElementById('auto-sync-btn');
+            if (timer) {
+                clearInterval(timer);
+                timer = null;
+                btn.innerText = "PLAY HIGHWAY [P]";
+                btn.classList.remove('playing');
+            } else {
+                btn.innerText = "HIGHWAY RUNNING (120 BPM)";
+                btn.classList.add('playing');
+                timer = setInterval(() => {
+                    triggerNextKeySync();
+                }, 500);
+            }
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key >= '1' && e.key <= '9') {
+                playChunk(parseInt(e.key));
+            } else if (e.key === '0') {
+                playChunk(10);
+            } else if (e.code === 'Space') {
+                e.preventDefault();
+                triggerNextKeySync();
+            } else if (e.key.toLowerCase() === 'p') {
+                toggleAutoSync();
+            }
+        });
+
+        updatePlayState(0);
+    </script>
+</body>
+</html>
